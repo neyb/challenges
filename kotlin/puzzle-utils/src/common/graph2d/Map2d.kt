@@ -10,16 +10,17 @@ interface Map2d<out T> {
 
     fun nodes(): Sequence<Node<T>>
 
-    operator fun get(x: Int, y: Int) = get(Coordinate2d(x, y))
     operator fun get(coordinate2d: Coordinate2d): T?
+    operator fun contains(coordinate2d: Coordinate2d): Boolean
+    fun getNode(coordinate2d: Coordinate2d): Node<T>?
 
     fun <R> map(mutation: (Node<T>) -> Node<R>): Map2d<R>
     fun <R> mapValues(mutation: (T) -> R): Map2d<R>
 
-    fun edit(mutation: (MutableMap2d<@UnsafeVariance T>) -> Unit): Map2d<T>
+    fun edit(mutation: (MutableMap<Coordinate2d, @UnsafeVariance T>) -> Unit): Map2d<T>
 
     fun area(
-        from: Coordinate2d,
+        startingPoint: Coordinate2d,
         withDiagonal: Boolean = false,
         linkFilter: (from: Node<T>, to: Node<T>) -> Boolean
             ): Set<Node<T>>
@@ -33,45 +34,46 @@ interface Map2d<out T> {
     }
 
     private class Impl<T>(content: Map<Coordinate2d, T>) : Map2d<T> {
-        private val content = content.toMutableMap()
+        private val content = content.toMap()
 
         override fun nodes() = content.asSequence().map { Node(it.key, it.value) }
 
-        override fun get(x: Int, y: Int) = get(Coordinate2d(x, y))
         override fun get(coordinate2d: Coordinate2d) = content[coordinate2d]
-
-        override fun <R> mapValues(mutation: (T) -> R) = map { Node(it.coordinate2d, mutation(it.value)) }
+        override fun getNode(coordinate2d: Coordinate2d) = get(coordinate2d)?.let { Node(coordinate2d, it) }
+        override fun contains(coordinate2d: Coordinate2d) = content.containsKey(coordinate2d)
 
         override fun <R> map(mutation: (Node<T>) -> Node<R>) = nodes().map(mutation).toMap2d()
+        override fun <R> mapValues(mutation: (T) -> R) = map { Node(it.coordinate2d, mutation(it.value)) }
 
-        override fun edit(mutation: MutableMap2d<T>.() -> Unit) = Impl(content).apply(mutation)
+        override fun edit(mutation: (MutableMap<Coordinate2d, T>) -> Unit) = of(content.toMutableMap().also(mutation))
 
         override fun area(
-            from: Coordinate2d,
+            startingPoint: Coordinate2d,
             withDiagonal: Boolean,
             linkFilter: (from: Node<T>, to: Node<T>) -> Boolean
-                         ): Set<Node<T>> {
-            TODO("Not yet implemented")
-        }
+                         ) = areaFrom(
+            setOf(startingPoint),
+            withDiagonal,
+            linkFilter
+                                     )
 
         private tailrec fun areaFrom(
             froms: Set<Coordinate2d>,
-            withDiagonal: Boolean = false,
-            linkFilter: (from: Node<T>, to: Node<T>) -> Boolean
-            visited: Set<Coordinate2d> = froms
+            withDiagonal: Boolean,
+            linkFilter: (from: Node<T>, to: Node<T>) -> Boolean,
+            visited: Set<Coordinate2d> = froms,
                                     ): Set<Node<T>> {
 
             val next = froms.asSequence()
                 .flatMap { from -> from.neightbours(withDiagonal).map { from to it } }
-                .filter { (from, to) -> to !in visited }
-                .map { (from, to) ->  }
-                    && linkFilter(from, to) }
+                .filter { (_, to) -> to !in visited }
+                .filter { (_, to) -> to in this }
+                .filter { (from, to) -> linkFilter(getNode(from)!!, getNode(to)!!) }
                 .map { (_, to) -> to }
                 .toSet()
-            return if (next.isEmpty())
-                visited + next
-            else
-                bassinFrom(next, visited + next)
+
+            return if (next.isEmpty()) visited.asSequence().map { getNode(it)!! }.toSet()
+            else areaFrom(next, withDiagonal, linkFilter, visited + next)
         }
 
     }

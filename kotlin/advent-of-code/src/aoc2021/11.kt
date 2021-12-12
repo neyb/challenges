@@ -42,13 +42,15 @@ class OctopusMap2d(private val map: Map2d<EnergyLevel>) {
         return map
             .mapValues { it + 1 }
             .edit { map ->
-                generateSequence { map.nodes().filter { it.coordinate2d !in flashed && it.value > 9 }.toList() }
+                generateSequence {
+                    map.filter { (coordinate2d, value) -> coordinate2d !in flashed && value > 9 }.toList()
+                }
                     .takeWhile { it.size > 0 }
                     .flatMap { it }
-                    .map { it.coordinate2d }
+                    .map { (coordinate2d) -> coordinate2d }
                     .onEach { flashed.add(it) }
                     .flatMap { it.neightbours(true) }
-                    .forEach { coord -> map.mutateValue(coord) { it + 1 } }
+                    .forEach { coord -> map.computeIfPresent(coord) { _, level -> level + 1 } }
             }
             .mapValues { if (it > 9) 0 else it }
             .let { NextStepResult(OctopusMap2d(it), flashed.size) }
