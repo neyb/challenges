@@ -14,7 +14,12 @@ interface Map2d<out T> {
     operator fun contains(coordinate2d: Coordinate2d): Boolean
     fun getNode(coordinate2d: Coordinate2d): Node<T>?
 
-    fun <R> map(mutation: (Node<T>) -> Node<R>): Map2d<R>
+    fun filter(predicate: (Node<T>) -> Boolean): Map2d<T>
+    fun <R> map(
+        mutation: (Node<T>) -> Node<R>,
+        mergeValues: (R, R) -> R = { a: R, b: R -> (throw Exception("conflict during node mapping : maybe pass a merge function ?")) }
+               ): Map2d<R>
+
     fun <R> mapValues(mutation: (T) -> R): Map2d<R>
 
     fun edit(mutation: (MutableMap<Coordinate2d, @UnsafeVariance T>) -> Unit): Map2d<T>
@@ -42,8 +47,17 @@ interface Map2d<out T> {
         override fun getNode(coordinate2d: Coordinate2d) = get(coordinate2d)?.let { Node(coordinate2d, it) }
         override fun contains(coordinate2d: Coordinate2d) = content.containsKey(coordinate2d)
 
-        override fun <R> map(mutation: (Node<T>) -> Node<R>) = nodes().map(mutation).toMap2d()
-        override fun <R> mapValues(mutation: (T) -> R) = map { Node(it.coordinate2d, mutation(it.value)) }
+        override fun filter(predicate: (Node<T>) -> Boolean) = nodes().filter(predicate).toMap2d()
+
+        override fun <R> map(mutation: (Node<T>) -> Node<R>, mergeValues: (R, R) -> R): Map2d<R> = nodes()
+            .map(mutation)
+            .groupingBy { it.coordinate2d }
+            .reduce { coord, nodeA, nodeB -> Node(coord, mergeValues(nodeA.value, nodeB.value)) }
+            .mapValues { (_, node) -> node.value }
+            .let(::Impl)
+
+        override fun <R> mapValues(mutation: (T) -> R) =
+            nodes().map { Node(it.coordinate2d, mutation(it.value)) }.toMap2d()
 
         override fun edit(mutation: (MutableMap<Coordinate2d, T>) -> Unit) = of(content.toMutableMap().also(mutation))
 
