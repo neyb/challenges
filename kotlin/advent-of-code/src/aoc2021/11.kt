@@ -32,31 +32,31 @@ typealias EnergyLevel = Int
 fun Iterable<Sequence<Char>>.toOctopusMap() = OctopusMap2d(map { it.map { it.digitToInt() }.toList() })
 class OctopusMap2d(private val map: Map2d<EnergyLevel>) {
 
-    constructor(lines: List<List<EnergyLevel>>) : this(Map2d.ofLines(lines))
+    constructor(lines: List<List<EnergyLevel>>) : this(Map2d.ofValueLines(lines))
 
     data class NextStepResult(val map: OctopusMap2d, val nbFlashes: Int)
 
     fun nextStep(): NextStepResult {
-        val flashed = mutableSetOf<Coordinate2d>()
+        val flashed = mutableSetOf<Coordinate>()
 
         return map
             .mapValues { it + 1 }
             .edit { map ->
                 generateSequence {
-                    map.filter { (coordinate2d, value) -> coordinate2d !in flashed && value > 9 }.toList()
+                    map.filter { (coordinate2d, node) -> coordinate2d !in flashed && node.value > 9 }.toList()
                 }
                     .takeWhile { it.size > 0 }
                     .flatMap { it }
                     .map { (coordinate2d) -> coordinate2d }
                     .onEach { flashed.add(it) }
                     .flatMap { it.neightbours(true) }
-                    .forEach { coord -> map.computeIfPresent(coord) { _, level -> level + 1 } }
+                    .forEach { coord -> map.computeIfPresent(coord) { _, node -> node.copy(value = node.value + 1) } }
             }
             .mapValues { if (it > 9) 0 else it }
             .let { NextStepResult(OctopusMap2d(it), flashed.size) }
     }
 
-    fun allBlinked() = map.nodes().all { it.value == 0 }
+    fun allBlinked() = map.nodes.asSequence().all { it.value == 0 }
 
 
 }
