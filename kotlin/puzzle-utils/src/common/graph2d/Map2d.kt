@@ -66,43 +66,31 @@ class Map2d<T>(private val nodesByCoord: Map<Coordinate, Node<T>>) {
         start: Coordinate,
         end: Coordinate,
         heuristic: (Node<T>) -> Int = { it.coordinate2d.run { abs(y - end.y) + abs(x - end.x) } },
-                    ): Path<T> {
-        tailrec fun shortestPathRec(
-            paths: PriorityQueue<Path<T>>,
-            bestPathTo: MutableMap<Coordinate, Path<T>>
-                                   ): Path<T> {
-            val path = paths.poll()
-            return if (path.end.coordinate2d == end) path
-            else {
-                val nexts = path.end.neightbours().map { path + it }
-                    .filter { next -> bestPathTo[next.end.coordinate2d]?.let { next.weight() < it.weight() } ?: true }
-                    .toList()
-                shortestPathRec(
-                    paths.apply {
-                        removeIf { it.end in nexts.map { it.end } }
-                        addAll(nexts)
-                    },
-                    bestPathTo.apply { putAll(nexts.associateBy { it.end.coordinate2d }) },
-                               )
-            }
-        }
+                    ): Path<T>? {
 
         val startPath = Path.from(getNode(start))
 
-        return shortestPathRec(
-            PriorityQueue<Path<T>>(Comparator.comparing { it.weight(heuristic) }).apply { add(startPath) },
-            hashMapOf(start to startPath)
-                              )
+        val paths = PriorityQueue<Path<T>>(Comparator.comparing { it.weight(heuristic) }).apply { add(startPath) }
+        val bestPathTo = hashMapOf(start to startPath)
+
+        generateSequence { paths.poll() }.forEach { path ->
+            if (path.end.coordinate2d == end) return path
+            path.end.neightbours()
+                .map { path + it }
+                .forEach { next ->
+                    val alreadyExistingPath = bestPathTo[next.end.coordinate2d]
+                    if (alreadyExistingPath == null || alreadyExistingPath.weight() > next.weight()) {
+                        paths.add(next)
+                        bestPathTo[next.end.coordinate2d] = next
+                        alreadyExistingPath?.let(paths::remove)
+                    }
+                }
+        }
+
+        return null
     }
 
     private fun Node<T>.neightbours(withDiagonal: Boolean = false) =
         coordinate2d.neightbours(withDiagonal).mapNotNull { findNode(it) }
-
-    //    override fun toString() = (nodes.minOf { it.coordinate2d.y }..nodes.maxOf { it.coordinate2d.y }).flatMap { y ->
-    //        (nodes.minOf { it.coordinate2d.x }..nodes.maxOf { it.coordinate2d.x }).map { x ->
-    //            findNode(Coordinate(x,y))?.value?:"."
-    //        }
-    //    }
-
 }
 

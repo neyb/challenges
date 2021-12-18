@@ -12,24 +12,17 @@ val part1 = { lines: List<String> ->
         }
         .toMap2d()
 
-    map.shortestPath(
+    val shortestPath = map.shortestPath(
         Coordinate(map.nodes.minOf { it.coordinate2d.x }, map.nodes.minOf { it.coordinate2d.y }),
         Coordinate(map.nodes.maxOf { it.coordinate2d.x }, map.nodes.maxOf { it.coordinate2d.y })
-                    )
+                                       ) ?: throw Exception("no path found")
+    shortestPath
         .nodes.asSequence()
         .drop(1)
         .sumOf { it.weight }
 }
 
 val part2 = { lines: List<String> ->
-
-    val down = { i: Int ->
-        var result = i
-        while (result > 9) {
-            result = result - 8
-        }
-    }
-
     val flatMap = (0..4).asSequence()
         .flatMap { repeatY ->
             lines.map { (0..4).flatMap { repeatX -> it.map { (it.digitToInt() + repeatX + repeatY).let { if (it > 9) it - 9 else it } } } }
@@ -42,7 +35,7 @@ val part2 = { lines: List<String> ->
     val shortestPath = map.shortestPath(
         Coordinate(map.nodes.minOf { it.coordinate2d.x }, map.nodes.minOf { it.coordinate2d.y }),
         Coordinate(map.nodes.maxOf { it.coordinate2d.x }, map.nodes.maxOf { it.coordinate2d.y })
-                                       )
+                                       ) ?: throw Exception("no path found")
     shortestPath
         .nodes.asSequence()
         .drop(1)
