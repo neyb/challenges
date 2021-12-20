@@ -41,7 +41,7 @@ class Test {
     }
 
     @Test fun `part1 given test - 8A004A801A8002F478`() {
-        expect(part1(listOf("8A004A801A8002F478"))).toEqual(16)
+        expect(part1(PacketReader("8A004A801A8002F478".asSequence().flatMap(hexaToBits)).readAllPackets())).toEqual(16)
     }
 
     private fun ofBinary(s: String) = PacketReader(s.asSequence().map { it.digitToInt() })

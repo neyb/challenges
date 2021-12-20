@@ -2,12 +2,16 @@ package common
 
 import java.io.File
 
-fun day(year: Int, day: Int, vararg parts: (lines: List<String>) -> Any?) {
-    val lines = linesOfDay(year, day)
-    parts.forEach { println(it(lines)) }
+fun day(year: Int, day: Int, vararg parts: (lines: List<String>) -> Any?) = day(year, day, *parts) { readLines() }
+
+fun <Parsed> day(year: Int, day: Int, vararg parts: (lines: Parsed) -> Any?, parse: File.() -> Parsed) {
+    val parsed = fileOfDay(year, day).run { parse() }
+    parts.forEach { println(it(parsed)) }
 }
 
-private fun linesOfDay(year: Int, day: Int) = File("advent-of-code/inputs/$year/$day.txt").readLines()
+private fun linesOfDay(year: Int, day: Int) = fileOfDay(year, day).readLines()
+
+private fun fileOfDay(year: Int, day: Int) = File("advent-of-code/inputs/$year/$day.txt")
 
 fun <T> Iterable<T>.split(isSplitter: (T) -> Boolean): List<List<T>> =
     fold(mutableListOf(mutableListOf())) { list: MutableList<MutableList<T>>, item ->
