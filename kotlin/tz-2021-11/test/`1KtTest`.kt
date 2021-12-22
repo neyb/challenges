@@ -4,6 +4,5 @@ internal class `1` {
 
     @Test
     fun main() {
-        throw Exception()
     }
 }
