@@ -26,23 +26,8 @@ val part1 = { lines: List<String> ->
         .mapNotNull { Regex("fold along ([yx])=(\\d+)").matchEntire(it)?.destructured }
         .map { (foldDir, foldPos) -> FoldDir.parse(foldDir) to foldPos.toInt() }
         .take(1)
-        .fold(startingPoints) { points, (foldDir, foldPos) ->
-            points.asSequence()
-                .filter { (x, y) ->
-                    when (foldDir) {
-                        FoldDir.X -> x
-                        FoldDir.Y -> y
-                    } != foldPos
-                }
-                .map { (x, y) ->
-                    when (foldDir) {
-                        FoldDir.X -> (if (x > foldPos) (2 * foldPos) - x else x) to y
-                        FoldDir.Y -> x to (if (y > foldPos) (2 * foldPos) - y else y)
-                    }
-                }
-                .toSet()
-        }.count()
-
+        .fold(startingPoints) { points, (foldDir, foldPos) -> fold(points, foldDir, foldPos) }
+        .count()
 }
 
 val part2 = { lines: List<String> ->
@@ -54,22 +39,7 @@ val part2 = { lines: List<String> ->
     val folded = foldLines.asSequence()
         .mapNotNull { Regex("fold along ([yx])=(\\d+)").matchEntire(it)?.destructured }
         .map { (foldDir, foldPos) -> FoldDir.parse(foldDir) to foldPos.toInt() }
-        .fold(startingPoints) { points, (foldDir, foldPos) ->
-            points.asSequence()
-                .filter { (x, y) ->
-                    when (foldDir) {
-                        FoldDir.X -> x
-                        FoldDir.Y -> y
-                    } != foldPos
-                }
-                .map { (x, y) ->
-                    when (foldDir) {
-                        FoldDir.X -> (if (x > foldPos) (2 * foldPos) - x else x) to y
-                        FoldDir.Y -> x to (if (y > foldPos) (2 * foldPos) - y else y)
-                    }
-                }
-                .toSet()
-        }
+        .fold(startingPoints) { points, (foldDir, foldPos) -> fold(points, foldDir, foldPos) }
 
     val maxX = folded.maxOf { it.first }
     val maxY = folded.maxOf { it.second }
@@ -79,4 +49,23 @@ val part2 = { lines: List<String> ->
     }
 
 }
+
+private fun fold(
+    points: Set<Pair<Int, Int>>,
+    foldDir: FoldDir,
+    foldPos: Int
+                ) = points.asSequence()
+    .filter { (x, y) ->
+        when (foldDir) {
+            FoldDir.X -> x
+            FoldDir.Y -> y
+        } != foldPos
+    }
+    .map { (x, y) ->
+        when (foldDir) {
+            FoldDir.X -> (if (x > foldPos) (2 * foldPos) - x else x) to y
+            FoldDir.Y -> x to (if (y > foldPos) (2 * foldPos) - y else y)
+        }
+    }
+    .toSet()
 

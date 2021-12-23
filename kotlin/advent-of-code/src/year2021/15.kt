@@ -5,6 +5,10 @@ import common.graph2d.*
 
 fun main() = day(2021, 15, part1, part2)
 
+val Map2d<Nothing?>.start get() = Coordinate(minX, minY)
+val Map2d<Nothing?>.end get() = Coordinate(maxX, maxY)
+fun Map2d<Nothing?>.path() = shortestPath(start, end) ?: throw Exception("no path found")
+
 val part1 = { lines: List<String> ->
     val map = lines.asSequence()
         .flatMapIndexed { y, line ->
@@ -12,10 +16,8 @@ val part1 = { lines: List<String> ->
         }
         .toMap2d()
 
-    val shortestPath = map.shortestPath(
-        Coordinate(map.nodes.minOf { it.coordinate2d.x }, map.nodes.minOf { it.coordinate2d.y }),
-        Coordinate(map.nodes.maxOf { it.coordinate2d.x }, map.nodes.maxOf { it.coordinate2d.y })
-                                       ) ?: throw Exception("no path found")
+    val shortestPath = map.path()
+
     shortestPath
         .nodes.asSequence()
         .drop(1)
@@ -23,19 +25,17 @@ val part1 = { lines: List<String> ->
 }
 
 val part2 = { lines: List<String> ->
-    val flatMap = (0..4).asSequence()
+    val duplicated = (0..4).asSequence()
         .flatMap { repeatY ->
             lines.map { (0..4).flatMap { repeatX -> it.map { (it.digitToInt() + repeatX + repeatY).let { if (it > 9) it - 9 else it } } } }
-        }.toList()
+        }
 
-    val map = flatMap
+    val map = duplicated
         .flatMapIndexed { y, l -> l.mapIndexed { x, i -> Node(Coordinate(x, y), null, i) } }
         .toMap2d()
 
-    val shortestPath = map.shortestPath(
-        Coordinate(map.nodes.minOf { it.coordinate2d.x }, map.nodes.minOf { it.coordinate2d.y }),
-        Coordinate(map.nodes.maxOf { it.coordinate2d.x }, map.nodes.maxOf { it.coordinate2d.y })
-                                       ) ?: throw Exception("no path found")
+    val shortestPath = with(map) { shortestPath(start, end) } ?: throw Exception("no path found")
+
     shortestPath
         .nodes.asSequence()
         .drop(1)

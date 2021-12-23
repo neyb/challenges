@@ -17,8 +17,14 @@ class Map2d<T>(private val nodesByCoord: Map<Coordinate, Node<T>>) {
             .toMap2d()
     }
 
+
     //    private val nodesByCoord = content.mapValues { (coord, value) -> Node(coord, value) }
     val nodes by lazy { nodesByCoord.values }
+
+    val minX by lazy {nodes.minOf { it.coordinate2d.x }}
+    val minY by lazy {nodes.minOf { it.coordinate2d.y }}
+    val maxX by lazy {nodes.maxOf { it.coordinate2d.x }}
+    val maxY by lazy {nodes.maxOf { it.coordinate2d.y }}
 
     fun findValue(coordinate2d: Coordinate) = nodesByCoord[coordinate2d]?.value
     fun getValue(coordinate2d: Coordinate) =

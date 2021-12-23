@@ -33,7 +33,9 @@ subprojects {
     }
 
     tasks.test {
-        useJUnitPlatform()
+        useJUnitPlatform {
+            excludeTags.add("slow")
+        }
     }
 
     tasks.compileKotlin {

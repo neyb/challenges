@@ -4,6 +4,7 @@ import year2021.day15.*
 
 import ch.tutteli.atrium.api.fluent.en_GB.toEqual
 import ch.tutteli.atrium.api.verbs.expect
+import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 
 class `15` {

@@ -1,5 +1,6 @@
 tasks.test {
     useJUnitPlatform {
-        this.includeEngines = setOf("junit-platform-suite")
+        includeEngines = setOf("junit-platform-suite")
+        excludeTags.add("slow")
     }
 }
