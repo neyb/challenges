@@ -29,24 +29,20 @@ val part2 = { (p1position, p2position): Input ->
         .eachCount()
 
     val quantumGames = mutableMapOf<Game, Long>()
-
-    val winProbs = mutableListOf(0L, 0L)
-
     generateSequence(QuantumGame(game, 1)) {
         quantumGames
             .minByOrNull { it.key.players.minOf { it.score } }
             ?.also { quantumGames.remove(it.key) }
             ?.let { (game, prob) -> QuantumGame(game, prob) }
     }
-        .forEach { currentQg ->
-            if (currentQg.game.isOver()) currentQg.game.indexOfWinner().let { playerIndex ->
-                winProbs[playerIndex] = winProbs[playerIndex] + currentQg.prob
-            } else diceSumsProb
-                .map { (diceSum, prob) -> currentQg.play(diceSum, prob.toLong()) }
-                .forEach { resultingQg -> quantumGames.merge(resultingQg.game, resultingQg.prob, Long::plus) }
-        }
-
-    winProbs.maxOf { it }
+        .flatMap { currentQg -> diceSumsProb.map { (diceSum, prob) -> currentQg.play(diceSum, prob.toLong()) } }
+        .filter { it.game.isOver().also { isOver -> if (!isOver) quantumGames.merge(it.game, it.prob, Long::plus) } }
+        .fold(mutableListOf(0L, 0L)) { winprobs, qg ->
+            winprobs.also {
+                val winner = qg.game.indexOfWinner()
+                winprobs[winner] = winprobs[winner] + qg.prob
+            }
+        }.maxOf { it }
 }
 
 data class QuantumGame(val game: Game, val prob: Long) {
