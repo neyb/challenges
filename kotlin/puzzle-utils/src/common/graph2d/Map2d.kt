@@ -1,6 +1,6 @@
 package common.graph2d
 
-import java.util.*
+import common.algo.*
 import kotlin.math.abs
 
 fun <T> Iterable<Node<T>>.toMap2d(): Map2d<T> = Map2d(associateBy({ it.coordinate2d }))
@@ -21,10 +21,10 @@ class Map2d<T>(private val nodesByCoord: Map<Coordinate, Node<T>>) {
     //    private val nodesByCoord = content.mapValues { (coord, value) -> Node(coord, value) }
     val nodes by lazy { nodesByCoord.values }
 
-    val minX by lazy {nodes.minOf { it.coordinate2d.x }}
-    val minY by lazy {nodes.minOf { it.coordinate2d.y }}
-    val maxX by lazy {nodes.maxOf { it.coordinate2d.x }}
-    val maxY by lazy {nodes.maxOf { it.coordinate2d.y }}
+    val minX by lazy { nodes.minOf { it.coordinate2d.x } }
+    val minY by lazy { nodes.minOf { it.coordinate2d.y } }
+    val maxX by lazy { nodes.maxOf { it.coordinate2d.x } }
+    val maxY by lazy { nodes.maxOf { it.coordinate2d.y } }
 
     fun findValue(coordinate2d: Coordinate) = nodesByCoord[coordinate2d]?.value
     fun getValue(coordinate2d: Coordinate) =
@@ -73,27 +73,16 @@ class Map2d<T>(private val nodesByCoord: Map<Coordinate, Node<T>>) {
         end: Coordinate,
         heuristic: (Node<T>) -> Int = { it.coordinate2d.run { abs(y - end.y) + abs(x - end.x) } },
                     ): Path<T>? {
-
-        val startPath = Path.from(getNode(start))
-
-        val paths = PriorityQueue<Path<T>>(Comparator.comparing { it.weight(heuristic) }).apply { add(startPath) }
-        val bestPathTo = hashMapOf(start to startPath)
-
-        generateSequence { paths.poll() }.forEach { path ->
-            if (path.end.coordinate2d == end) return path
-            path.end.neightbours()
-                .map { path + it }
-                .forEach { next ->
-                    val alreadyExistingPath = bestPathTo[next.end.coordinate2d]
-                    if (alreadyExistingPath == null || alreadyExistingPath.weight() > next.weight()) {
-                        paths.add(next)
-                        bestPathTo[next.end.coordinate2d] = next
-                        alreadyExistingPath?.let(paths::remove)
-                    }
-                }
-        }
-
-        return null
+        val bestPathTo = hashMapOf<Coordinate, Path<T>>()
+        return explore(Path.from(getNode(start))) { path -> path.end.neightbours().map { path + it } }
+            .minimizing { it.weight(heuristic) }
+            .filterExploration { path -> bestPathTo[path.end.coordinate2d]?.let { it == path } ?: true }
+            .onEach { path ->
+                val alreadyExistingPath = bestPathTo[path.end.coordinate2d]
+                if (alreadyExistingPath == null || alreadyExistingPath.weight() > path.weight())
+                    bestPathTo[path.end.coordinate2d] = path
+            }
+            .firstOrNull { it.end.coordinate2d == end }
     }
 
     private fun Node<T>.neightbours(withDiagonal: Boolean = false) =

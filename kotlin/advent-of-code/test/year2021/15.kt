@@ -27,6 +27,7 @@ class `15` {
               ).toEqual(40)
     }
 
+    @Tag("slow")
     @Test fun `part2 given test`() {
         expect(
             part2(

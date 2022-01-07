@@ -251,6 +251,7 @@ class `19` {
         expect(world.localize(givenScanners[2])).toEqual(null)
     }
 
+    @Tag("slow")
     @Test fun `part 1 - building world`() {
         val world = World.from(givenScanners)
 
