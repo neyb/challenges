@@ -1,0 +1,398 @@
+
+====================
+    inp w
+    mul x 0
+    add x z
+    mod x 26
+    div z 1
+    add x 12
+    eql x w
+    eql x 0
+    mul y 0
+    add y 25
+    mul y x
+    add y 1
+    mul z y
+    mul y 0
+    add y w
+    add y 4
+    mul y x
+    add z y
+
+w = w1
+x= 1
+z = w1 +4
+y = w1 + 4
+
+====================
+    inp w
+    mul x 0
+    add x z
+    mod x 26
+    div z 1
+    add x 15
+    eql x w
+    eql x 0
+    mul y 0
+    add y 25
+    mul y x
+    add y 1
+    mul z y
+    mul y 0
+    add y w
+    add y 11
+    mul y x
+    add z y
+w=w2
+x = 1
+y = w2 + 11
+z = w1+w2 + 40
+
+====================
+    inp w
+    mul x 0
+    add x z
+    mod x 26
+    div z 1
+    add x 11
+    eql x w
+    eql x 0
+    mul y 0
+    add y 25
+    mul y x
+    add y 1
+    mul z y
+    mul y 0
+    add y w
+    add y 7
+    mul y x
+    add z y
+w=w3
+x = 1
+y = w3+7
+z = 26(w1+w2 + 40) + w3+7
+
+====================
+    inp w
+    mul x 0
+    add x z
+    mod x 26
+    div z 26
+    add x -14
+    eql x w
+    eql x 0
+    mul y 0
+    add y 25
+    mul y x
+    add y 1
+    mul z y
+    mul y 0
+    add y w
+    add y 2
+    mul y x
+    add z y
+si w3 = w4 + 7 //eql x w
+    w=w4
+    x = 0
+    y = 0
+    z = w1+w2 + 40
+sinon
+    w=w4
+    x = 1
+    y = w4+2
+    z = 26(w1+w2 + 40) + w4+2
+
+====================
+    inp w
+    mul x 0
+    add x z
+    mod x 26
+    div z 1
+    add x 12
+    eql x w
+    eql x 0
+    mul y 0
+    add y 25
+    mul y x
+    add y 1
+    mul z y
+    mul y 0
+    add y w
+    add y 11
+    mul y x
+    add z y
+si w3 = w4 + 7
+    w=w5
+    x = 1
+    y = w5+11
+    z = 26(w1+w2 + 40) + w5+11
+sinon
+    w=w5
+    x = 1
+    y = w5+11
+    z = 26(26(w1+w2 + 40) + w4+2) + w5+11
+
+====================
+    inp w
+    mul x 0
+    add x z
+    mod x 26
+    div z 26
+    add x -10
+    eql x w
+    eql x 0
+    mul y 0
+    add y 25
+    mul y x
+    add y 1
+    mul z y
+    mul y 0
+    add y w
+    add y 13
+    mul y x
+    add z y
+w=w6
+si w3 = w4 + 7
+    si w5+1 = w6
+        x = 0
+        y = 0
+        z = w1+w2 + 40
+    sinon
+        x = 1
+        y = w6+13
+        z = 26(w1+w2 + 40) + w6+13
+sinon
+    si w5+1 = w6
+        x = 0
+        y = 0
+        z = 26(w1+w2 + 40) + w4+2
+    sinon
+        x = 1
+        y = w6+13
+        z = 26(26(w1+w2 + 40) + w4+2) + w6+13
+
+====================
+inp w
+w=w7
+x = 1
+y = w7+9
+si w3 = w4 + 7
+    si w5+1 = w6
+        z = 26(w1+w2 + 40) + w7+9
+    sinon
+        z = 26(26(w1+w2 + 40) + w6+13) + w7+9
+sinon
+    si w5+1 = w6
+        z = 26(26(w1+w2 + 40) + w4+2) + w7+9
+    sinon
+        z = 26(26(26(w1+w2 + 40) + w4+2) + w6+13) + w7+9
+
+====================
+    inp w
+    mul x 0
+    add x z
+    mod x 26
+    div z 1
+    add x 11
+    eql x w
+    eql x 0
+    mul y 0
+    add y 25
+    mul y x
+    add y 1
+    mul z y
+    mul y 0
+    add y w
+    add y 9
+    mul y x
+    add z y
+w=w8
+x = 1
+y = w8+12
+si w3 = w4 + 7
+    si w5+1 = w6
+        z = 26(26(w1+w2 + 40) + w7+9) + w8+12
+    sinon
+        z = 26(26(26(w1+w2 + 40) + w6+13) + w7+9) + w8+12
+sinon
+    si w5+1 = w6
+        z = 26(26(26(w1+w2 + 40) + w4+2) + w7+9) + w8+12
+    sinon
+        z = 26(26(26(26(w1+w2 + 40) + w4+2) + w6+13) + w7+9) + w8+12
+
+====================
+    inp w
+    mul x 0
+    add x z
+    mod x 26
+    div z 26
+    add x -7
+    eql x w
+    eql x 0
+    mul y 0
+    add y 25
+    mul y x
+    add y 1
+    mul z y
+    mul y 0
+    add y w
+    add y 6
+    mul y x
+    add z y
+w=w9
+x = w8+5
+si w9 = W8+5
+    x = 0
+    y = 0
+sinon
+    x = 1
+    y = w9+6
+
+si w3 = w4 + 7
+    si w5+1 = w6
+        si w9 = W8+5
+            z = 26(w1+w2 + 40) + w7+9
+        sinon
+            z = 26(26(w1+w2 + 40) + w7+9) + w9+6
+    sinon
+        si w9 = W8+5
+            z = 26(26(w1+w2 + 40) + w6+13) + w7+9
+        sinon
+            z = 26(26(26(w1+w2 + 40) + w6+13) + w7+9) + w9+6
+sinon
+    si w5+1 = w6
+        si w9 = W8+5
+            z = 26(26(w1+w2 + 40) + w4+2) + w7+9
+        sinon
+            z = 26(26(26(w1+w2 + 40) + w4+2) + w7+9) + w9+6
+    sinon
+        si w9 = W8+5
+            z = 26(26(26(w1+w2 + 40) + w4+2) + w6+13) + w7+9
+        sinon
+            z = 26(26(26(26(w1+w2 + 40) + w4+2) + w6+13) + w7+9) + w9+6
+
+====================
+    inp w
+    mul x 0
+add x z
+mod x 26
+div z 26
+add x -7
+eql x w
+eql x 0
+    mul y 0
+add y 25
+mul y x
+add y 1
+mul z y
+mul y 0
+add y w
+add y 6
+mul y x
+add z y
+w=w10
+x=0
+y=0
+si w3 = w4 + 7
+    si w5+1 = w6
+        si w9 = W8+5
+            z = 26(w1+w2 + 40) + w7+9
+        sinon
+            z = 26(26(w1+w2 + 40) + w7+9) + w9+6
+    sinon
+        si w9 = W8+5
+            z = 26(26(w1+w2 + 40) + w6+13) + w7+9
+        sinon
+            z = 26(26(26(w1+w2 + 40) + w6+13) + w7+9) + w9+6
+sinon
+    si w5+1 = w6
+        si w9 = W8+5
+            z = 26(26(w1+w2 + 40) + w4+2) + w7+9
+        sinon
+            z = 26(26(26(w1+w2 + 40) + w4+2) + w7+9) + w9+6
+    sinon
+        si w9 = W8+5
+            z = 26(26(26(w1+w2 + 40) + w4+2) + w6+13) + w7+9
+        sinon
+            z = 26(26(26(26(w1+w2 + 40) + w4+2) + w6+13) + w7+9) + w9+6
+
+
+====================
+inp w
+mul x 0
+add x z
+mod x 26
+div z 26
+add x -2
+eql x w
+eql x 0
+mul y 0
+add y 25
+mul y x
+add y 1
+mul z y
+mul y 0
+add y w
+add y 11
+mul y x
+add z y
+
+====================
+inp w
+mul x 0
+add x z
+mod x 26
+div z 26
+add x -1
+eql x w
+eql x 0
+mul y 0
+add y 25
+mul y x
+add y 1
+mul z y
+mul y 0
+add y w
+add y 12
+mul y x
+add z y
+
+====================
+inp w
+mul x 0
+add x z
+mod x 26
+div z 26
+add x -4
+eql x w
+eql x 0
+mul y 0
+add y 25
+mul y x
+add y 1
+mul z y
+mul y 0
+add y w
+add y 3
+mul y x
+add z y
+
+====================
+inp w
+mul x 0
+add x z
+mod x 26
+div z 26
+add x -12
+eql x w
+eql x 0
+mul y 0
+add y 25
+mul y x
+add y 1
+mul z y
+mul y 0
+add y w
+add y 13
+mul y x
+add z y

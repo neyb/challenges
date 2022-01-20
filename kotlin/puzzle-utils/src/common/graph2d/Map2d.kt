@@ -1,6 +1,6 @@
 package common.graph2d
 
-import common.algo.*
+import common.*
 import kotlin.math.abs
 
 fun <T> Iterable<Node<T>>.toMap2d(): Map2d<T> = Map2d(associateBy({ it.coordinate2d }))

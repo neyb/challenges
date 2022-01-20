@@ -1,4 +1,4 @@
-package common.algo
+package common
 
 import java.util.*
 import java.util.Comparator.comparing
