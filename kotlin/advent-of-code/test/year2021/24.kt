@@ -25,7 +25,6 @@ class `24` {
         val z = 26.e * (Expression.Numeric.Input(0) + 11.e)
         val y = Expression.Numeric.Input(1) + 11.e
         val result = z + y
-        val expected = Expression.Numeric.Plus(listOf(z, y))
         expect(result)
             .its { toString() }.toEqual("((26) * ((input(0)) + (11))) + (input(1)) + (11)")
     }

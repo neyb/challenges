@@ -61,7 +61,7 @@ data class Path constructor(val from: Cave, val links: List<Link>) {
 class Graph(links: Set<Link>) {
     private val links: Map<Cave, Set<Link>> = mutableMapOf<Cave, MutableSet<Link>>().apply {
         val remaping = { link: Link ->
-            { node: Cave, links: MutableSet<Link>? -> (links ?: mutableSetOf()).apply { add(link) } }
+            { _: Cave, links: MutableSet<Link>? -> (links ?: mutableSetOf()).apply { add(link) } }
         }
 
         links.forEach {

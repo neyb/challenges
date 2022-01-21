@@ -2,7 +2,6 @@ package year2021.day23
 
 import common.*
 import common.`object`.*
-import common.algo.*
 import year2021.day23.Move.Companion.at
 
 fun main() = day(2021, 23, part1, part2)

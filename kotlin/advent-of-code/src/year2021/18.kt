@@ -41,6 +41,7 @@ class Snailfish(val element: Element) {
         directions.indexOfLast { it != direction }.let { indexLastRight ->
             if (indexLastRight < 0) return null
             else (take<Element>(indexLastRight).plus<Element>(direction)).let { from ->
+                @Suppress("UNCHECKED_CAST")
                 element[from].traverse(from).asSequence()
                     .filter { element[it] is Value }
                     .filter { it.directions.drop(from.depth).all { it != direction } }
@@ -48,6 +49,7 @@ class Snailfish(val element: Element) {
             }
         }
 
+    @Suppress("UNCHECKED_CAST")
     private fun nextExplodePath() =
         element.traverse().asSequence().firstOrNull { it.depth >= 4 && element[it] is Pair } as Path<Pair>?
 
@@ -63,6 +65,7 @@ class Snailfish(val element: Element) {
                         )
     }
 
+    @Suppress("UNCHECKED_CAST")
     private fun nextSplitPath() = element.traverse().asSequence()
         .firstOrNull { element[it].let { e -> e is Value && e.value >= 10 } } as Path<Value>?
 
@@ -128,6 +131,7 @@ sealed interface Element {
 data class Pair(val left: Element, val right: Element) : Element {
     override val magniture get() = 3 * left.magniture + 2 * right.magniture
 
+    @Suppress("UNCHECKED_CAST")
     override fun <E : Element> get(path: Path<E>) =
         if (path.isEmpty()) this as E
         else this[path.head()][path.tail()]
@@ -140,6 +144,7 @@ data class Pair(val left: Element, val right: Element) : Element {
         Right -> right
     }
 
+    @Suppress("UNCHECKED_CAST")
     override fun <E : Element> update(pathToUpdate: Path<E>, update: (E) -> Element) =
         if (pathToUpdate.isEmpty()) update(this as E)
         else when (pathToUpdate.head()) {
@@ -153,12 +158,14 @@ data class Pair(val left: Element, val right: Element) : Element {
 data class Value(val value: Int) : Element {
     override val magniture get() = value
 
+    @Suppress("UNCHECKED_CAST")
     override fun <E : Element> get(path: Path<E>) =
         if (path.isEmpty()) this as E
         else throw Exception("cannot get $path of leaf")
 
     override fun traverse(path: Path<Element>) = listOf(path)
 
+    @Suppress("UNCHECKED_CAST")
     override fun <E : Element> update(pathToUpdate: Path<E>, update: (E) -> Element) =
         if (pathToUpdate.isEmpty()) update(this as E)
         else throw Exception("$pathToUpdate not in leaf")

@@ -2,25 +2,21 @@ package year2021.day11
 
 import common.graph2d.*
 
-fun main() = common.day(2021, 11, part1(100), part2)
+fun main() = common.day(2021, 11, part1(100), part2) {
+    OctopusMap2d(useLines { Map2d.parseLinesWithItem(it) { it.digitToInt() } })
+}
 
 val part1 = { nbStep: Int ->
-    { lines: List<String> ->
-        lines.map { it.asSequence() }
-            .toOctopusMap()
-            .let {
-                (1..nbStep).fold(it to 0) { (currentMap, totalNbFlashes), step ->
-                    currentMap.nextStep().let { (nextMap, nbFlashes) ->
-                        nextMap to totalNbFlashes + nbFlashes
-                    }
-                }.second
+    { octopusMap: OctopusMap2d ->
+        (1..nbStep).fold(octopusMap to 0) { (currentMap, totalNbFlashes), _ ->
+            currentMap.nextStep().let { (nextMap, nbFlashes) ->
+                nextMap to totalNbFlashes + nbFlashes
             }
+        }.second
     }
 }
 
-val part2 = { lines: List<String> ->
-    val octopusMap = lines.map { it.asSequence() }.toOctopusMap()
-
+val part2 = { octopusMap: OctopusMap2d ->
     generateSequence(1) { it + 1 }
         .runningFold(octopusMap to 0) { (octopusMap), step -> octopusMap.nextStep().map to step }
         .first { (octopusMap) -> octopusMap.allBlinked() }
@@ -29,11 +25,7 @@ val part2 = { lines: List<String> ->
 
 typealias EnergyLevel = Int
 
-fun Iterable<Sequence<Char>>.toOctopusMap() = OctopusMap2d(map { it.map { it.digitToInt() }.toList() })
 class OctopusMap2d(private val map: Map2d<EnergyLevel>) {
-
-    constructor(lines: List<List<EnergyLevel>>) : this(Map2d.ofValueLines(lines))
-
     data class NextStepResult(val map: OctopusMap2d, val nbFlashes: Int)
 
     fun nextStep(): NextStepResult {

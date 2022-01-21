@@ -3,22 +3,19 @@ package common.graph2d
 import common.*
 import kotlin.math.abs
 
-fun <T> Iterable<Node<T>>.toMap2d(): Map2d<T> = Map2d(associateBy({ it.coordinate2d }))
-fun <T> Sequence<Node<T>>.toMap2d(): Map2d<T> = Map2d(associateBy({ it.coordinate2d }))
+class Map2d<T> private constructor(private val nodesByCoord: Map<Coordinate, Node<T>>) {
 
-class Map2d<T>(private val nodesByCoord: Map<Coordinate, Node<T>>) {
+    constructor(nodes: Sequence<Node<T>>) : this(nodes.associateBy { it.coordinate2d })
 
     companion object {
-        fun <T> ofValueLines(lines: Iterable<Iterable<T>>): Map2d<T> = lines.asSequence()
-            .flatMapIndexed { y, line -> line.mapIndexed { x, value -> Node(Coordinate(x, y), value) } }.toMap2d()
+        fun <T> parseLinesWithItem(lines: Sequence<String>, parseItem: (Char) -> T) =
+            parseLinesWithNodes(lines) { coord, c -> Node(coord, parseItem(c)) }
 
-        fun ofWeightLines(lines: Iterable<Iterable<Int>>): Map2d<Nothing?> = lines.asSequence()
-            .flatMapIndexed { y, line -> line.mapIndexed { x, weight -> Node(Coordinate(x, y), null, weight) } }
-            .toMap2d()
+        fun <T> parseLinesWithNodes(lines: Sequence<String>, parseNode: (Coordinate, Char) -> Node<T>) = lines
+            .flatMapIndexed { y, line -> line.mapIndexed { x, char -> parseNode(Coordinate(x, y), char) } }
+            .let(::Map2d)
     }
 
-
-    //    private val nodesByCoord = content.mapValues { (coord, value) -> Node(coord, value) }
     val nodes by lazy { nodesByCoord.values }
 
     val minX by lazy { nodes.minOf { it.coordinate2d.x } }
@@ -34,16 +31,16 @@ class Map2d<T>(private val nodesByCoord: Map<Coordinate, Node<T>>) {
     fun findNode(coordinate2d: Coordinate) = nodesByCoord[coordinate2d]
     operator fun contains(coordinate2d: Coordinate) = nodesByCoord.containsKey(coordinate2d)
 
-    fun filter(predicate: (Node<T>) -> Boolean) = nodes.asSequence().filter(predicate).toMap2d()
+    fun filter(predicate: (Node<T>) -> Boolean) = nodes.asSequence().filter(predicate).let(::Map2d)
 
     fun <R> map(
         mutation: (Node<T>) -> Node<R>,
-        mergeValues: (R, R) -> R = { a: R, b: R -> (throw Exception("conflict during node mapping : maybe pass a merge function ?")) }
+        mergeValues: (R, R) -> R = { _: R, _: R -> (throw Exception("conflict during node mapping : maybe pass a merge function ?")) }
                ): Map2d<R> = nodes.asSequence().map(mutation).groupingBy { it.coordinate2d }
         .reduce { coord, nodeA, nodeB -> Node(coord, mergeValues(nodeA.value, nodeB.value)) }.let(::Map2d)
 
     fun <R> mapValues(mutation: (T) -> R) =
-        nodes.asSequence().map { Node(it.coordinate2d, mutation(it.value)) }.toMap2d()
+        nodes.asSequence().map { Node(it.coordinate2d, mutation(it.value)) }.let(::Map2d)
 
     fun edit(mutation: (MutableMap<Coordinate, Node<T>>) -> Unit) = Map2d(nodesByCoord.toMutableMap().also(mutation))
 

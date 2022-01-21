@@ -11,7 +11,7 @@ fun main() = day(2021, 17, part1, part2) { //target area: x=119..176, y=-141..-8
 }
 
 
-val part1 = { (xRange, yRange): Target -> (1..abs(yRange.start) - 1).sum() }
+val part1 = { (_, yRange): Target -> (1..abs(yRange.start) - 1).sum() }
 
 val part2 = { target: Target ->
     val touchTarget = { speed: Speed ->

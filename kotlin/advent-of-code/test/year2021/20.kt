@@ -24,7 +24,7 @@ class `20` {
             ##..#
             ..#..
             ..###
-        """.trimIndent().lines().let(Input::parse)
+        """.trimIndent().lines().let { Input.parse(it) }
 
     @Test fun `part1 - given test`() {
         val count = part1(givenInput)

@@ -14,7 +14,7 @@ val part1 = { lines: List<String> ->
         .flatMapIndexed { y, line ->
             line.asSequence().mapIndexed { x, c -> Node(Coordinate(x, y), null, c.digitToInt()) }
         }
-        .toMap2d()
+        .let(::Map2d)
 
     val shortestPath = map.path()
 
@@ -32,7 +32,7 @@ val part2 = { lines: List<String> ->
 
     val map = duplicated
         .flatMapIndexed { y, l -> l.mapIndexed { x, i -> Node(Coordinate(x, y), null, i) } }
-        .toMap2d()
+        .let(::Map2d)
 
     val shortestPath = with(map) { shortestPath(start, end) } ?: throw Exception("no path found")
 

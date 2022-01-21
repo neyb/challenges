@@ -18,7 +18,7 @@ subprojects {
 
     dependencies {
         if (name != "puzzle-utils") implementation(project(":puzzle-utils"))
-        implementation("org.jetbrains.kotlinx:kotlinx-collections-immutable:0.3.5")
+//        implementation("org.jetbrains.kotlinx:kotlinx-collections-immutable:0.3.5")
 
         //        testImplementation(kotlin("test"))
         testImplementation("ch.tutteli.atrium:atrium-fluent-en_GB:0.17.0")
