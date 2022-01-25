@@ -1,7 +1,3 @@
-import kotlin.math.abs
-import kotlin.math.pow
-import kotlin.math.sqrt
-
 fun main() {
     val input = generateSequence(::readLine)
     val lines = input.toList()
@@ -16,10 +12,8 @@ typealias InclRange = Pair<Int, Int>
 //    fun distance(other:Point) = sqrt((x-other.x).toDouble().pow(2) + (y-other.y).toDouble().pow(2))
 //}
 
-fun <I, O> ((I) -> O).memoize(): ((I) -> O) {
-    val mem = mutableMapOf<I, O>()
-    return { input -> mem.computeIfAbsent(input, this) }
-}
+fun <I, O> ((I) -> O).memoize() =
+    with(mutableMapOf<I, O>()) { { input: I -> computeIfAbsent(input, this@memoize) } }
 
 fun rangeXorFor(numbers: List<Int>): ((InclRange) -> Int) {
     var previous = 0

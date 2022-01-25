@@ -1,4 +1,4 @@
-package year2015
+package year2015.day5
 
 import common.*
 
