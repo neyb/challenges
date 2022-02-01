@@ -1,4 +1,4 @@
-package common.graph2d
+package common.graph.graph2d
 
 @JvmRecord
 data class Coordinate(val x: Int, val y: Int) {

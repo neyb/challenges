@@ -1,4 +1,4 @@
-package common.graph2d
+package common.graph.graph2d
 
 @JvmRecord
 data class Node<out T>(val coordinate2d: Coordinate, val value: T, val weight:Int = 1) {

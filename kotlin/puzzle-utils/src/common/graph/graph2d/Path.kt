@@ -1,4 +1,4 @@
-package common.graph2d
+package common.graph.graph2d
 
 class Path<T>(val nodes: List<Node<T>>) {
     companion object {

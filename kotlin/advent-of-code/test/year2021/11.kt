@@ -2,7 +2,7 @@ package year2021
 
 import ch.tutteli.atrium.api.fluent.en_GB.toEqual
 import ch.tutteli.atrium.api.verbs.expect
-import common.graph2d.*
+import common.graph.graph2d.*
 import org.junit.jupiter.api.Test
 import year2021.day11.OctopusMap2d
 import year2021.day11.part1

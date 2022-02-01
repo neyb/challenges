@@ -10,7 +10,7 @@ inline fun <T : Any, ReduceResult : T, reified SubType : ReduceResult> Iterable<
         : List<T> = asSequence().joiningIfInstanceOf(subType, reduce).toList()
 
 inline fun <T : Any, ReduceResult : T, reified SubType : ReduceResult> Sequence<T>.joiningIfInstanceOf(
-    subType: KClass<SubType>,
+    @Suppress("UNUSED_PARAMETER") subType: KClass<SubType>,
     crossinline reduce: (ReduceResult, SubType) -> ReduceResult
                                                                                                       )
         : Sequence<T> {
@@ -25,7 +25,7 @@ inline fun <T, reified SubType : T> Sequence<T>.flattenInstanceOf(crossinline fl
     flatMap { if (it is SubType) flat(it) else sequenceOf(it) }
 
 inline fun <T : Any, reified SubType : T> Iterable<T>.flattenInstanceOf(
-    subType: KClass<SubType>,
+    @Suppress("UNUSED_PARAMETER") subType: KClass<SubType>,
     crossinline flat: (SubType) -> Iterable<T>
                                                                        ): List<T> =
     flatMap { if (it is SubType) flat(it) else listOf(it) }

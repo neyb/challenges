@@ -1,4 +1,4 @@
-package common.graph2d
+package common.graph.graph2d
 
 import common.*
 import kotlin.math.abs

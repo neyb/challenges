@@ -1,6 +1,6 @@
 package year2021.day11
 
-import common.graph2d.*
+import common.graph.graph2d.*
 
 fun main() = common.day(2021, 11, part1(100), part2) {
     OctopusMap2d(useLines { Map2d.parseLinesWithItem(it) { it.digitToInt() } })

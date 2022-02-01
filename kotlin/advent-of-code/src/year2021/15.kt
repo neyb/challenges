@@ -1,7 +1,7 @@
 package year2021.day15
 
 import common.*
-import common.graph2d.*
+import common.graph.graph2d.*
 
 fun main() = day(2021, 15, part1, part2)
 

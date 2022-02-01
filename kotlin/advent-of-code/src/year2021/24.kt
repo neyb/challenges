@@ -79,12 +79,10 @@ sealed interface Operand { //    fun value(context: RunContext): Int
 
     enum class Variable : Operand {
         w, x, y, z;
-
-        //        override fun value(context: RunContext) = context[this]
     }
 
     class Literal(val value: Int) : Operand {
-        override fun toString() = value.toString() //        override fun value(context: RunContext) = value
+        override fun toString() = value.toString()
     }
 }
 

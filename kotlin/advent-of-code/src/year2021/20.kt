@@ -1,7 +1,7 @@
 package year2021.day20
 
 import common.*
-import common.graph2d.*
+import common.graph.graph2d.*
 import java.util.Comparator.comparing
 
 fun main() = day(2021, 20, part1, part2) { Input.parse(readLines()) }

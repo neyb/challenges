@@ -1,4 +1,4 @@
-fun main(args : Array<String>) {
+fun main() {
     val input = generateSequence(::readLine)
     val lines = input.toList()
 
