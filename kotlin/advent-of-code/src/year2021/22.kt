@@ -4,17 +4,18 @@ import common.*
 import kotlin.math.max
 import kotlin.math.min
 
-fun main() = day(2021, 22, part1, part2) { readText().parseInput() }
+fun main() = run().forEach(::println)
+val run = { day(2021, 22, part1, part2) { readText().parseInput() } }
 
 typealias Input = List<Pair<Cuboid, Boolean>>
 
 fun String.parseInput(): Input = split("\n").toList()
     .filter { it.isNotBlank() }
     .map {
-    val regex = Regex("""(on|off) (.*)""")
-    val (_, onoff, cube) = regex.matchEntire(it)?.groupValues ?: throw Exception("cannot parse $it as a cube")
-    Cuboid.parse(cube) to (onoff == "on")
-}
+        val regex = Regex("""(on|off) (.*)""")
+        val (_, onoff, cube) = regex.matchEntire(it)?.groupValues ?: throw Exception("cannot parse $it as a cube")
+        Cuboid.parse(cube) to (onoff == "on")
+    }
 
 val part1 = { input: Input ->
     input
@@ -62,7 +63,10 @@ data class Cuboid(val xRange: IntRange, val yRange: IntRange, val zRange: IntRan
 
 
     operator fun minus(other: Cuboid): Set<Cuboid> {
-        fun Cuboid.split(getRange: Cuboid.() -> IntRange, copyWithRange: Cuboid.(IntRange) -> Cuboid): Pair<Set<Cuboid>, Cuboid> {
+        fun Cuboid.split(
+            getRange: Cuboid.() -> IntRange,
+            copyWithRange: Cuboid.(IntRange) -> Cuboid
+                        ): Pair<Set<Cuboid>, Cuboid> {
             val range = getRange()
             val otherRange = other.getRange()
 

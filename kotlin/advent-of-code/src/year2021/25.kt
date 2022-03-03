@@ -3,9 +3,8 @@ package year2021.day25
 import common.*
 import common.`object`.*
 
-fun main() = day(2021, 25, part1) {
-    RegionState.parse(readLines())
-}
+fun main() = run().forEach(::println)
+val run = { day(2021, 25, part1) { RegionState.parse(readLines()) } }
 
 val part1 = { regionState: RegionState ->
     generateSequence(regionState) { it.next() }

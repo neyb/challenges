@@ -1,8 +1,9 @@
 package year2015.day1
 
-import common.day
+import common.*
 
-fun main() = day(2015, 1, ::part1, ::part2)
+fun main() = run().forEach(::println)
+fun run() = day(2015, 1, ::part1, ::part2)
 
 fun part1(lines: List<String>) = lines.floorMoves().reduce(Int::plus)
 

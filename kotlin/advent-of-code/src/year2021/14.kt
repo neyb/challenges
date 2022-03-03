@@ -2,7 +2,8 @@ package year2021.day14
 
 import common.*
 
-fun main() = day(2021, 14, run(10), run(40))
+fun main() = run().forEach(::println)
+val run = { day(2021, 14, `for`(10), `for`(40)) }
 
 // polymer is just pair (string of 2 chars) counts & last character (being a string of 1 char)
 typealias Polymer = Map<String, Long>
@@ -15,7 +16,7 @@ fun Polymer.score() = asSequence()
     .fold(0L) { nb, e -> nb + e.value }
     .values.run { maxOf { it } - minOf { it } }
 
-val run = { nbStep: Int ->
+val `for` = { nbStep: Int ->
     { lines: List<String> ->
         val (startPolymerLines, insertionsLines) = lines.split { it.isBlank() }
 

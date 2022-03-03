@@ -2,16 +2,24 @@ package common
 
 import java.io.File
 
-fun day(year: Int, day: Int, vararg parts: (lines: List<String>) -> Any?) = day(year, day, *parts) { readLines() }
+fun <Return> day(year: Int, day: Int, vararg parts: (lines: List<String>) -> Return): Sequence<Return> =
+    day(year, day, *parts) { readLines() }
 
-fun <Parsed> day(year: Int, day: Int, vararg parts: (lines: Parsed) -> Any?, parse: File.() -> Parsed) {
+fun <Return, Parsed> day(
+    year: Int,
+    day: Int,
+    vararg parts: (lines: Parsed) -> Return,
+    parse: File.() -> Parsed
+                        ): Sequence<Return> {
     val parsed = fileOfDay(year, day).run { parse() }
-    parts.forEach { println(it(parsed)) }
+    return parts.asSequence().map { it(parsed) }
 }
 
 private fun linesOfDay(year: Int, day: Int) = fileOfDay(year, day).readLines()
 
-private fun fileOfDay(year: Int, day: Int) = File("advent-of-code/inputs/$year/$day.txt")
+val inputsDir = (File("advent-of-code").takeIf(File::exists) ?: File(".")).resolve("inputs")
+private fun fileOfDay(year: Int, day: Int) =
+    inputsDir.resolve("$year/$day.txt")
 
 fun <T> Iterable<T>.split(isSplitter: (T) -> Boolean): List<List<T>> =
     fold(mutableListOf(mutableListOf())) { list: MutableList<MutableList<T>>, item ->

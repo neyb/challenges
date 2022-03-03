@@ -1,12 +1,12 @@
 package year2021.day18
 
+import common.*
 import year2021.day18.Direction.Left
 import year2021.day18.Direction.Right
-import common.*
 
-fun main() = day(2021, 18, part1, part2) {
-    readLines().map(Snailfish.Companion::parse)
-}
+fun main() = run().forEach(::println)
+
+val run = { day(2021, 18, part1, part2) { readLines().map(Snailfish.Companion::parse) } }
 
 val part1 = { snailfishes: List<Snailfish> ->
     snailfishes.reduce(Snailfish::plus).magnitude

@@ -2,7 +2,8 @@ package year2021.day13
 
 import common.*
 
-fun main() = day(2021, 13, part1, part2)
+fun main() = run().forEach(::println)
+val run = { day(2021, 13, part1, part2) }
 
 enum class FoldDir {
     X, Y;
@@ -44,10 +45,9 @@ val part2 = { lines: List<String> ->
     val maxX = folded.maxOf { it.first }
     val maxY = folded.maxOf { it.second }
 
-    (0..maxY).forEach { y ->
-        println((0..maxX).map { x -> if ((x to y) in folded) "X" else " " }.joinToString(""))
-    }
-
+    (0..maxY).asSequence()
+        .map { y -> (0..maxX).map { x -> if ((x to y) in folded) "X" else " " }.joinToString("") }
+        .joinToString("\n")
 }
 
 private fun fold(

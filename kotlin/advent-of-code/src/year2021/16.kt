@@ -5,9 +5,13 @@ import common.io.*
 import kotlin.math.max
 import kotlin.math.min
 
-fun main() = day(2021, 16, part1, part2) {
-    bufferedReader().use { reader ->
-        PacketReader(reader.toSequence().filter { it != '\n' }.flatMap(hexaToBits)).readAllPackets()
+fun main() = run().forEach(::println)
+
+val run = {
+    day(2021, 16, part1, part2) {
+        bufferedReader().use { reader ->
+            PacketReader(reader.toSequence().filter { it != '\n' }.flatMap(hexaToBits)).readAllPackets()
+        }
     }
 }
 

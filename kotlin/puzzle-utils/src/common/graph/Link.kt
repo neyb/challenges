@@ -1,17 +1,16 @@
 package common.graph
 
-class Link<Id, Data>(val edge1: Node<Id, Data>, val edge2: Node<Id, Data>, val weight: Int = 1) {
-    fun edgeFrom(edge: Node<Id, Data>) = when (edge) {
-        edge1 -> edge2
-        edge2 -> edge1
-        else -> throw Exception("$edge not in $this")
-    }
+import common.`object`.*
 
-    operator fun contains(edge: Node<Id, Data>) = edge == edge1 || edge == edge2
+class Link<Id, Data>(val from: Node<Id, Data>, val to: Node<Id, Data>, val weight: Int = 1) {
+    fun <NewData> mapNodes(mutation: (Node<Id, Data>) -> Node<Id, NewData>) =
+        Link(mutation(from), mutation(to), weight)
 
-    override fun hashCode() = edge1.hashCode() + edge2.hashCode()
-    override fun equals(other: Any?) =
-        other is Link<*, *> && ((edge1 == other.edge1 && edge2 == other.edge2) || (edge1 == other.edge2 && edge2 == other.edge1))
+    fun <NewData> mapData(mutation: (Data) -> NewData) = Link(from.mapData(mutation), to.mapData(mutation), weight)
 
-    override fun toString() = "$edge1 <-[$weight]-> $edge2"
+    operator fun contains(edge: Node<Id, Data>) = edge == from || edge == to
+
+    override fun hashCode() = hash(from, to)
+    override fun equals(other: Any?) = eq(other, { from }, { to })
+    override fun toString() = "$from <-[$weight]-> $to"
 }

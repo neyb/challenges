@@ -3,7 +3,8 @@ package year2021.day10
 import common.day
 import java.util.*
 
-fun main() = day(2021, 10, part1, part2)
+fun main() = year2021.day8.run().forEach(::println)
+val run = { day(2021, 10, part1, part2) }
 
 sealed interface Result {
     val keepTaking: Boolean

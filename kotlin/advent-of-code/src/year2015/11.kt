@@ -1,9 +1,7 @@
 package year2015.day11
 
-fun main() {
-    println(part1())
-    println(part2())
-}
+fun main() = run().forEach(::println)
+val run = { sequenceOf(part1(), part2()) }
 
 val part1 = {
     generateSequence(Password("hxbxwxba"), Password::next)
@@ -13,12 +11,12 @@ val part1 = {
 val part2 = {
     generateSequence(part1(), Password::next)
         .drop(1)
-        .first{it.isValid()}
+        .first { it.isValid() }
 }
 
 @JvmInline
 value class Password private constructor(private val chars: CharArray) {
-    constructor(string:String):this(string.toCharArray())
+    constructor(string: String) : this(string.toCharArray())
 
     private fun Char.next() = if (this == 'z') 'a' else inc()
 

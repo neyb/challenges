@@ -1,10 +1,11 @@
 package year2021.day5
 
-import common.day
+import common.*
 import kotlin.math.max
 import kotlin.math.min
 
-fun main() = day(2021, 5, commonRun { it.pointsPart1 }, commonRun { it.pointsPart2 })
+fun main() = run().forEach(::println)
+val run = { day(2021, 5, commonRun { it.pointsPart1 }, commonRun { it.pointsPart2 }) }
 
 data class Vent(val from: Point, val to: Point) {
     companion object {

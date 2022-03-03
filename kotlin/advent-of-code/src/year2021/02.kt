@@ -1,8 +1,9 @@
 package year2021.day2
 
-import common.day
+import common.*
 
-fun main() = day(2021, 2, { run(it, Submarine::part1Move) }, { run(it, Submarine::part2Move) })
+fun main() = run().forEach(::println)
+val run = { day(2021, 2, { run(it, Submarine::part1Move) }, { run(it, Submarine::part2Move) }) }
 
 data class Submarine(val x: Int = 0, val y: Int = 0, val aim: Int = 0) {
     fun part1Move(op: String, v: Int) = when (op) {

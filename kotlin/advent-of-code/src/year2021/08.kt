@@ -2,7 +2,8 @@ package year2021.day8
 
 import common.day
 
-fun main() = day(2021, 8, part1, part2)
+fun main() = run().forEach(::println)
+val run = { day(2021, 8, part1, part2) }
 
 data class Signal(val segments: Set<Char>) {
     companion object {

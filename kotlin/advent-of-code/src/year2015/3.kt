@@ -2,7 +2,8 @@ package year2015.day3
 
 import common.day
 
-fun main() = day(2015, 3, part1, part2)
+fun main() = run().forEach(::println)
+fun run() = day(2015, 3, part1, part2)
 
 val part1 = { lines: List<String> ->
     lines.asSequence()

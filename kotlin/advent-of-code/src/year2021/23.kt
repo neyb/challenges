@@ -4,13 +4,13 @@ import common.*
 import common.`object`.*
 import year2021.day23.Move.Companion.at
 
-fun main() = day(2021, 23, part1, part2)
+fun main() = run().forEach(::println)
+
+val run = { day(2021, 23, part1, part2) }
 
 val part1 = { lines: List<String> ->
     val gameState = GameState.parse(lines)
-    val solution = findBestSolution(gameState)
-    println(solution.historic().joinToString("\n\n"))
-    solution.energyConsumed
+    findBestSolution(gameState).energyConsumed
 }
 
 val part2 = { lines: List<String> ->
@@ -18,9 +18,7 @@ val part2 = { lines: List<String> ->
         add(3, "  #D#C#B#A#")
         add(4, "  #D#B#A#C#")
     })
-    val solution = findBestSolution(gameState)
-    println(solution.historic().joinToString("\n\n"))
-    solution.energyConsumed
+    findBestSolution(gameState).energyConsumed
 }
 
 fun findBestSolution(state: GameState): GameState = explore(state) { it.exploreNext() }
@@ -41,6 +39,7 @@ class Board private constructor(
         })
 }
 
+// optimise #3 : fastplus on moves
 class GameState private constructor(
     private val board: Board,
     private val moves: Moves,
@@ -143,6 +142,7 @@ class GameState private constructor(
             .onEach { visitedNodes.add(it.to) }
     }
 
+    // to optimise #1 : use cache for amphipod that didn't move
     private fun fastestInGhostMove(amphipod: Amphipod) = inGhostMoves(amphipod).firstOrNull()
 
     private fun inGhostMoves(amphipod: Amphipod) = availableGhostPaths(nodeOf(amphipod))
@@ -200,7 +200,8 @@ class Moves private constructor(
         ?.key
 
     operator fun plus(move: Move) = Moves(
-        moves + move,
+//        moves.fastPlus(move),
+                moves + move,
         amphipods,
         energyConsumed + move.energyCost(),
         amphipodsNode + (move.amphipod to move.path.to),
@@ -239,6 +240,7 @@ class Link(val edge1: Node, val edge2: Node) {
         else false
 }
 
+// to optimise #2 : use common.collections.plus
 data class Path(val from: Node, val links: List<Link>) {
     companion object {
         fun from(node: Node) = Path(node, emptyList())

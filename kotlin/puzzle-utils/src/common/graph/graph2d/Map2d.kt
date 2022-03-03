@@ -1,88 +1,51 @@
 package common.graph.graph2d
 
-import common.*
-import kotlin.math.abs
+import common.graph.*
 
-class Map2d<T> private constructor(private val nodesByCoord: Map<Coordinate, Node<T>>) {
+typealias Graph<T> = common.graph.Graph<Coordinate, T>
+typealias Node<T> = common.graph.Node<Coordinate, T>
+typealias Link<T> = common.graph.Link<Coordinate, T>
 
-    constructor(nodes: Sequence<Node<T>>) : this(nodes.associateBy { it.coordinate2d })
-
+class Map2d<T> private constructor(val graph: Graph<T>) : Graph<T> by graph {
     companion object {
-        fun <T> parseLinesWithItem(lines: Sequence<String>, parseItem: (Char) -> T) =
-            parseLinesWithNodes(lines) { coord, c -> Node(coord, parseItem(c)) }
+        fun <T> ofNodes(nodes: Collection<Node<T>>, withDiagonals: Boolean, linksWeight: Int = 1): Map2d<T> =
+            ofNodes(nodes.associateByTo(HashMap(nodes.size)) { it.id }, withDiagonals, linksWeight)
 
-        fun <T> parseLinesWithNodes(lines: Sequence<String>, parseNode: (Coordinate, Char) -> Node<T>) = lines
-            .flatMapIndexed { y, line -> line.mapIndexed { x, char -> parseNode(Coordinate(x, y), char) } }
-            .let(::Map2d)
-    }
-
-    val nodes by lazy { nodesByCoord.values }
-
-    val minX by lazy { nodes.minOf { it.coordinate2d.x } }
-    val minY by lazy { nodes.minOf { it.coordinate2d.y } }
-    val maxX by lazy { nodes.maxOf { it.coordinate2d.x } }
-    val maxY by lazy { nodes.maxOf { it.coordinate2d.y } }
-
-    fun findValue(coordinate2d: Coordinate) = nodesByCoord[coordinate2d]?.value
-    fun getValue(coordinate2d: Coordinate) =
-        nodesByCoord[coordinate2d]?.value ?: throw Exception("$coordinate2d not in map")
-
-    fun getNode(coordinate2d: Coordinate) = findNode(coordinate2d) ?: throw Exception("$coordinate2d not in map")
-    fun findNode(coordinate2d: Coordinate) = nodesByCoord[coordinate2d]
-    operator fun contains(coordinate2d: Coordinate) = nodesByCoord.containsKey(coordinate2d)
-
-    fun filter(predicate: (Node<T>) -> Boolean) = nodes.asSequence().filter(predicate).let(::Map2d)
-
-    fun <R> map(
-        mutation: (Node<T>) -> Node<R>,
-        mergeValues: (R, R) -> R = { _: R, _: R -> (throw Exception("conflict during node mapping : maybe pass a merge function ?")) }
-               ): Map2d<R> = nodes.asSequence().map(mutation).groupingBy { it.coordinate2d }
-        .reduce { coord, nodeA, nodeB -> Node(coord, mergeValues(nodeA.value, nodeB.value)) }.let(::Map2d)
-
-    fun <R> mapValues(mutation: (T) -> R) =
-        nodes.asSequence().map { Node(it.coordinate2d, mutation(it.value)) }.let(::Map2d)
-
-    fun edit(mutation: (MutableMap<Coordinate, Node<T>>) -> Unit) = Map2d(nodesByCoord.toMutableMap().also(mutation))
-
-    fun area(
-        startingPoint: Coordinate, withDiagonal: Boolean = false, linkFilter: (from: Node<T>, to: Node<T>) -> Boolean
-            ) = areaFrom(
-        setOf(startingPoint), withDiagonal, linkFilter
-                        )
-
-    private tailrec fun areaFrom(
-        froms: Set<Coordinate>,
-        withDiagonal: Boolean,
-        linkFilter: (from: Node<T>, to: Node<T>) -> Boolean,
-        visited: Set<Coordinate> = froms,
-                                ): Set<Node<T>> {
-
-        val next = froms.asSequence().flatMap { from -> from.neightbours(withDiagonal).map { from to it } }
-            .filter { (_, to) -> to !in visited }.filter { (_, to) -> to in this }
-            .filter { (from, to) -> linkFilter(getNode(from), getNode(to)) }.map { (_, to) -> to }.toSet()
-
-        return if (next.isEmpty()) visited.asSequence().map { getNode(it) }.toSet()
-        else areaFrom(next, withDiagonal, linkFilter, visited + next)
-    }
-
-    fun shortestPath(
-        start: Coordinate,
-        end: Coordinate,
-        heuristic: (Node<T>) -> Int = { it.coordinate2d.run { abs(y - end.y) + abs(x - end.x) } },
-                    ): Path<T>? {
-        val bestPathTo = hashMapOf<Coordinate, Path<T>>()
-        return explore(Path.from(getNode(start))) { path -> path.end.neightbours().map { path + it } }
-            .minimizing { it.weight(heuristic) }
-            .filterExploration { path -> bestPathTo[path.end.coordinate2d]?.let { it == path } ?: true }
-            .onEach { path ->
-                val alreadyExistingPath = bestPathTo[path.end.coordinate2d]
-                if (alreadyExistingPath == null || alreadyExistingPath.weight() > path.weight())
-                    bestPathTo[path.end.coordinate2d] = path
+        fun <T> ofNodes(nodesById: Map<Coordinate, Node<T>>, withDiagonals: Boolean, linksWeight: Int = 1): Map2d<T> {
+            val content = nodesById.mapValues { (_, node) ->
+                val links = node.id.neightbours(withDiagonals)
+                    .mapNotNull(nodesById::get)
+                    .map { Link(node, it, linksWeight) }
+                    .toCollection(ArrayList(if (withDiagonals) 8 else 4))
+                NodeAndLinks(node, links)
             }
-            .firstOrNull { it.end.coordinate2d == end }
+            return Map2d(Graph(content))
+        }
+
+        fun <T> withoutLinks(nodesById: Map<Coordinate, Node<T>>): Map2d<T> =
+            Map2d(Graph(nodesById.mapValues { (_, node) -> NodeAndLinks(node, emptyList()) }))
+
+        fun <T> parseLinesWithItem(lines: Sequence<String>, withDiagonals: Boolean, parseItem: (Char) -> T) =
+            parseLinesWithNodes(lines, withDiagonals) { coord, c -> Node(coord, parseItem(c)) }
+
+        fun <T> parseLinesWithNodes(
+            lines: Sequence<String>,
+            withDiagonals: Boolean,
+            parseNode: (Coordinate, Char) -> Node<T>
+                                   ) = lines
+            .flatMapIndexed { y, line -> line.mapIndexed { x, char -> parseNode(Coordinate(x, y), char) } }
+            .let { ofNodes(it.toList(), withDiagonals) }
     }
 
-    private fun Node<T>.neightbours(withDiagonal: Boolean = false) =
-        coordinate2d.neightbours(withDiagonal).mapNotNull { findNode(it) }
-}
+    val minX by lazy { graph.nodes.minOf { it.id.x } }
+    val minY by lazy { graph.nodes.minOf { it.id.y } }
+    val maxX by lazy { graph.nodes.maxOf { it.id.x } }
+    val maxY by lazy { graph.nodes.maxOf { it.id.y } }
 
+    override fun <R> mapValues(mutation: (T) -> R) = Map2d(graph.mapValues(mutation))
+
+    fun edit(mutation: (MutableMap<Coordinate, Node<T>>) -> Unit): Map2d<T> =
+        graph.nodes.associateByTo(mutableMapOf()) { it.id }
+            .also(mutation)
+            .let { updatedNodesById -> Map2d(mapNodes { updatedNodesById[it.id]!! }) }
+}

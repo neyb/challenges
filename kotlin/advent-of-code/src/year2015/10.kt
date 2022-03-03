@@ -1,9 +1,7 @@
 package year2015.day10
 
-fun main() {
-    println(part1())
-    println(part2())
-}
+fun main() = run().forEach(::println)
+val run = { sequenceOf(part1(), part2()) }
 
 val input = "1321131112"
 val part1 = {

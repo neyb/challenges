@@ -5,10 +5,14 @@ import common.matrix.*
 import java.rmi.UnexpectedException
 import kotlin.math.abs
 
-fun main() = day(2021, 19, part1, part2) {
-    readLines().split { it.isBlank() }
-        .map(Scanner::parse)
-        .let(World::from)
+fun main() = run().forEach(::println)
+
+val run = {
+    day(2021, 19, part1, part2) {
+        readLines().split { it.isBlank() }
+            .map(Scanner::parse)
+            .let(World::from)
+    }
 }
 
 val part1 = { world: World ->

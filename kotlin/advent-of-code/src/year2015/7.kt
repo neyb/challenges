@@ -4,9 +4,11 @@ import common.*
 import year2015.day7.Expression.Literal
 import year2015.day7.Expression.Variable
 
-fun main() = day(2015, 7, part1, part2) {
+fun main() = run().forEach(::println)
+fun run() = day(2015, 7, part1, part2) {
     useLines { it.map { Instruction.parse(it) }.toList() }
 }
+
 
 val part1 = { instructions: List<Instruction> ->
     instructions.fold(Context.init, Context::take)["a"]
@@ -20,10 +22,9 @@ val part2 = { instructions: List<Instruction> ->
 class Instruction(val expr: Expression, val assignTo: Variable) {
     companion object {
         private val r = Regex("""(?<expr>.*) -> (?<var>.*)""")
-        fun parse(s: String) =
-            r.matchEntire(s)!!.groupValues.let { (_, expr, variableName) ->
-                Instruction(Expression.parse(expr), Variable(variableName))
-            }
+        fun parse(s: String) = r.matchEntire(s)!!.groupValues.let { (_, expr, variableName) ->
+            Instruction(Expression.parse(expr), Variable(variableName))
+        }
     }
 }
 

@@ -2,7 +2,8 @@ package year2015.day2
 
 import common.day
 
-fun main() = day(2015, 2, ::part1, ::part2)
+fun main() = run().forEach(::println)
+fun run() = day(2015, 2, ::part1, ::part2)
 
 fun part1(lines: List<String>) = lines
     .map { it.split("x").map(String::toInt) }

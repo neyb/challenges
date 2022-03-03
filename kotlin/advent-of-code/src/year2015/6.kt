@@ -3,7 +3,8 @@ package year2015.day6
 import common.*
 import java.lang.Integer.max
 
-fun main() = day(2015, 6, part1, part2) {
+fun main() = run().forEach(::println)
+fun run() = day(2015, 6, part1, part2) {
     val regex = Regex("""(turn on|turn off|toggle) (.*) through (.*)""")
 
     useLines {

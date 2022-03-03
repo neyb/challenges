@@ -6,32 +6,29 @@ import java.util.*
 import kotlin.math.max
 import kotlin.math.min
 
-fun main() = day(2021, 24, part1, part2) {
-    readLines().map(Instruction::parse).let(::Alu)
+fun main() = run().forEach(::println)
+val run = {
+    day(2021, 24, part1, part2) {
+        readLines().map(Instruction::parse).let(::Alu)
+    }
 }
 
 val part1 = { alu: Alu ->
     val analyseResult = alu.analyze()
     val conditionforPotential = analyseResult.conditionforPotential(Operand.Variable.z, 0)
-    (0..13).asSequence()
-        .map { conditionforPotential.possibleRangeFor(it) }
+    (0..13).asSequence().map { conditionforPotential.possibleRangeFor(it) }
         .fold(sequenceOf(emptyList<Int>())) { seq, range ->
             seq.flatMap { modelValues -> range.down().map { modelValues + it.toInt() } }
-        }
-        .map(::Model)
-        .first { analyseResult.calc(it, Operand.Variable.z) == 0 }
+        }.map(::Model).first { analyseResult.calc(it, Operand.Variable.z) == 0 }
 }
 
 val part2 = { alu: Alu ->
     val context = alu.analyze()
     val conditionforPotential = context.conditionforPotential(Operand.Variable.z, 0)
-    (0..13).asSequence()
-        .map { conditionforPotential.possibleRangeFor(it) }
+    (0..13).asSequence().map { conditionforPotential.possibleRangeFor(it) }
         .fold(sequenceOf(emptyList<Int>())) { seq, range ->
             seq.flatMap { modelValues -> range.up().map { modelValues + it.toInt() } }
-        }
-        .map(::Model)
-        .first { context.calc(it, Operand.Variable.z) == 0 }
+        }.map(::Model).first { context.calc(it, Operand.Variable.z) == 0 }
 }
 
 class Alu(private val instructions: List<Instruction>) {
@@ -111,8 +108,7 @@ interface AnalyseResult : Formatable {
                     Operand.Variable.x to 0.e,
                     Operand.Variable.y to 0.e,
                     Operand.Variable.z to 0.e
-                     ),
-                0
+                     ), 0
                               )
         }
 
@@ -135,10 +131,8 @@ interface AnalyseResult : Formatable {
         override fun calc(model: Model, variable: Operand.Variable) = get(variable).calc(model)
 
         override fun conditionforPotential(variable: Operand.Variable, value: Int) = when {
-            get(variable).estimation == value.r ->
-                true.e
-            value !in get(variable).estimation ->
-                false.e
+            get(variable).estimation == value.r -> true.e
+            value !in get(variable).estimation -> false.e
             else -> get(variable) eql value.e
         }.simplify()
 
@@ -190,8 +184,13 @@ interface AnalyseResult : Formatable {
         }
 
         override fun conditionforPotential(variable: Operand.Variable, value: Int) =
-            (condition and ifTrue.conditionforPotential(variable, value)) or
-                    (condition.not() and ifFalse.conditionforPotential(variable, value))
+            (condition and ifTrue.conditionforPotential(
+                variable,
+                value
+                                                       )) or (condition.not() and ifFalse.conditionforPotential(
+                variable,
+                value
+                                                                                                               ))
 
         override fun format(indent: Int) = """
 if(${condition.format()}){
@@ -301,10 +300,9 @@ interface Expression<T, Estimate> {
                 expressions.size == 1 -> expressions[0]
                 expressions.any { it is Plus } -> Plus(expressions.flattenInstanceOf(Plus::class) { it.expressions }).simplify()
                 expressions.any { it.estimation == 0.r } -> Plus(expressions.filter { it.estimation != 0.r }).simplify()
-                expressions.count { it is Literal } > 1 -> Plus(
-                    expressions.joiningIfInstanceOf(Literal::class) { l1, l2 ->
-                        Literal(l1.value + l2.value)
-                    }).simplify()
+                expressions.count { it is Literal } > 1 -> Plus(expressions.joiningIfInstanceOf(Literal::class) { l1, l2 ->
+                    Literal(l1.value + l2.value)
+                }).simplify()
                 else -> this
             }
 
@@ -343,10 +341,9 @@ interface Expression<T, Estimate> {
 
             private fun remove1s() = Mult(expressions.filter { it.estimation != 1.r })
 
-            private fun mergeLiterals() = Mult(
-                (sequenceOf(expressions.asSequence().filterIsInstance<Literal>()
-                                .fold(Literal.one) { a, b -> Literal(a.value * b.value) }) + expressions.asSequence()
-                    .filter { it !is Literal }).toList()
+            private fun mergeLiterals() = Mult((sequenceOf(expressions.asSequence().filterIsInstance<Literal>()
+                                                               .fold(Literal.one) { a, b -> Literal(a.value * b.value) }) + expressions.asSequence()
+                .filter { it !is Literal }).toList()
                                               )
 
             override fun toString() = expressions.joinToString(" * ") { "($it)" }

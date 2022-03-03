@@ -4,12 +4,16 @@ import common.*
 import kotlin.math.abs
 import kotlin.math.max
 
-fun main() = day(2021, 17, part1, part2) { //target area: x=119..176, y=-141..-84
-    val matchEntire = Regex("""target area: x=([\d-]+)..([\d-]+), y=([\d-]+)..([\d-]+)""").matchEntire(readLines()[0])
-    val (_, minX, maxX, minY, maxY) = matchEntire!!.groupValues
-    Target(minX.toInt()..maxX.toInt(), minY.toInt()..maxY.toInt())
-}
+fun main() = run().forEach(::println)
 
+val run = {
+    day(2021, 17, part1, part2) { //target area: x=119..176, y=-141..-84
+        val matchEntire =
+            Regex("""target area: x=([\d-]+)..([\d-]+), y=([\d-]+)..([\d-]+)""").matchEntire(readLines()[0])
+        val (_, minX, maxX, minY, maxY) = matchEntire!!.groupValues
+        Target(minX.toInt()..maxX.toInt(), minY.toInt()..maxY.toInt())
+    }
+}
 
 val part1 = { (_, yRange): Target -> (1..abs(yRange.start) - 1).sum() }
 

@@ -10,7 +10,7 @@ import year2021.day11.part1
 class `11` {
 
     fun octopusMapOf(s: String) =
-        OctopusMap2d(Map2d.parseLinesWithItem(s.trimIndent().lineSequence()) { it.digitToInt() })
+        OctopusMap2d(Map2d.parseLinesWithItem(s.trimIndent().lineSequence(), false) { it.digitToInt() })
 
     @Test fun `part 1 given test step 1`() {
         expect(

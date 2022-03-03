@@ -1,8 +1,9 @@
 package year2021.day9
 
-import common.day
+import common.*
 
-fun main() = day(2021, 9, part1, part2)
+fun main() = run().forEach(::println)
+val run = { day(2021, 9, part1, part2) }
 
 typealias Height = Int
 

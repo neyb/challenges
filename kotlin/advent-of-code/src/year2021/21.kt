@@ -2,9 +2,12 @@ package year2021.day21
 
 import common.*
 
-fun main() = day(2021, 21, part1, part2) {
-    val lines = readLines()
-    lines[0].last().digitToInt() to lines[1].last().digitToInt()
+fun main() = run().forEach(::println)
+val run = {
+    day(2021, 21, part1, part2) {
+        val lines = readLines()
+        lines[0].last().digitToInt() to lines[1].last().digitToInt()
+    }
 }
 
 typealias Input = Pair<Int, Int>

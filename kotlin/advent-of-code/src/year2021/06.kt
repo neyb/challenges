@@ -1,9 +1,10 @@
 package year2021.day6
 
-import common.day
+import common.*
 import kotlin.math.max
 
-fun main() = day(2021, 6, populationAfter(80), populationAfter(256))
+fun main() = run().forEach(::println)
+val run = { day(2021, 6, populationAfter(80), populationAfter(256)) }
 
 class LanternfishPopulation(
     populationByTimer: Map<Int, Long>,

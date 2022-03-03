@@ -1,8 +1,9 @@
 package year2021.day4
 
-import common.day
+import common.*
 
-fun main() = day(2021, 4, ::part1, ::part2)
+fun main() = run().forEach(::println)
+val run = { day(2021, 4, ::part1, ::part2) }
 
 class Board(val lines: List<List<Int>>) {
     val drawnNumbers = mutableSetOf<Int>()

@@ -1,6 +1,7 @@
 package year2021.day12
 
-fun main() = common.day(2021, 12, part1, part2)
+fun main() = run().forEach(::println)
+val run = { common.day(2021, 12, part1, part2) }
 
 val start = Cave("start")
 val end = Cave("end")

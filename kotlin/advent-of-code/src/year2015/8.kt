@@ -2,7 +2,8 @@ package year2015.day8
 
 import common.*
 
-fun main() = day(2015, 8, part1, part2)
+fun main() = run().forEach(::println)
+fun run() = day(2015, 8, part1, part2)
 
 val part1 = { lines: List<String> ->
     lines.asSequence().map { it.length - it.decode().length }.sum()
