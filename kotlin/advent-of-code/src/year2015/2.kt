@@ -1,6 +1,6 @@
 package year2015.day2
 
-import common.day
+import common.*
 
 fun main() = run().forEach(::println)
 fun run() = day(2015, 2, ::part1, ::part2)

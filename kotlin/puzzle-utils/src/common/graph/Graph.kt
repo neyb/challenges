@@ -7,7 +7,6 @@ data class NodeAndLinks<Id, Data>(val node: Node<Id, Data>, val links: Collectio
         NodeAndLinks(mutation(node), links.map { it.mapNodes(mutation) })
 }
 
-//TODO out Id out Data
 interface Graph<Id, Data> {
 
     companion object {

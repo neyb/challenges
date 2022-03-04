@@ -1,6 +1,6 @@
 package year2021.day7
 
-import common.day
+import common.*
 
 fun main() = run().forEach(::println)
 val run = {day(2021, 7, part1, part2)}
