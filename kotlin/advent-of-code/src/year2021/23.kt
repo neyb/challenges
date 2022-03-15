@@ -3,6 +3,7 @@ package year2021.day23
 import common.*
 import common.`object`.*
 import year2021.day23.Move.Companion.at
+import common.collections.plus as fastPlus
 
 fun main() = run().forEach(::println)
 
@@ -21,29 +22,45 @@ val part2 = { lines: List<String> ->
     findBestSolution(gameState).energyConsumed
 }
 
-fun findBestSolution(state: GameState): GameState = explore(state) { it.exploreNext() }
-    .minimizing { it.energyConsumed + it.heuristic }
-    .first { it.solved }
+fun findBestSolution(state: GameState): GameState =
+    explore(state) { it.exploreNext() }.minimizing { it.energyConsumed + it.heuristic }.first { it.solved }
 
 class Board private constructor(
-    val nodes: Collection<Node>,
-    val linksByNode: Map<Node, Set<Link>>
+    val nodes: Collection<Node>, val linksByNode: Map<Node, Set<Link>>
                                ) {
-    constructor(nodes: Collection<Node>, links: List<Link>) : this(
-        nodes,
-        mutableMapOf<Node, MutableSet<Link>>().apply {
-            links.forEach {
-                merge(it.edge1, mutableSetOf(it)) { set1, set2 -> set1.apply { addAll(set2) } }
-                merge(it.edge2, mutableSetOf(it)) { set1, set2 -> set1.apply { addAll(set2) } }
-            }
-        })
+    constructor(nodes: Collection<Node>, links: List<Link>) : this(nodes, mutableMapOf<Node, MutableSet<Link>>().apply {
+        links.forEach {
+            merge(it.edge1, mutableSetOf(it)) { set1, set2 -> set1.apply { addAll(set2) } }
+            merge(it.edge2, mutableSetOf(it)) { set1, set2 -> set1.apply { addAll(set2) } }
+        }
+    })
+
+    fun amphipodStateFor(move: Move): AmphipodState {
+        val amphipod = move.amphipod
+        val newNode = move.path.to
+
+        fun ghostPaths(): Sequence<Path> {
+            val visitedNodes = mutableSetOf<Node>()
+            return explore(Path.from(newNode)) { path ->
+                linksByNode[path.to]!!.asSequence().map { path + it }
+            }.filterExploration { it.to !in visitedNodes }.minimizing { it.length }.onEach { visitedNodes.add(it.to) }
+        }
+
+        val inGhostMoves = if (move.isInMove()) emptySequence()
+        else ghostPaths().filter { it.to.target == amphipod.type }.map { Move(amphipod, it) }
+
+        //        val outGhostMoves = ghostPaths()
+        //            .filter { it.to.type == NodeType.hallway }
+        //            .map { Move(amphipod, it) }
+        //            .toList()
+
+        return AmphipodState(newNode, inGhostMoves.firstOrNull())
+    }
+
 }
 
 // optimise #3 : fastplus on moves
-class GameState private constructor(
-    private val board: Board,
-    private val moves: Moves,
-                                   ) {
+class GameState private constructor(private val board: Board, private val moves: Moves) {
     companion object {
         fun parse(lines: List<String>): GameState {
             val targetGen = generateSequence(AmphipodType.A) {
@@ -62,157 +79,116 @@ class GameState private constructor(
                 val type = if (coords.y == 1) NodeType.hallway else NodeType.sideRooms
                 Node(coords, type, if (type == NodeType.sideRooms) targetGen.next() else null)
             }
-
             val links = nodes.asSequence().flatMap { node ->
                 nodes.asSequence().filter {
                     it.coordinates in with(node.coordinates) { arrayOf(copy(x = x - 1), copy(y = y - 1)) }
                 }.map { other -> node linkTo other }
             }.toList()
+            val board = Board(nodes, links)
 
             val amphypodsPlaceMoves = charByCoords.asSequence().filter { (_, c) -> c in 'A'..'D' }
                 .map { (coord, c) -> AmphipodType.valueOf(c.toString()) at nodes.single { it.coordinates == coord } }
-                .toList()
-                .let(::Moves)
+                .toList().let { Moves(it, board::amphipodStateFor) }
 
-            return GameState(Board(nodes, links), amphypodsPlaceMoves)
+            return GameState(board, amphypodsPlaceMoves)
         }
     }
 
     private val nodes get() = board.nodes
     private val linksByNode = board.linksByNode
 
-    private val amphipods get() = moves.amphipods
+    private val amphipods get() = moves.amphipods.keys
     val energyConsumed get() = moves.energyConsumed
-    private val amphipodsNode = moves.amphipodsNode
+
+    private val usedNodes by lazy { moves.amphipods.values.map { it.position } }
     private fun nodeOf(amphipod: Amphipod) = moves.nodeOf(amphipod)
     private fun findAmphipodAt(coordinates: Coordinates) = moves.findAmphipodAt(coordinates)
 
-    val solved: Boolean = amphipodsNode.all { (amphipod, node) -> amphipod.type == node.target }
+    val solved: Boolean = moves.amphipods.all { (amphipod, state) -> amphipod.type == state.position.target }
 
-    val heuristic = amphipods.asSequence()
-        .filter { nodeOf(it).target != it.type }
-        .mapNotNull { fastestInGhostMove(it) }
-        .sumOf { it.energyCost() }
+    val heuristic = moves.heuristic
 
     fun exploreNext(): Sequence<GameState> = moveinMoves().ifEmpty { outMoves() }.map { this + it }
 
-    fun historic() = moves.historic().map { GameState(board, it) }
+    private operator fun plus(move: Move) = GameState(board, moves.plus(move, board.amphipodStateFor(move)))
 
-    private operator fun plus(move: Move) = GameState(board, moves + move)
+    private fun outMoves(): Sequence<Move> {
+        fun outPaths(from: Node): Sequence<Path> =
+            availablePaths(from).filter { it.to.type == NodeType.hallway }.filter { target -> !isEntrance(target.to) }
 
-    private fun outMoves() = amphipods.asSequence()
-        .filter { nodeOf(it).type == NodeType.sideRooms }
-        .filter { !isSideRoomFree(nodeOf(it).target!!) }
-        .flatMap { outMoves(it) }
+        fun outMoves(amphipod: Amphipod) = outPaths(nodeOf(amphipod)).filter { path -> //to simplify
+            moves.amphipods.asSequence().filter { it.value.position.target == amphipod.type }
+                .minByOrNull { it.value.position.coordinates.y }?.let { it.value.fastestInGhostMove }
+                ?.let { path.to !in it.path } ?: true
+        }.map { Move(amphipod, it) }
 
-    private fun outMoves(amphipod: Amphipod) = outPaths(nodeOf(amphipod))
-        .filter { path ->
-            amphipodsNode.asSequence()
-                .filter { it.value.target == amphipod.type }
-                .minByOrNull { it.value.coordinates.y }
-                ?.let { (amphipod) -> fastestInGhostMove(amphipod) }
-                ?.let { path.to !in it.path }
-                ?: true
-        }
-        .map { Move(amphipod, it) }
-
-    private fun outPaths(from: Node): Sequence<Path> = availablePaths(from)
-        .filter { it.to.type == NodeType.hallway }
-        .filter { target -> !isEntrance(target.to) }
+        return moves.amphipods.asSequence().filter { it.value.position.type == NodeType.sideRooms }
+            .filter { !isSideRoomFree(it.value.position.target!!) }.flatMap { outMoves(it.key) }
+    }
 
     private fun isEntrance(node: Node) = nodes.any { it.coordinates == with(node.coordinates) { copy(y = y + 1) } }
 
     private fun moveinMoves(): Sequence<Move> {
+        fun inPaths(from: Node, toType: AmphipodType) = availablePaths(from).filter { it.to.target == toType }
+        fun inMoves(amphipod: Amphipod) = inPaths(nodeOf(amphipod), amphipod.type).map { Move(amphipod, it) }
+
         val validSideroomsType = AmphipodType.values().asSequence().filter(::isSideRoomFree).toSet()
-        return amphipods.asSequence()
-            .filter { it.type in validSideroomsType }
-            .filter { nodeOf(it).target != it.type }
+        return amphipods.asSequence().filter { it.type in validSideroomsType }.filter { nodeOf(it).target != it.type }
             .mapNotNull { inMoves(it).maxByOrNull { it.energyCost() } }
     }
 
-    private fun inMoves(amphipod: Amphipod) = inPaths(nodeOf(amphipod), amphipod.type).map { Move(amphipod, it) }
-
-    private fun inPaths(from: Node, toType: AmphipodType) = availablePaths(from).filter { it.to.target == toType }
-
     private fun availablePaths(from: Node): Sequence<Path> {
         val visitedNodes = mutableSetOf<Node>()
-        return explore(Path(from, emptyList())) { path -> linksByNode[path.to]!!.asSequence().map { path + it } }
-            .filterExploration { it.to !in visitedNodes && (it.to !in amphipodsNode.values || it.length == 0) }
-            .minimizing { it.length }
-            .onEach { visitedNodes.add(it.to) }
-    }
-
-    // to optimise #1 : use cache for amphipod that didn't move
-    private fun fastestInGhostMove(amphipod: Amphipod) = inGhostMoves(amphipod).firstOrNull()
-
-    private fun inGhostMoves(amphipod: Amphipod) = availableGhostPaths(nodeOf(amphipod))
-        .filter { it.to.target == amphipod.type }
-        .map { Move(amphipod, it) }
-
-    private fun availableGhostPaths(from: Node): Sequence<Path> {
-        val visitedNodes = mutableSetOf<Node>()
-        return explore(Path(from, emptyList())) { path ->
+        return explore(Path.from(from)) { path ->
             linksByNode[path.to]!!.asSequence().map { path + it }
-        }
-            .filterExploration { it.to !in visitedNodes }
-            .minimizing { it.length }
-            .onEach { visitedNodes.add(it.to) }
+        }.filterExploration { it.to !in visitedNodes && (it.to !in usedNodes || it.length == 0) }
+            .minimizing { it.length }.onEach { visitedNodes.add(it.to) }
     }
 
     private fun isSideRoomFree(amphipodType: AmphipodType) =
-        amphipods.asSequence().filter { it.type != amphipodType }.map { amphipodsNode[it]!! }
+        moves.amphipods.asSequence()
+            .filter { it.key.type != amphipodType }
+            .map { it.value.position }
             .all { it.target !== amphipodType }
 
     override fun toString(): String {
         val xRange = nodes.minOf { it.coordinates.x }..nodes.maxOf { it.coordinates.x }
-        return (nodes.minOf { it.coordinates.y }..nodes.maxOf { it.coordinates.y })
-            .map { y ->
-                xRange.map { x ->
-                    when {
-                        findAmphipodAt(Coordinates(x, y)) != null ->
-                            findAmphipodAt(Coordinates(x, y))?.type?.toString()
-                        nodes.any { it.coordinates == Coordinates(x, y) } -> "."
-                        else -> " "
-                    }
-                }.joinToString("")
-            }.joinToString("\n")
+        return (nodes.minOf { it.coordinates.y }..nodes.maxOf { it.coordinates.y }).map { y ->
+            xRange.map { x ->
+                when {
+                    findAmphipodAt(Coordinates(x, y)) != null -> findAmphipodAt(Coordinates(x, y))?.type?.toString()
+                    nodes.any { it.coordinates == Coordinates(x, y) } -> "."
+                    else -> " "
+                }
+            }.joinToString("")
+        }.joinToString("\n")
     }
 }
 
 class Moves private constructor(
     val moves: List<Move>,
-    val amphipods: Set<Amphipod>,
+    val amphipods: Map<Amphipod, AmphipodState>,
     val energyConsumed: Int,
-    val amphipodsNode: Map<Amphipod, Node>,
                                ) {
 
-    constructor(moves: List<Move>) : this(
+    val heuristic = amphipods.asSequence().sumOf { it.value.heuristic }
+
+    constructor(moves: List<Move>, calcState: (Move) -> AmphipodState) : this(
         moves,
-        moves.asSequence().map { it.amphipod }.toSet(),
+        moves.asSequence().map { it.amphipod to calcState(it) }.toMap(),
         moves.sumOf { it.energyCost() },
-        moves.groupingBy { it.amphipod }.fold({ _, t -> t.path.to }, { _, _, move2 -> move2.path.to }),
-                                         )
+                                                                             )
 
-    fun nodeOf(amphipod: Amphipod) = amphipodsNode[amphipod]!!
+    fun nodeOf(amphipod: Amphipod) = amphipods.getValue(amphipod).position
 
-    fun findAmphipodAt(coordinates: Coordinates) = amphipodsNode.entries.asSequence()
-        .firstOrNull { it.value.coordinates == coordinates }
-        ?.key
+    fun findAmphipodAt(coordinates: Coordinates) =
+        amphipods.entries.asSequence().firstOrNull { it.value.position.coordinates == coordinates }?.key
 
-    operator fun plus(move: Move) = Moves(
-//        moves.fastPlus(move),
-                moves + move,
-        amphipods,
+    fun plus(move: Move, newAmphipodState: AmphipodState) = Moves(
+        moves.fastPlus(move),
+        amphipods + (move.amphipod to newAmphipodState),
         energyConsumed + move.energyCost(),
-        amphipodsNode + (move.amphipod to move.path.to),
-                                         )
-
-    fun historic(): List<Moves> = moves.fold(listOf()) { movess, move ->
-        val newMoves = movess.lastOrNull()?.let { it + move } ?: Moves(listOf(move))
-        if (movess.isEmpty() || move.path.length > 0) movess + newMoves
-        else listOf(newMoves)
-    }
-
+                                                                 )
 }
 
 data class Coordinates(val x: Int, val y: Int) {
@@ -241,16 +217,18 @@ class Link(val edge1: Node, val edge2: Node) {
 }
 
 // to optimise #2 : use common.collections.plus
-data class Path(val from: Node, val links: List<Link>) {
+data class Path private constructor(
+    val from: Node,
+    val to: Node,
+    val links: List<Link>,
+    val length: Int,
+                                   ) {
+
     companion object {
-        fun from(node: Node) = Path(node, emptyList())
+        fun from(node: Node) = Path(node, node, emptyList(), 0)
     }
 
-    val to = links.fold(from) { last, link -> link.leadsTo(last) }
-
-    val length = links.size
-
-    operator fun plus(link: Link) = copy(links = links + link)
+    operator fun plus(link: Link) = Path(from, link.leadsTo(to), links.fastPlus(link), length + 1)
     operator fun contains(node: Node) = node == from || links.any { it.edge1 == node || it.edge2 == node }
     override fun toString() = "$from -> $to"
 }
@@ -259,13 +237,17 @@ class Amphipod(val type: AmphipodType) {
     override fun toString() = type.toString()
 }
 
+class AmphipodState(val position: Node, val fastestInGhostMove: Move?) {
+    val heuristic: Int = fastestInGhostMove?.energyCost() ?: 0
+}
+
 data class Move(val amphipod: Amphipod, val path: Path) {
     companion object {
         infix fun AmphipodType.at(node: Node) = Move(Amphipod(this), Path.from(node))
     }
 
     fun energyCost() = path.length * amphipod.type.movementCost
-
+    fun isInMove() = amphipod.type == path.to.target
 }
 
 enum class NodeType { hallway, sideRooms }
