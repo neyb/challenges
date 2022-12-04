@@ -6,6 +6,7 @@ version = 3
 name = "aoc_2022_1"
 version = "0.0.0"
 dependencies = [
+ "challenges_common",
  "itertools",
 ]
 

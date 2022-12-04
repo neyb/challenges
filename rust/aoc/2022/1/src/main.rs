@@ -1,33 +1,38 @@
+extern crate challenges_common;
 extern crate itertools;
 
-use itertools::{Itertools, fold};
+use std::io::{BufRead, BufReader, Read};
+
+use challenges_common::{get_input_file, MyIterTools};
+use itertools::Itertools;
 
 fn main() {
-    let content = std::fs::read_to_string("input.txt").expect("should read the file");
+    let input = get_input_file(vec!["aoc", "2022", "1.txt"]).unwrap();
+    let elves = parse(input);
 
-    let splitted = content
-        .split("\n")
-        .map(|s| u32::from_str_radix(s, 10))
-        .map(|x| x.ok())
-        .fold(Vec::<u32>::new(), |mut acc, val| {
-            if let Some(val) = val {
-                acc.las
-            } else {
+    part1(&elves);
+    part2(&elves);
+}
 
-            }
-            
-            acc;
+fn part1(elves: &Vec<u32>) {
+    println!("max is {}", elves.iter().max().unwrap());
+}
+
+fn part2(elves: &Vec<u32>) {
+    let sum: u32 = elves.iter().sorted_by(|a, b| b.cmp(a)).take(3).sum();
+    println!("max 3 sum is {}", sum)
+}
+
+fn parse<R: Read + Sized>(input: R) -> Vec<u32> {
+    BufReader::new(input)
+        .lines()
+        .map(|line_res| line_res.unwrap())
+        .split(|line| line.is_empty())
+        .map(|group| {
+            group
+                .iter()
+                .map(|s| u32::from_str_radix(s, 10).unwrap())
+                .sum()
         })
-
-    let x = splitted.coalesce(|x, y| match (x, y) {
-        (Some(x), Some(y)) => Ok(Some(x + y)),
-        _ => Err((x, y)),
-    });
-    for x in splitted {
-        if let Some(value) = x {
-            println!("{}", value)
-        } else {
-            println!("changement")
-        }
-    }
+        .collect()
 }
