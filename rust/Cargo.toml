@@ -7,3 +7,5 @@ members=[
 [workspace.dependencies]
 rpds = "0"
 itertools = "0"
+challenges_common = { path="./challenges_common" }
+anyhow = "1"
