@@ -34,6 +34,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "aoc_2022_4"
+version = "0.1.0"
+dependencies = [
+ "challenges_common",
+ "itertools",
+]
+
+[[package]]
 name = "challenges_common"
 version = "0.1.0"
 
