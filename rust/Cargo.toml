@@ -10,3 +10,4 @@ itertools = "0"
 challenges_common = { path="./challenges_common" }
 anyhow = "1"
 regex = "1"
+lazy_static = "1"

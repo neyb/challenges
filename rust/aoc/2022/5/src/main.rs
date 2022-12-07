@@ -1,5 +1,6 @@
 use challenges_common::MyIterTools;
 use itertools::Itertools;
+use lazy_static::lazy_static;
 use regex::Regex;
 
 fn main() {
@@ -7,8 +8,8 @@ fn main() {
         "aoc", "2022", "5.txt",
     ]));
 
-    println!("part1: {}", part1(cargo.clone(), &moves));
-    println!("part2: {}", part2(cargo.clone(), &moves));
+    println!("part1: {}", part1(&mut cargo.clone(), &moves));
+    println!("part2: {}", part2(&mut cargo.clone(), &moves));
 }
 
 fn parse(lines: impl Iterator<Item = String>) -> (Cargo, Vec<Move>) {
@@ -20,7 +21,7 @@ fn parse(lines: impl Iterator<Item = String>) -> (Cargo, Vec<Move>) {
     (cargo, moves)
 }
 
-fn part1(mut cargo: Cargo, moves: &Vec<Move>) -> String {
+fn part1(cargo: &mut Cargo, moves: &Vec<Move>) -> String {
     for a_move in moves {
         cargo.apply(a_move)
     }
@@ -28,7 +29,7 @@ fn part1(mut cargo: Cargo, moves: &Vec<Move>) -> String {
     cargo.result()
 }
 
-fn part2(mut cargo: Cargo, moves: &Vec<Move>) -> String {
+fn part2(cargo: &mut Cargo, moves: &Vec<Move>) -> String {
     for a_move in moves {
         cargo.apply_9001(a_move)
     }
@@ -120,10 +121,16 @@ struct Move {
     to: u8,
 }
 
+// static move_regex: Regex =
+//     Regex::new(r"move (?P<times>\d+) from (?P<from>\d+) to (?P<to>\d+)").unwrap();
 impl From<&String> for Move {
     fn from(s: &String) -> Self {
-        let regex = Regex::new(r"move (?P<times>\d+) from (?P<from>\d+) to (?P<to>\d+)").unwrap();
-        let caps = regex.captures(s).unwrap();
+        lazy_static! {
+            static ref MOVE_REGEX: Regex =
+                Regex::new(r"move (?P<times>\d+) from (?P<from>\d+) to (?P<to>\d+)").unwrap();
+        }
+
+        let caps = MOVE_REGEX.captures(s).unwrap();
         Self {
             nb_crates: caps["times"].parse().unwrap(),
             from: caps["from"].parse().unwrap(),
@@ -138,7 +145,7 @@ mod test {
 
     #[test]
     fn given_test_part1() {
-        let (cargo, moves) = parse(
+        let (mut cargo, moves) = parse(
             vec![
                 "    [D]    ",
                 "[N] [C]    ",
@@ -154,12 +161,12 @@ mod test {
             .map(|l| l.to_string()),
         );
 
-        assert_eq!("CMZ", part1(cargo, &moves));
+        assert_eq!("CMZ", part1(&mut cargo, &moves));
     }
 
     #[test]
     fn given_test_part2() {
-        let (cargo, moves) = parse(
+        let (mut cargo, moves) = parse(
             vec![
                 "    [D]    ",
                 "[N] [C]    ",
@@ -175,6 +182,6 @@ mod test {
             .map(|l| l.to_string()),
         );
 
-        assert_eq!("MCD", part2(cargo, &moves));
+        assert_eq!("MCD", part2(&mut cargo, &moves));
     }
 }
