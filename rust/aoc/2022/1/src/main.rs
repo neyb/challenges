@@ -7,7 +7,7 @@ use challenges_common::{get_input_file, MyIterTools};
 use itertools::Itertools;
 
 fn main() {
-    let input = get_input_file(vec!["aoc", "2022", "1.txt"]).unwrap();
+    let input = get_input_file(vec!["aoc", "2022", "1.txt"]);
     let elves = parse(input);
 
     part1(&elves);

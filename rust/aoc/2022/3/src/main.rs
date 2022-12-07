@@ -2,10 +2,9 @@ use itertools::Itertools;
 use std::collections::HashSet;
 
 fn main() {
-    let lines =
-        challenges_common::get_input_lines(vec!["aoc", "2022", "3.txt"]).expect("cannot read file");
-
-    let rucksaks: Vec<Rucksack> = lines.iter().map(Rucksack::parse).collect();
+    let rucksaks: Vec<Rucksack> = challenges_common::get_input_lines(vec!["aoc", "2022", "3.txt"])
+        .map(Rucksack::parse)
+        .collect();
     println!("part1: {}", sum_part1(&rucksaks));
     println!("part2: {}", sum_part2(&rucksaks));
 }
@@ -48,17 +47,17 @@ fn value_of(item: char) -> u32 {
         _ => panic!("unsupported char: {}", item),
     }
 }
-struct Rucksack<'a> {
-    first_compartment: &'a str,
-    second_compartment: &'a str,
+struct Rucksack {
+    first_compartment: String,
+    second_compartment: String,
 }
 
-impl<'a> Rucksack<'a> {
-    fn parse(line: &'a String) -> Self {
+impl Rucksack {
+    fn parse(line: String) -> Self {
         let len = line.len();
         Rucksack {
-            first_compartment: &line[..len / 2],
-            second_compartment: &line[len / 2..],
+            first_compartment: line[..len / 2].to_string(),
+            second_compartment: line[len / 2..].to_string(),
         }
     }
 
@@ -88,7 +87,7 @@ mod test {
     #[test]
     fn first_rucksak() {
         let s = "vJrwpWtwJgWrhcsFMMfFFhFp".to_string();
-        let r = Rucksack::parse(&s);
+        let r = Rucksack::parse(s);
         assert_eq!(r.common_item(), Some('p'));
     }
 
@@ -102,7 +101,7 @@ mod test {
             "ttgJtRGJQctTZtZT".to_string(),
             "CrZsJsPPZsGzwwsLwLmpwMDw".to_string(),
         ];
-        let rucksaks: Vec<Rucksack> = lines.iter().map(Rucksack::parse).collect();
+        let rucksaks: Vec<Rucksack> = lines.into_iter().map(Rucksack::parse).collect();
         assert_eq!(157, sum_part1(&rucksaks));
     }
 }

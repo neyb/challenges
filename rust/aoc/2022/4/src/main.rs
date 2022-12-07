@@ -3,9 +3,9 @@ use itertools::Itertools;
 type Range = std::ops::Range<u16>;
 
 fn main() {
-    let lines = challenges_common::get_input_lines(vec!["aoc", "2022", "4.txt"]).unwrap();
-
-    let pairs = lines.iter().map(parse).collect_vec();
+    let pairs = challenges_common::get_input_lines(vec!["aoc", "2022", "4.txt"])
+        .map(|line| parse(&line))
+        .collect_vec();
     println!("part1: {}", part1(&pairs));
     println!("part2: {}", part2(&pairs));
 }

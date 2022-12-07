@@ -4,7 +4,7 @@ use std::{
     path::Path,
 };
 
-pub fn get_input_file(location: Vec<&str>) -> Option<File> {
+pub fn get_input_file(location: Vec<&str>) -> File {
     let current = Path::new(".").canonicalize().unwrap();
     let target = |path: &Path| {
         location
@@ -15,16 +15,15 @@ pub fn get_input_file(location: Vec<&str>) -> Option<File> {
     let target = current
         .ancestors()
         .map(target)
-        .find(|target| target.exists());
+        .find(|target| target.exists())
+        .unwrap();
 
-    target.map(|target| File::open(target).unwrap())
+    File::open(target).unwrap()
 }
 
-pub fn get_input_lines(location: Vec<&str>) -> Option<Vec<String>> {
-    get_input_file(location).map(|file| {
-        BufReader::new(file)
-            .lines()
-            .map(|line_res| line_res.unwrap())
-            .collect::<Vec<_>>()
-    })
+pub fn get_input_lines(location: Vec<&str>) -> impl Iterator<Item = String> {
+    let file = get_input_file(location);
+    BufReader::new(file)
+        .lines()
+        .map(|line_res| line_res.unwrap())
 }

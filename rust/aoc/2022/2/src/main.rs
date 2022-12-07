@@ -5,7 +5,8 @@ use std::str::FromStr;
 use anyhow::{Error, Result};
 
 fn main() {
-    let lines = challenges_common::get_input_lines(vec!["aoc", "2022", "2.txt"]).unwrap();
+    let lines =
+        challenges_common::get_input_lines(vec!["aoc", "2022", "2.txt"]).collect::<Vec<_>>();
 
     let rounds = parse1(&lines).unwrap();
     println!("sum is: {}", score_sum(&rounds));
