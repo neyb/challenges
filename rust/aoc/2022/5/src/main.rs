@@ -4,7 +4,7 @@ use lazy_static::lazy_static;
 use regex::Regex;
 
 fn main() {
-    let (cargo, moves) = parse(challenges_common::get_input_lines(vec![
+    let (cargo, moves) = parse(challenges_common::get_input_lines(&[
         "aoc", "2022", "5.txt",
     ]));
 

@@ -2,7 +2,7 @@ use itertools::Itertools;
 use std::collections::HashSet;
 
 fn main() {
-    let rucksaks: Vec<Rucksack> = challenges_common::get_input_lines(vec!["aoc", "2022", "3.txt"])
+    let rucksaks: Vec<Rucksack> = challenges_common::get_input_lines(&["aoc", "2022", "3.txt"])
         .map(Rucksack::parse)
         .collect();
     println!("part1: {}", sum_part1(&rucksaks));

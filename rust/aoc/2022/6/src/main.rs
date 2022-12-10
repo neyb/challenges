@@ -1,7 +1,7 @@
 use itertools::Itertools;
 
 fn main() {
-    let first_line = challenges_common::get_input_lines(vec!["aoc", "2022", "6.txt"])
+    let first_line = challenges_common::get_input_lines(&["aoc", "2022", "6.txt"])
         .next()
         .unwrap();
 

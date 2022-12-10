@@ -3,11 +3,12 @@ extern crate itertools;
 
 use std::io::{BufRead, BufReader, Read};
 
-use challenges_common::{get_input_file, MyIterTools};
 use itertools::Itertools;
 
+use challenges_common::{get_input_file, MyIterTools};
+
 fn main() {
-    let input = get_input_file(vec!["aoc", "2022", "1.txt"]);
+    let input = get_input_file(&["aoc", "2022", "1.txt"]);
     let elves = parse(input);
 
     part1(&elves);
