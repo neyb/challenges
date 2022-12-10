@@ -11,7 +11,15 @@ use challenges_common::MyIterTools;
 fn main() {
     let input_lines = challenges_common::get_input_lines(&["aoc", "2022", "7.txt"]);
     let commands = parse(input_lines);
-    println!("part1: {}", part1(commands).unwrap());
+
+    let root = commands.iter().fold(Context::new(), |mut context, command| {
+        context.apply(command).unwrap();
+        context
+    }).root;
+
+    let root = &*root.borrow();
+
+    println!("part1: {}", part1(root));
 }
 
 fn parse(input_lines: impl IntoIterator<Item=impl AsRef<str>>) -> Vec<Command> {
@@ -23,13 +31,12 @@ fn parse(input_lines: impl IntoIterator<Item=impl AsRef<str>>) -> Vec<Command> {
         .collect()
 }
 
-fn part1(commands: Vec<Command>) -> Result<u32> {
-    let mut context = Context::new();
-    for command in commands {
-        context.apply(&command)?;
-    }
-    let root = context.root.borrow();
-    Ok(root.size())
+fn part1(root: &FileNode) -> u32 {
+    root.walk().iter()
+        .filter(|file| file.borrow().size() <= 100000)
+        .max_by_key(|file| file.borrow().size())
+        .map(|file| file.borrow().size())
+        .unwrap()
 }
 
 #[derive(Debug, PartialEq)]
@@ -167,6 +174,17 @@ impl FileNode {
                 Ok(())
             }
             FileNode::File { .. } => Err(Error::msg("file cannot have childs")),
+        }
+    }
+
+    fn walk(&self) -> Vec<Rc<RefCell<FileNode>>> {
+        match self {
+            FileNode::Dir { files, .. } => {
+                let mut result = vec![Rc::new(RefCell::new(self.clone()))];
+                result.extend(files.iter().flat_map(|file| file.borrow().walk()));
+                result
+            }
+            FileNode::File { .. } => vec![Rc::new(RefCell::new(self.clone()))]
         }
     }
 }
