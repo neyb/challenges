@@ -11,15 +11,10 @@ use challenges_common::MyIterTools;
 fn main() {
     let input_lines = challenges_common::get_input_lines(&["aoc", "2022", "7.txt"]);
     let commands = parse(input_lines);
+    let root = build_root(&commands);
 
-    let root = commands.iter().fold(Context::new(), |mut context, command| {
-        context.apply(command).unwrap();
-        context
-    }).root;
-
-    let root = &*root.borrow();
-
-    println!("part1: {}", part1(root));
+    println!("part1: {}", part1(&root));
+    println!("part2: {}", part2(&root));
 }
 
 fn parse(input_lines: impl IntoIterator<Item=impl AsRef<str>>) -> Vec<Command> {
@@ -31,12 +26,36 @@ fn parse(input_lines: impl IntoIterator<Item=impl AsRef<str>>) -> Vec<Command> {
         .collect()
 }
 
+fn build_root(commands: &Vec<Command>) -> FileNode {
+    let context = commands
+        .iter()
+        .fold(Context::new(), |mut context, command| {
+            context.apply(command).unwrap();
+            context
+        });
+    let root_ref = context.root.borrow();
+    (&*root_ref).clone()
+}
+
 fn part1(root: &FileNode) -> u32 {
-    root.walk().iter()
-        .filter(|file| file.borrow().size() <= 100000)
-        .max_by_key(|file| file.borrow().size())
+    root.walk()
+        .iter()
+        .filter(|file| file.borrow().is_directory())
         .map(|file| file.borrow().size())
-        .unwrap()
+        .filter(|&size| size <= 100000)
+        .sum()
+}
+
+fn part2(root: &FileNode) -> u32 {
+    let total_size = root.size();
+    let space_to_free = total_size + 30000000 - 70000000;
+
+    root.walk()
+        .iter()
+        .filter(|file| file.borrow().is_directory())
+        .map(|file| file.borrow().size())
+        .filter(|&size| size >= space_to_free)
+        .min().unwrap()
 }
 
 #[derive(Debug, PartialEq)]
@@ -177,6 +196,13 @@ impl FileNode {
         }
     }
 
+    fn is_directory(&self) -> bool {
+        match self {
+            FileNode::Dir { .. } => true,
+            FileNode::File { .. } => false,
+        }
+    }
+
     fn walk(&self) -> Vec<Rc<RefCell<FileNode>>> {
         match self {
             FileNode::Dir { files, .. } => {
@@ -184,7 +210,7 @@ impl FileNode {
                 result.extend(files.iter().flat_map(|file| file.borrow().walk()));
                 result
             }
-            FileNode::File { .. } => vec![Rc::new(RefCell::new(self.clone()))]
+            FileNode::File { .. } => vec![Rc::new(RefCell::new(self.clone()))],
         }
     }
 }
@@ -215,7 +241,9 @@ impl Context {
                     self.current_path = vec![self.root.clone()];
                 }
                 CdTarget::Parent => {
-                    self.current_path.pop().ok_or(Error::msg("current path should not be empty"))?;
+                    self.current_path
+                        .pop()
+                        .ok_or(Error::msg("current path should not be empty"))?;
                     if self.current_path.is_empty() {
                         return Err(Error::msg("empty current dir"));
                     }
@@ -247,6 +275,8 @@ impl Context {
 
 #[cfg(test)]
 mod tests {
+    use crate::*;
+
     mod parsing {
         mod command {
             mod output {
@@ -389,5 +419,13 @@ mod tests {
                 )
             }
         }
+    }
+
+    #[test]
+    fn given_test() {
+        let input_lines = challenges_common::get_input_lines(&["aoc", "2022", "7-test.txt"]);
+        let commands = parse(input_lines);
+        let root = build_root(&commands);
+        assert_eq!(part1(&root), 95437)
     }
 }
