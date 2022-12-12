@@ -1,4 +1,5 @@
 use std::cell::RefCell;
+use std::fs::File;
 use std::rc::Rc;
 use std::str::FromStr;
 use std::vec;
@@ -27,12 +28,11 @@ fn parse(input_lines: impl IntoIterator<Item=impl AsRef<str>>) -> Vec<Command> {
 }
 
 fn build_root(commands: &Vec<Command>) -> Result<FileNode> {
-    let mut root = FileNode::dir("/");
-    let mut context = Context::new(&mut root);
+    let mut context = Context::new();
     for command in commands {
-        (&mut context).apply(command)?;
+        (context).apply(command)?;
     }
-    Ok(root)
+    Ok(context.root)
 }
 
 fn part1(root: &FileNode) -> u32 {
@@ -183,7 +183,7 @@ impl FileNode {
         }
     }
 
-    fn child_mut(&mut self, name: &String) -> Option<&mut Self> {
+    fn child_mut(&'_ mut self, name: &String) -> Option<&mut Self> {
         match self {
             FileNode::Dir { files, .. } => files
                 .iter_mut()
@@ -221,29 +221,32 @@ impl FileNode {
     }
 }
 
-struct Context<'r> {
-    root: &'r mut FileNode,
-    current_path: Vec<String>,
+struct Context {
+    root: FileNode,
+    current_path: Vec<*mut FileNode>,
 }
 
-impl<'r> Context<'r> {
-    fn new(root: &'r mut FileNode) -> Self {
+impl Context {
+    fn new() -> Self {
+        let mut root = FileNode::dir("/");
         Self {
             root,
             current_path: vec![],
         }
     }
 
-    fn current_node(&self) -> &FileNode {
-        self.current_path
-            .iter()
-            .fold(self.root, |curr, name| curr.child(name).unwrap())
+    fn current_node(&self) -> *const FileNode {
+        match self.current_path.last() {
+            Some(last) => *last,
+            None => &self.root
+        }
     }
 
-    fn current_node_mut(&mut self) -> &'_ mut FileNode {
-        self.current_path
-            .iter_mut()
-            .fold(self.root, |curr, name| curr.child_mut(name).unwrap())
+    fn current_node_mut(&mut self) -> *mut FileNode {
+        match self.current_path.last_mut() {
+            Some(last) => *last,
+            None => &mut self.root
+        }
     }
 
     fn apply(&mut self, command: &Command) -> Result<()> {
@@ -258,21 +261,25 @@ impl<'r> Context<'r> {
                         .ok_or(Error::msg("current path should not be empty"))?;
                 }
                 CdTarget::Dir { name } => {
-                    let file = self
-                        .current_node()
-                        .child(name)
-                        .ok_or(Error::msg("no such file"))?;
-                    self.current_path.push(file.name().clone())
+                    unsafe {
+                        let file: *mut FileNode = (*self
+                            .current_node_mut())
+                            .child_mut(name)
+                            .ok_or(Error::msg("no such file"))?;
+                        self.current_path.push(file)
+                    }
                 }
             },
             Command::Ls { files } => {
-                let mut current_node: &'_ mut FileNode = self.current_node_mut();
+                let mut current_node = self.current_node_mut();
                 for file in files {
                     let file = match file {
                         LsFileOutput::Dir { name } => FileNode::dir(name),
                         LsFileOutput::File { name, size } => FileNode::file(name, *size),
                     };
-                    current_node.add_file(file)?;
+                    unsafe {
+                        (*current_node).add_file(file)?;
+                    }
                 }
             }
         };
