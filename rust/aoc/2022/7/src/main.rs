@@ -11,7 +11,7 @@ use challenges_common::MyIterTools;
 fn main() {
     let input_lines = challenges_common::get_input_lines(&["aoc", "2022", "7.txt"]);
     let commands = parse(input_lines);
-    let root = build_root(&commands);
+    let root = build_root(&commands).unwrap();
 
     println!("part1: {}", part1(&root));
     println!("part2: {}", part2(&root));
@@ -26,22 +26,20 @@ fn parse(input_lines: impl IntoIterator<Item=impl AsRef<str>>) -> Vec<Command> {
         .collect()
 }
 
-fn build_root(commands: &Vec<Command>) -> FileNode {
-    let context = commands
-        .iter()
-        .fold(Context::new(), |mut context, command| {
-            context.apply(command).unwrap();
-            context
-        });
-    let root_ref = context.root.borrow();
-    (&*root_ref).clone()
+fn build_root(commands: &Vec<Command>) -> Result<FileNode> {
+    let mut root = FileNode::dir("/");
+    let mut context = Context::new(&mut root);
+    for command in commands {
+        (&mut context).apply(command)?;
+    }
+    Ok(root)
 }
 
 fn part1(root: &FileNode) -> u32 {
     root.walk()
         .iter()
-        .filter(|file| file.borrow().is_directory())
-        .map(|file| file.borrow().size())
+        .filter(|file| file.is_directory())
+        .map(|file| file.size())
         .filter(|&size| size <= 100000)
         .sum()
 }
@@ -52,8 +50,8 @@ fn part2(root: &FileNode) -> u32 {
 
     root.walk()
         .iter()
-        .filter(|file| file.borrow().is_directory())
-        .map(|file| file.borrow().size())
+        .filter(|file| file.is_directory())
+        .map(|file| file.size())
         .filter(|&size| size >= space_to_free)
         .min().unwrap()
 }
@@ -133,7 +131,7 @@ impl FromStr for LsFileOutput {
 enum FileNode {
     Dir {
         name: String,
-        files: Vec<Rc<RefCell<Self>>>,
+        files: Vec<Self>,
         cached_size: Option<u32>,
     },
     File {
@@ -165,7 +163,7 @@ impl FileNode {
                 files,
                 ..
             } => *cached_size
-                .get_or_insert_with(|| files.iter().map(|file| file.borrow().size()).sum()),
+                .get_or_insert_with(|| files.iter().map(|file| file.size()).sum()),
             FileNode::File { size, .. } => *size,
         }
     }
@@ -176,12 +174,20 @@ impl FileNode {
         }
     }
 
-    fn child(&self, name: &String) -> Option<Rc<RefCell<Self>>> {
+    fn child(&self, name: &String) -> Option<&Self> {
         match self {
             FileNode::Dir { files, .. } => files
                 .iter()
-                .find(|f| f.borrow().name() == name)
-                .map(Rc::clone),
+                .find(|f| f.name() == name),
+            FileNode::File { .. } => None,
+        }
+    }
+
+    fn child_mut(&mut self, name: &String) -> Option<&mut Self> {
+        match self {
+            FileNode::Dir { files, .. } => files
+                .iter_mut()
+                .find(|f| f.name() == name),
             FileNode::File { .. } => None,
         }
     }
@@ -189,7 +195,7 @@ impl FileNode {
     fn add_file(&mut self, file: Self) -> Result<()> {
         match self {
             FileNode::Dir { files, .. } => {
-                files.push(Rc::new(RefCell::new(file)));
+                files.push(file);
                 Ok(())
             }
             FileNode::File { .. } => Err(Error::msg("file cannot have childs")),
@@ -203,62 +209,64 @@ impl FileNode {
         }
     }
 
-    fn walk(&self) -> Vec<Rc<RefCell<FileNode>>> {
+    fn walk(&self) -> Vec<&FileNode> {
         match self {
             FileNode::Dir { files, .. } => {
-                let mut result = vec![Rc::new(RefCell::new(self.clone()))];
-                result.extend(files.iter().flat_map(|file| file.borrow().walk()));
+                let mut result = vec![self];
+                result.extend(files.iter().flat_map(|file| file.walk()));
                 result
             }
-            FileNode::File { .. } => vec![Rc::new(RefCell::new(self.clone()))],
+            FileNode::File { .. } => vec![self],
         }
     }
 }
 
-struct Context {
-    root: Rc<RefCell<FileNode>>,
-    current_path: Vec<Rc<RefCell<FileNode>>>,
+struct Context<'r> {
+    root: &'r mut FileNode,
+    current_path: Vec<String>,
 }
 
-impl Context {
-    fn new() -> Self {
-        let root = Rc::new(RefCell::new(FileNode::dir("/")));
-        let root_for_path = root.clone();
+impl<'r> Context<'r> {
+    fn new(root: &'r mut FileNode) -> Self {
         Self {
             root,
-            current_path: vec![root_for_path],
+            current_path: vec![],
         }
     }
 
-    fn current_node(&self) -> &Rc<RefCell<FileNode>> {
-        self.current_path.last().unwrap()
+    fn current_node(&self) -> &FileNode {
+        self.current_path
+            .iter()
+            .fold(self.root, |curr, name| curr.child(name).unwrap())
+    }
+
+    fn current_node_mut(&mut self) -> &'_ mut FileNode {
+        self.current_path
+            .iter_mut()
+            .fold(self.root, |curr, name| curr.child_mut(name).unwrap())
     }
 
     fn apply(&mut self, command: &Command) -> Result<()> {
         match command {
             Command::Cd { dir } => match dir {
                 CdTarget::Root => {
-                    self.current_path = vec![self.root.clone()];
+                    self.current_path = vec![];
                 }
                 CdTarget::Parent => {
                     self.current_path
                         .pop()
                         .ok_or(Error::msg("current path should not be empty"))?;
-                    if self.current_path.is_empty() {
-                        return Err(Error::msg("empty current dir"));
-                    }
                 }
                 CdTarget::Dir { name } => {
                     let file = self
                         .current_node()
-                        .borrow()
                         .child(name)
                         .ok_or(Error::msg("no such file"))?;
-                    self.current_path.push(file)
+                    self.current_path.push(file.name().clone())
                 }
             },
             Command::Ls { files } => {
-                let mut current_node = self.current_node().borrow_mut();
+                let mut current_node: &'_ mut FileNode = self.current_node_mut();
                 for file in files {
                     let file = match file {
                         LsFileOutput::Dir { name } => FileNode::dir(name),
@@ -425,7 +433,7 @@ mod tests {
     fn given_test() {
         let input_lines = challenges_common::get_input_lines(&["aoc", "2022", "7-test.txt"]);
         let commands = parse(input_lines);
-        let root = build_root(&commands);
+        let root = build_root(&commands).unwrap();
         assert_eq!(part1(&root), 95437)
     }
 }
