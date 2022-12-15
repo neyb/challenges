@@ -20,14 +20,11 @@ fn part2(moves: &Vec<Move>) -> usize {
 }
 
 fn count_visited(moves: &Vec<Move>, tail_position: usize) -> usize {
-    moves
-        .iter()
-        .fold(Rope::new_at_origin(tail_position + 1), |mut rope, m| {
-            rope.apply_move(&m);
-            rope
-        })
-        .tail()
-        .count_visited()
+    let mut rope = Rope::new_at_origin(tail_position + 1);
+    for m in moves {
+        rope.apply_move(m);
+    }
+    rope.tail().count_visited()
 }
 
 struct Rope {
