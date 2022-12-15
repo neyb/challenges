@@ -1,10 +1,7 @@
-use std::cell::RefCell;
-use std::fs::File;
-use std::rc::Rc;
 use std::str::FromStr;
 use std::vec;
 
-use anyhow::{Error, format_err, Result};
+use anyhow::{format_err, Error, Result};
 use itertools::Itertools;
 
 use challenges_common::MyIterTools;
@@ -18,7 +15,7 @@ fn main() {
     println!("part2: {}", part2(&root));
 }
 
-fn parse(input_lines: impl IntoIterator<Item=impl AsRef<str>>) -> Vec<Command> {
+fn parse(input_lines: impl IntoIterator<Item = impl AsRef<str>>) -> Vec<Command> {
     input_lines
         .into_iter()
         .chunks_starting_by(|line| line.as_ref().starts_with("$"))
@@ -53,7 +50,8 @@ fn part2(root: &FileNode) -> u32 {
         .filter(|file| file.is_directory())
         .map(|file| file.size())
         .filter(|&size| size >= space_to_free)
-        .min().unwrap()
+        .min()
+        .unwrap()
 }
 
 #[derive(Debug, PartialEq)]
@@ -162,8 +160,7 @@ impl FileNode {
                 mut cached_size,
                 files,
                 ..
-            } => *cached_size
-                .get_or_insert_with(|| files.iter().map(|file| file.size()).sum()),
+            } => *cached_size.get_or_insert_with(|| files.iter().map(|file| file.size()).sum()),
             FileNode::File { size, .. } => *size,
         }
     }
@@ -174,20 +171,9 @@ impl FileNode {
         }
     }
 
-    fn child(&self, name: &String) -> Option<&Self> {
-        match self {
-            FileNode::Dir { files, .. } => files
-                .iter()
-                .find(|f| f.name() == name),
-            FileNode::File { .. } => None,
-        }
-    }
-
     fn child_mut(&'_ mut self, name: &String) -> Option<&mut Self> {
         match self {
-            FileNode::Dir { files, .. } => files
-                .iter_mut()
-                .find(|f| f.name() == name),
+            FileNode::Dir { files, .. } => files.iter_mut().find(|f| f.name() == name),
             FileNode::File { .. } => None,
         }
     }
@@ -228,24 +214,16 @@ struct Context {
 
 impl Context {
     fn new() -> Self {
-        let mut root = FileNode::dir("/");
         Self {
-            root,
+            root: FileNode::dir("/"),
             current_path: vec![],
         }
     }
 
-    fn current_node(&self) -> *const FileNode {
-        match self.current_path.last() {
-            Some(last) => *last,
-            None => &self.root
-        }
-    }
-
-    fn current_node_mut(&mut self) -> *mut FileNode {
+    fn current_node_mut(&mut self) -> &mut FileNode {
         match self.current_path.last_mut() {
-            Some(last) => *last,
-            None => &mut self.root
+            Some(last) => unsafe { &mut **last },
+            None => &mut self.root,
         }
     }
 
@@ -261,25 +239,20 @@ impl Context {
                         .ok_or(Error::msg("current path should not be empty"))?;
                 }
                 CdTarget::Dir { name } => {
-                    unsafe {
-                        let file: *mut FileNode = (*self
-                            .current_node_mut())
-                            .child_mut(name)
-                            .ok_or(Error::msg("no such file"))?;
-                        self.current_path.push(file)
-                    }
+                    let file: *mut FileNode = (self.current_node_mut())
+                        .child_mut(name)
+                        .ok_or(Error::msg("no such file"))?;
+                    self.current_path.push(file)
                 }
             },
             Command::Ls { files } => {
-                let mut current_node = self.current_node_mut();
+                let current_node = self.current_node_mut();
                 for file in files {
                     let file = match file {
                         LsFileOutput::Dir { name } => FileNode::dir(name),
                         LsFileOutput::File { name, size } => FileNode::file(name, *size),
                     };
-                    unsafe {
-                        (*current_node).add_file(file)?;
-                    }
+                    current_node.add_file(file)?;
                 }
             }
         };
