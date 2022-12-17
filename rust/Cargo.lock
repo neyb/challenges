@@ -35,6 +35,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "aoc_2022_11"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "challenges_common",
+ "itertools",
+ "lazy_static",
+ "regex",
+]
+
+[[package]]
 name = "aoc_2022_2"
 version = "0.1.0"
 dependencies = [
