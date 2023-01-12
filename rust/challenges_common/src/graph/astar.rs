@@ -6,14 +6,20 @@ use std::{
     rc::Rc,
 };
 
-fn astar<N, C, Nexts>(
+pub trait Cost: Ord + Copy + Add<Output = Self> + Sized + Default {}
+impl<T: Ord + Copy + Add<Output = Self> + Sized + Default> Cost for T {}
+
+pub trait Node: Hash + Eq + Clone {}
+impl<T: Hash + Eq + Clone> Node for T {}
+
+pub fn astar<N, C, Nexts>(
     starting_at: N,
     next: impl Fn(&N) -> Nexts,
     is_end: impl Fn(&N) -> bool,
     heuristic: impl Fn(&N) -> C,
 ) -> Option<Path<N, C>>
 where
-    N: Node<C>,
+    N: Node,
     C: Cost,
     Nexts: Iterator<Item = Step<N, C>>,
 {
@@ -26,7 +32,7 @@ where
         node: Rc<N>,
         info: NodeInfo<N, C>,
     ) where
-        N: Node<C>,
+        N: Node,
         C: Cost,
     {
         let info = Rc::new(info);
@@ -44,7 +50,7 @@ where
         heuristic: impl Fn(&N) -> C,
     ) -> NodeInfo<N, C>
     where
-        N: Node<C>,
+        N: Node,
         C: Cost,
     {
         let existing = optimals.get(&to);
@@ -60,10 +66,7 @@ where
         }
     }
 
-    fn is_improvement<N: Node<C>, C: Cost>(
-        optimals: &Optimals<N, C>,
-        info: &NodeInfo<N, C>,
-    ) -> bool {
+    fn is_improvement<N: Node, C: Cost>(optimals: &Optimals<N, C>, info: &NodeInfo<N, C>) -> bool {
         match optimals.get(&info.node) {
             Some(existing) => info.cost < existing.cost,
             None => true,
@@ -72,7 +75,7 @@ where
 
     fn is_optimal<'n, N, C>(optimals: &Optimals<N, C>, info: &Rc<NodeInfo<N, C>>) -> bool
     where
-        N: Node<C>,
+        N: Node,
         C: Cost,
     {
         match optimals.get(&info.node) {
@@ -81,10 +84,7 @@ where
         }
     }
 
-    fn rebuild_path<N: Node<C>, C: Cost>(
-        optimals: &mut Optimals<N, C>,
-        from: Rc<NodeInfo<N, C>>,
-    ) -> Path<N, C> {
+    fn rebuild_path<N: Node, C: Cost>(from: Rc<NodeInfo<N, C>>) -> Path<N, C> {
         // let from = &optimals.get(from).unwrap();
         let cost = from.cost;
         let mut nodes = Vec::new();
@@ -114,7 +114,7 @@ where
             let reached = &from.node;
 
             if is_end(reached) {
-                return Some(rebuild_path(&mut optimals, from));
+                return Some(rebuild_path(from));
             } else {
                 for next_step in next(reached) {
                     let to = Rc::new(next_step.to);
@@ -134,21 +134,10 @@ where
     None
 }
 
-trait Cost: Ord + Copy + Add<Output = Self> + Sized {}
-impl<T: Ord + Copy + Add<Output = Self> + Sized> Cost for T {}
-
-trait Node<Cost>
-where
-    Self: Hash + Eq + Clone,
-    Cost: self::Cost,
-{
-    fn cost(&self) -> Cost;
-}
-
 #[derive(PartialEq, Eq)]
 struct NodeInfo<N, C>
 where
-    N: Node<C>,
+    N: Node,
     C: Cost,
 {
     node: Rc<N>,
@@ -157,14 +146,13 @@ where
     heuristic: C,
 }
 
-impl<N: Node<C>, C: Cost> NodeInfo<N, C> {
+impl<N: Node, C: Cost> NodeInfo<N, C> {
     fn start(start: Rc<N>, heuristic: &dyn Fn(&N) -> C) -> Self {
-        let cost = N::cost(&start);
         let heuristic = heuristic(&start);
         Self {
             node: start,
             previous_ancestor: None,
-            cost,
+            cost: C::default(),
             heuristic,
         }
     }
@@ -174,51 +162,41 @@ impl<N: Node<C>, C: Cost> NodeInfo<N, C> {
     }
 }
 
-impl<'n, N: Node<C>, C: Cost> PartialOrd for NodeInfo<N, C> {
+impl<'n, N: Node, C: Cost> PartialOrd for NodeInfo<N, C> {
     fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
         Some(self.cmp(other))
     }
 }
 
-impl<'n, N: Node<C>, C: Cost> Ord for NodeInfo<N, C> {
+impl<'n, N: Node, C: Cost> Ord for NodeInfo<N, C> {
     fn cmp(&self, other: &Self) -> std::cmp::Ordering {
         self.score().cmp(&other.score())
     }
 }
 
 #[derive(PartialEq, Eq)]
-struct Path<Node, Cost> {
-    nodes: Vec<Node>,
-    cost: Cost,
+pub struct Path<Node, Cost> {
+    pub nodes: Vec<Node>,
+    pub cost: Cost,
 }
 
 #[derive(PartialEq, Eq)]
-struct Step<Node, Cost> {
-    to: Node,
-    additionnal_cost: Cost,
-}
-
-impl<T, Cost> Node<Cost> for T
-where
-    Cost: self::Cost + Default,
-    T: Hash + Eq + Clone,
-{
-    fn cost(&self) -> Cost {
-        Cost::default()
-    }
+pub struct Step<Node, Cost> {
+    pub to: Node,
+    pub additionnal_cost: Cost,
 }
 
 #[cfg(test)]
 mod test {
     use std::iter::once;
 
-    use super::{astar, Path, Step};
+    use super::*;
 
-    struct CustomGraph {
-        edges: Vec<(u8, u8, u8)>,
+    struct CustomGraph<N, E> {
+        edges: Vec<(N, N, E)>,
     }
 
-    impl CustomGraph {
+    impl CustomGraph<u8, u8> {
         fn same_weights(edges: Vec<(u8, u8)>) -> Self {
             Self {
                 edges: edges.into_iter().map(|(from, to)| (from, to, 1)).collect(),
@@ -247,6 +225,11 @@ mod test {
         ) -> Option<Path<u8, u8>> {
             astar(from, |&n| self.next(n), |&n| n == to, heuristic)
         }
+    }
+
+    #[derive(Hash, PartialEq, Eq, Clone)]
+    struct WeightedNode {
+        id: u8,
     }
 
     #[test]

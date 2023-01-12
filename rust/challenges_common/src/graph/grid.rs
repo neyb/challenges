@@ -34,7 +34,7 @@ impl<N> Grid<N> {
         (0..self.width()).flat_map(|x| (0..self.height()).map(move |y| Coord { x, y }))
     }
 
-    pub fn neightbours<'a>(&'a self, coord: &'a Coord) -> impl Iterator<Item = (Coord, &N)> + 'a {
+    pub fn neightbours<'a>(&'a self, coord: &Coord) -> impl Iterator<Item = (Coord, &N)> + 'a {
         coord
             .neighbours(false)
             .filter_map(|coord| self.at(&coord).map(move |n| (coord, n)))
@@ -79,7 +79,7 @@ impl Coord {
         self.x.abs_diff(to.x) + self.y.abs_diff(to.y)
     }
 
-    pub fn neighbours(&self, with_diag: bool) -> impl Iterator<Item = Coord> + '_ {
+    pub fn neighbours(&self, with_diag: bool) -> impl Iterator<Item = Coord> {
         (-1i8..=1)
             .flat_map(|diff_x| (-1i8..=1).map(move |diff_y| (diff_x, diff_y)))
             .filter(|(diff_x, diff_y)| diff_x != &0 || diff_y != &0)
@@ -90,6 +90,8 @@ impl Coord {
                 x: x as usize,
                 y: y as usize,
             })
+            .collect_vec()
+            .into_iter()
     }
 }
 
