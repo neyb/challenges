@@ -30,7 +30,7 @@ where
     let start = Rc::new(starting_at);
 
     let info = NodeInfo::start(start.clone(), &heuristic);
-    add_node(&mut queue, &mut optimals, start, info);
+    add_node(&mut queue, &mut optimals, info);
 
     while let Some(Reverse(from)) = queue.pop() {
         if is_optimal(&optimals, &from) {
@@ -40,15 +40,14 @@ where
                 return Some(rebuild_path(from));
             } else {
                 for next_step in next(reached) {
-                    let to = Rc::new(next_step.to);
                     let info = node_info(
                         from.clone(),
-                        Rc::clone(&to),
+                        Rc::new(next_step.to),
                         next_step.additionnal_cost,
                         &optimals,
                         &heuristic,
                     );
-                    add_node(&mut queue, &mut optimals, to, info);
+                    add_node(&mut queue, &mut optimals, info);
                 }
             }
         }
@@ -59,30 +58,29 @@ where
     type Queue<N, C> = BinaryHeap<Reverse<Rc<NodeInfo<N, C>>>>;
     type Optimals<N, C> = HashMap<Rc<N>, Rc<NodeInfo<N, C>>>;
 
-    fn is_optimal<N, C>(optimals: &Optimals<N, C>, info: &Rc<NodeInfo<N, C>>) -> bool
-    where
-        N: Node,
-        C: Cost,
-    {
+    fn is_optimal<N: Node, C: Cost>(optimals: &Optimals<N, C>, info: &Rc<NodeInfo<N, C>>) -> bool {
         match optimals.get(&info.node) {
-            Some(existing) => existing == info,
+            Some(existing) => info.cost <= existing.cost,
             None => true,
         }
     }
 
-    fn add_node<N, C>(
-        queue: &mut Queue<N, C>,
-        optimals: &mut Optimals<N, C>,
-        node: Rc<N>,
-        info: NodeInfo<N, C>,
-    ) where
+    fn is_improvement<N: Node, C: Cost>(optimals: &Optimals<N, C>, info: &NodeInfo<N, C>) -> bool {
+        match optimals.get(&info.node) {
+            Some(existing) => info.cost < existing.cost,
+            None => true,
+        }
+    }
+
+    fn add_node<N, C>(queue: &mut Queue<N, C>, optimals: &mut Optimals<N, C>, info: NodeInfo<N, C>)
+    where
         N: Node,
         C: Cost,
     {
         let info = Rc::new(info);
         if is_improvement(&optimals, &info) {
             queue.push(Reverse(info.clone()));
-            optimals.insert(node, info);
+            optimals.insert(Rc::clone(&info.node), info);
         }
     }
 
@@ -126,13 +124,6 @@ where
             cost: from.cost + additionnal_cost,
             previous_ancestor: Some(from),
             heuristic,
-        }
-    }
-
-    fn is_improvement<N: Node, C: Cost>(optimals: &Optimals<N, C>, info: &NodeInfo<N, C>) -> bool {
-        match optimals.get(&info.node) {
-            Some(existing) => info.cost < existing.cost,
-            None => true,
         }
     }
 }
