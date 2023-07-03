@@ -7,9 +7,11 @@ use std::{
 };
 
 pub trait Cost: Ord + Copy + Add<Output = Self> + Sized + Default {}
+
 impl<T: Ord + Copy + Add<Output = Self> + Sized + Default> Cost for T {}
 
 pub trait Node: Hash + Eq + Clone {}
+
 impl<T: Hash + Eq + Clone> Node for T {}
 
 pub fn astar<N, C, Nexts>(
@@ -23,85 +25,6 @@ where
     C: Cost,
     Nexts: Iterator<Item = Step<N, C>>,
 {
-    type Queue<'n, N, C> = BinaryHeap<Reverse<Rc<NodeInfo<N, C>>>>;
-    type Optimals<'n, N, C> = HashMap<Rc<N>, Rc<NodeInfo<N, C>>>;
-
-    fn add_node<'n, N, C>(
-        queue: &mut Queue<'n, N, C>,
-        optimals: &mut Optimals<'n, N, C>,
-        node: Rc<N>,
-        info: NodeInfo<N, C>,
-    ) where
-        N: Node,
-        C: Cost,
-    {
-        let info = Rc::new(info);
-        if is_improvement(&optimals, &info) {
-            queue.push(Reverse(info.clone()));
-            optimals.insert(node, info);
-        }
-    }
-
-    fn node_info<'n, N, C>(
-        from: Rc<NodeInfo<N, C>>,
-        to: Rc<N>,
-        additionnal_cost: C,
-        optimals: &Optimals<N, C>,
-        heuristic: impl Fn(&N) -> C,
-    ) -> NodeInfo<N, C>
-    where
-        N: Node,
-        C: Cost,
-    {
-        let existing = optimals.get(&to);
-        let heuristic = existing
-            .map(|existing| existing.heuristic)
-            .unwrap_or_else(|| heuristic(&to));
-        let cost = from.cost + additionnal_cost;
-        NodeInfo {
-            node: to,
-            previous_ancestor: Some(from),
-            cost,
-            heuristic,
-        }
-    }
-
-    fn is_improvement<N: Node, C: Cost>(optimals: &Optimals<N, C>, info: &NodeInfo<N, C>) -> bool {
-        match optimals.get(&info.node) {
-            Some(existing) => info.cost < existing.cost,
-            None => true,
-        }
-    }
-
-    fn is_optimal<'n, N, C>(optimals: &Optimals<N, C>, info: &Rc<NodeInfo<N, C>>) -> bool
-    where
-        N: Node,
-        C: Cost,
-    {
-        match optimals.get(&info.node) {
-            Some(existing) => existing == info,
-            None => true,
-        }
-    }
-
-    fn rebuild_path<N: Node, C: Cost>(from: Rc<NodeInfo<N, C>>) -> Path<N, C> {
-        // let from = &optimals.get(from).unwrap();
-        let cost = from.cost;
-        let mut nodes = Vec::new();
-
-        let mut current = Some(from);
-        while let Some(node_info) = current {
-            nodes.push(N::clone(&node_info.node));
-            current = match &node_info.previous_ancestor {
-                Some(node_info) => Some(Rc::clone(node_info)),
-                None => None,
-            }
-        }
-        nodes.reverse();
-
-        Path { nodes, cost }
-    }
-
     let mut queue: Queue<N, C> = BinaryHeap::new();
     let mut optimals: Optimals<N, C> = HashMap::new();
     let start = Rc::new(starting_at);
@@ -131,7 +54,87 @@ where
         }
     }
 
-    None
+    return None;
+
+    type Queue<N, C> = BinaryHeap<Reverse<Rc<NodeInfo<N, C>>>>;
+    type Optimals<N, C> = HashMap<Rc<N>, Rc<NodeInfo<N, C>>>;
+
+    fn is_optimal<N, C>(optimals: &Optimals<N, C>, info: &Rc<NodeInfo<N, C>>) -> bool
+    where
+        N: Node,
+        C: Cost,
+    {
+        match optimals.get(&info.node) {
+            Some(existing) => existing == info,
+            None => true,
+        }
+    }
+
+    fn add_node<N, C>(
+        queue: &mut Queue<N, C>,
+        optimals: &mut Optimals<N, C>,
+        node: Rc<N>,
+        info: NodeInfo<N, C>,
+    ) where
+        N: Node,
+        C: Cost,
+    {
+        let info = Rc::new(info);
+        if is_improvement(&optimals, &info) {
+            queue.push(Reverse(info.clone()));
+            optimals.insert(node, info);
+        }
+    }
+
+    fn rebuild_path<N: Node, C: Cost>(from: Rc<NodeInfo<N, C>>) -> Path<N, C> {
+        // let from = &optimals.get(from).unwrap();
+        let cost = from.cost;
+        let mut nodes = Vec::new();
+
+        let mut current = Some(from);
+        while let Some(node_info) = current {
+            let previous = &node_info.previous_ancestor;
+            nodes.push(N::clone(&node_info.node));
+            current = match previous {
+                Some(node_info) => Some(Rc::clone(node_info)),
+                None => None,
+            }
+        }
+        nodes.reverse();
+
+        Path { nodes, cost }
+    }
+
+    fn node_info<N, C>(
+        from: Rc<NodeInfo<N, C>>,
+        to: Rc<N>,
+        additionnal_cost: C,
+        optimals: &Optimals<N, C>,
+        heuristic: impl Fn(&N) -> C,
+    ) -> NodeInfo<N, C>
+    where
+        N: Node,
+        C: Cost,
+    {
+        let heuristic = match optimals.get(&to) {
+            Some(existing) => existing.heuristic,
+            _ => heuristic(&to),
+        };
+
+        NodeInfo {
+            node: to,
+            cost: from.cost + additionnal_cost,
+            previous_ancestor: Some(from),
+            heuristic,
+        }
+    }
+
+    fn is_improvement<N: Node, C: Cost>(optimals: &Optimals<N, C>, info: &NodeInfo<N, C>) -> bool {
+        match optimals.get(&info.node) {
+            Some(existing) => info.cost < existing.cost,
+            None => true,
+        }
+    }
 }
 
 #[derive(PartialEq, Eq)]
@@ -162,13 +165,13 @@ impl<N: Node, C: Cost> NodeInfo<N, C> {
     }
 }
 
-impl<'n, N: Node, C: Cost> PartialOrd for NodeInfo<N, C> {
+impl<N: Node, C: Cost> PartialOrd for NodeInfo<N, C> {
     fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
         Some(self.cmp(other))
     }
 }
 
-impl<'n, N: Node, C: Cost> Ord for NodeInfo<N, C> {
+impl<N: Node, C: Cost> Ord for NodeInfo<N, C> {
     fn cmp(&self, other: &Self) -> std::cmp::Ordering {
         self.score().cmp(&other.score())
     }

@@ -2,10 +2,11 @@
 members = ["challenges_common", "aoc/2022/*"]
 
 [workspace.dependencies]
-rpds = "0"
-itertools = "0"
 challenges_common = { path = "./challenges_common" }
 anyhow = "1"
+itertools = "0"
+lazy-regex = "2"
 regex = "1"
-lazy_static = "1"
 petgraph = "0"
+rpds = "0"
+lazy_static = "1"

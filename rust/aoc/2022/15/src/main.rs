@@ -1,7 +1,7 @@
+use std::{collections::HashSet, str::FromStr};
+
 use anyhow::{anyhow, Error, Result};
-use itertools::Itertools;
 use lazy_regex::regex;
-use std::{collections::HashSet, ops::AddAssign, str::FromStr};
 
 fn main() {
     let sensors = parse(&["aoc", "2022", "15.txt"]).unwrap();
@@ -68,12 +68,12 @@ struct Coord {
 }
 
 impl Coord {
-    fn apply(&self, vector: &Vector) -> Self {
-        Self {
-            x: self.x + vector.x,
-            y: self.y + vector.y,
-        }
-    }
+    // fn apply(&self, vector: &Vector) -> Self {
+    //     Self {
+    //         x: self.x + vector.x,
+    //         y: self.y + vector.y,
+    //     }
+    // }
 
     fn to(&self, to: &Self) -> Vector {
         Vector {
@@ -166,7 +166,7 @@ impl Ranges {
         Self { ranges: Vec::new() }
     }
 
-    fn from(ranges: impl IntoIterator<Item = Range>) -> Self {
+    fn from(ranges: impl IntoIterator<Item=Range>) -> Self {
         let mut result = Self {
             ranges: ranges.into_iter().collect(),
         };
@@ -255,6 +255,7 @@ mod test {
         let sensors = parse(&["aoc", "2022", "15-test.txt"]).unwrap();
         assert_eq!(part1(&sensors, 10), 26)
     }
+
     #[test]
     fn given_test_part2() {
         let sensors = parse(&["aoc", "2022", "15-test.txt"]).unwrap();
