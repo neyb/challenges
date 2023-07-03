@@ -83,16 +83,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "aoc_2022_16"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "challenges_common",
- "itertools",
- "lazy-regex",
-]
-
-[[package]]
 name = "aoc_2022_2"
 version = "0.1.0"
 dependencies = [
