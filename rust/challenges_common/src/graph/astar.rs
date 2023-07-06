@@ -1,18 +1,11 @@
 use core::cmp::Reverse;
+use std::iter::successors;
 use std::{
     collections::{BinaryHeap, HashMap},
     hash::Hash,
     ops::Add,
     rc::Rc,
 };
-
-pub trait Cost: Ord + Copy + Add<Output = Self> + Sized + Default {}
-
-impl<T: Ord + Copy + Add<Output = Self> + Sized + Default> Cost for T {}
-
-pub trait Node: Hash + Eq + Clone {}
-
-impl<T: Hash + Eq + Clone> Node for T {}
 
 pub fn astar<N, C, Nexts>(
     starting_at: N,
@@ -85,22 +78,18 @@ where
     }
 
     fn rebuild_path<N: Node, C: Cost>(from: Rc<NodeInfo<N, C>>) -> Path<N, C> {
-        // let from = &optimals.get(from).unwrap();
-        let cost = from.cost;
-        let mut nodes = Vec::new();
-
-        let mut current = Some(from);
-        while let Some(node_info) = current {
-            let previous = &node_info.previous_ancestor;
-            nodes.push(N::clone(&node_info.node));
-            current = match previous {
-                Some(node_info) => Some(Rc::clone(node_info)),
-                None => None,
-            }
-        }
+        let mut nodes = successors(Some(&from), |current| match &current.previous_ancestor {
+            Some(node_info) => Some(node_info),
+            None => None,
+        })
+        .map(|node_info| N::clone(&node_info.node))
+        .collect::<Vec<_>>();
         nodes.reverse();
 
-        Path { nodes, cost }
+        Path {
+            nodes,
+            cost: from.cost,
+        }
     }
 
     fn node_info<N, C>(
@@ -127,6 +116,24 @@ where
         }
     }
 }
+
+#[derive(PartialEq, Eq)]
+pub struct Path<Node, Cost> {
+    pub nodes: Vec<Node>,
+    pub cost: Cost,
+}
+
+#[derive(PartialEq, Eq)]
+pub struct Step<Node, Cost> {
+    pub to: Node,
+    pub additionnal_cost: Cost,
+}
+
+pub trait Cost: Ord + Copy + Add<Output = Self> + Sized + Default {}
+pub trait Node: Hash + Eq + Clone {}
+
+impl<T: Ord + Copy + Add<Output = Self> + Sized + Default> Cost for T {}
+impl<T: Hash + Eq + Clone> Node for T {}
 
 #[derive(PartialEq, Eq)]
 struct NodeInfo<N, C>
@@ -166,18 +173,6 @@ impl<N: Node, C: Cost> Ord for NodeInfo<N, C> {
     fn cmp(&self, other: &Self) -> std::cmp::Ordering {
         self.score().cmp(&other.score())
     }
-}
-
-#[derive(PartialEq, Eq)]
-pub struct Path<Node, Cost> {
-    pub nodes: Vec<Node>,
-    pub cost: Cost,
-}
-
-#[derive(PartialEq, Eq)]
-pub struct Step<Node, Cost> {
-    pub to: Node,
-    pub additionnal_cost: Cost,
 }
 
 #[cfg(test)]
