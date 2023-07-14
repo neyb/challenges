@@ -162,11 +162,7 @@ struct Ranges {
 }
 
 impl Ranges {
-    fn new() -> Self {
-        Self { ranges: Vec::new() }
-    }
-
-    fn from(ranges: impl IntoIterator<Item=Range>) -> Self {
+    fn from(ranges: impl IntoIterator<Item = Range>) -> Self {
         let mut result = Self {
             ranges: ranges.into_iter().collect(),
         };
@@ -198,12 +194,6 @@ impl Ranges {
         if let Some(current) = current {
             self.ranges.push(current);
         }
-    }
-
-    fn add(&mut self, range: Range) {
-        self.ranges.push(range);
-
-        self.simplify()
     }
 
     fn len(&self) -> usize {
