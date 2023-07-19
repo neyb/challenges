@@ -91,7 +91,7 @@ impl Map {
                         |&from| {
                             map.get(from).unwrap().tunnels_to.iter().map(|target| Step {
                                 to: target,
-                                additionnal_cost: 1,
+                                additional_cost: 1,
                             })
                         },
                         |&valve| valve == target,

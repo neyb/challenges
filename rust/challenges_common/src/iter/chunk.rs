@@ -38,7 +38,7 @@ where
 
     fn next(&mut self) -> Option<Self::Item> {
         let mut result = None;
-        while let Some(item) = self.inner.next() {
+        for item in self.inner.by_ref() {
             let vec = result.get_or_insert_with(Vec::new);
             if let Some(last_splitter) = self.last_splitter.take() {
                 vec.push(last_splitter)
@@ -65,7 +65,7 @@ mod test {
 
         let chunks: Vec<_> = ChunkStarting {
             inner: iter,
-            splitter: |line| line.starts_with("$"),
+            splitter: |line| line.starts_with('$'),
             last_splitter: None,
         }
         .collect();

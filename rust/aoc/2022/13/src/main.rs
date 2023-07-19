@@ -22,7 +22,7 @@ fn parse(path: &[&str]) -> Vec<Entry> {
         .collect()
 }
 
-fn part1(entries: &Vec<Entry>) -> usize {
+fn part1(entries: &[Entry]) -> usize {
     entries
         .iter()
         .filter(|entry| entry.is_ordered())
@@ -30,7 +30,7 @@ fn part1(entries: &Vec<Entry>) -> usize {
         .sum()
 }
 
-fn part2(entries: &Vec<Entry>) -> u16 {
+fn part2(entries: &[Entry]) -> u16 {
     let divider_2 = Value::Integer(2);
     let divider_6 = Value::Integer(6);
 
@@ -105,9 +105,9 @@ impl Value {
 
                 Ok(Value::List(values))
             }
-            Some(char) if char.is_digit(10) => {
+            Some(char) if char.is_ascii_digit() => {
                 let value_as_str: String =
-                    chars.peeking_take_while(|char| char.is_digit(10)).collect();
+                    chars.peeking_take_while(|char| char.is_ascii_digit()).collect();
                 Ok(Value::Integer(value_as_str.parse()?))
             }
             char => Err(anyhow!("unexpected char : {:?}", char)),
@@ -123,13 +123,13 @@ impl PartialEq for Value {
 }
 
 impl PartialOrd for Value {
-    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
         Some(self.cmp(other))
     }
 }
 
 impl Ord for Value {
-    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+    fn cmp(&self, other: &Self) -> Ordering {
         use Ordering::*;
         use Value::*;
 
@@ -141,7 +141,7 @@ impl Ord for Value {
                 .find_map(|either_or_both| match either_or_both {
                     EitherOrBoth::Both(left, right) => match left.cmp(right) {
                         Equal => None,
-                        cmp @ _ => Some(cmp),
+                        cmp => Some(cmp),
                     },
                     EitherOrBoth::Left(_) => Some(Greater),
                     EitherOrBoth::Right(_) => Some(Less),

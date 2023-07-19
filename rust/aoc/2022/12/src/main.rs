@@ -21,11 +21,11 @@ fn read_map(location: &[&str]) -> Map {
                 .map(|(x, char)| match char {
                     'S' => {
                         start = Some(Coord { x, y });
-                        'a' as u8
+                        b'a'
                     }
                     'E' => {
                         exit = Some(Coord { x, y });
-                        'z' as u8
+                        b'z'
                     }
                     _ => char as u8,
                 })
@@ -41,13 +41,12 @@ fn read_map(location: &[&str]) -> Map {
 
 fn part1(map: &Map) -> usize {
     let found_path = astar(
-        map.start.clone(),
+        map.start,
         |from| {
             map.accessible_nodes_from(from)
-                .into_iter()
                 .map(|coord| Step {
                     to: coord,
-                    additionnal_cost: 1,
+                    additional_cost: 1,
                 })
         },
         |coord| coord == &map.exit,
@@ -59,14 +58,14 @@ fn part1(map: &Map) -> usize {
 
 fn part2(map: &Map) -> usize {
     astar(
-        map.exit.clone(),
+        map.exit,
         |to| {
-            map.node_accessing(to).into_iter().map(|coord| Step {
-                additionnal_cost: 1,
+            map.node_accessing(to).map(|coord| Step {
+                additional_cost: 1,
                 to: coord,
             })
         },
-        |coord| map.grid.at(&coord).unwrap() == &('a' as u8),
+        |coord| map.grid.at(coord).unwrap() == &b'a',
         |_| 0,
     )
     .unwrap()
@@ -85,9 +84,7 @@ impl Map {
             .coords()
             .flat_map(|from| {
                 self.accessible_nodes_from(&from)
-                    .into_iter()
                     .map({
-                        let from = from.clone();
                         move |to_coord| (from, to_coord)
                     })
                     .collect_vec()
@@ -96,12 +93,12 @@ impl Map {
     }
 
     fn accessible_nodes_from<'a>(&'a self, from: &Coord) -> impl Iterator<Item = Coord> + 'a {
-        let &from_height = self.grid.at(&from).unwrap();
+        let &from_height = self.grid.at(from).unwrap();
         self.neightbours_with(from, move |(_, &to_height)| (from_height + 1) >= to_height)
     }
 
     fn node_accessing<'a>(&'a self, to: &Coord) -> impl Iterator<Item = Coord> + 'a {
-        let &to_height = self.grid.at(&to).unwrap();
+        let &to_height = self.grid.at(to).unwrap();
         self.neightbours_with(to, move |(_, &from_height)| from_height + 1 >= to_height)
     }
 
@@ -111,7 +108,7 @@ impl Map {
         filter: impl Fn(&(Coord, &u8)) -> bool + 'a,
     ) -> impl Iterator<Item = Coord> + 'a {
         self.grid
-            .neightbours(&from)
+            .neighbours(&from)
             .filter(filter)
             .map(|(to_coord, _)| to_coord)
     }

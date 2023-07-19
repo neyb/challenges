@@ -34,7 +34,7 @@ impl<N> Grid<N> {
         (0..self.width()).flat_map(|x| (0..self.height()).map(move |y| Coord { x, y }))
     }
 
-    pub fn neightbours<'a>(&'a self, coord: &Coord) -> impl Iterator<Item = (Coord, &N)> + 'a {
+    pub fn neighbours(&self, coord: &Coord) -> impl Iterator<Item = (Coord, &N)> + '_ {
         coord
             .neighbours(false)
             .filter_map(|coord| self.at(&coord).map(move |n| (coord, n)))
@@ -112,7 +112,7 @@ mod test {
     }
 
     #[test]
-    fn neightbours_of_00_are_2() {
+    fn neighbours_of_00_are_2() {
         let coord = Coord { x: 0, y: 0 };
         assert_eq!(coord.neighbours(false).count(), 2)
     }

@@ -14,11 +14,11 @@ fn main() {
     println!("sum 2 is: {}", score_sum(&rounds));
 }
 
-fn parse1(lines: &Vec<String>) -> Result<Vec<Round>> {
+fn parse1(lines: &[String]) -> Result<Vec<Round>> {
     lines
         .iter()
         .map(|line| {
-            let mut splitted = line.split(" ");
+            let mut splitted = line.split(' ');
             let opponent_move = splitted.next().unwrap().parse()?;
             let your_move = splitted.next().unwrap().parse()?;
             Ok(Round {
@@ -29,11 +29,11 @@ fn parse1(lines: &Vec<String>) -> Result<Vec<Round>> {
         .collect()
 }
 
-fn parse2(lines: &Vec<String>) -> Result<Vec<Round>> {
+fn parse2(lines: &[String]) -> Result<Vec<Round>> {
     lines
         .iter()
         .map(|line| {
-            let mut splitted = line.split(" ");
+            let mut splitted = line.split(' ');
             let opponent_move = splitted.next().unwrap().parse()?;
             let your_move = match (&opponent_move, splitted.next().unwrap()) {
                 (Move::Paper, "Z") | (Move::Scissors, "Y") | (Move::Rock, "X") => Move::Scissors,
@@ -52,7 +52,7 @@ fn parse2(lines: &Vec<String>) -> Result<Vec<Round>> {
         .collect()
 }
 
-fn score_sum(rounds: &Vec<Round>) -> u32 {
+fn score_sum(rounds: &[Round]) -> u32 {
     rounds.iter().map(Round::points).sum()
 }
 
@@ -70,7 +70,7 @@ impl Round {
             Move::Scissors => 3,
         };
 
-        let oucome_points: u32 = match (&self.your_move, &self.opponent_move) {
+        let outcome_points: u32 = match (&self.your_move, &self.opponent_move) {
             _ if self.your_move == self.opponent_move => 3,
             (Move::Paper, Move::Rock)
             | (Move::Rock, Move::Scissors)
@@ -78,7 +78,7 @@ impl Round {
             _ => 0,
         };
 
-        move_points + oucome_points
+        move_points + outcome_points
     }
 }
 

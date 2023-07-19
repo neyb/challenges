@@ -18,7 +18,7 @@ fn main() {
 fn parse(input_lines: impl IntoIterator<Item = impl AsRef<str>>) -> Vec<Command> {
     input_lines
         .into_iter()
-        .chunks_starting_by(|line| line.as_ref().starts_with("$"))
+        .chunks_starting_by(|line| line.as_ref().starts_with('$'))
         .map(Command::try_from)
         .map(Result::unwrap)
         .collect()
@@ -66,7 +66,7 @@ impl<S: AsRef<str>> TryFrom<Vec<S>> for Command {
     fn try_from(value: Vec<S>) -> std::result::Result<Self, Self::Error> {
         let mut lines = value.iter();
         let command = lines.next().unwrap().as_ref();
-        match command.split(" ").collect_vec()[..] {
+        match command.split(' ').collect_vec()[..] {
             ["$", "cd", target] => Ok(Command::Cd {
                 dir: target.parse()?,
             }),
@@ -112,7 +112,7 @@ impl FromStr for LsFileOutput {
     type Err = Error;
 
     fn from_str(s: &str) -> Result<Self> {
-        match s.split(" ").collect_vec()[..] {
+        match s.split(' ').collect_vec()[..] {
             ["dir", dir_name] => Ok(Self::Dir {
                 name: dir_name.to_string(),
             }),

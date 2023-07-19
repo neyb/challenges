@@ -30,7 +30,7 @@ where
 
     fn next(&mut self) -> Option<Self::Item> {
         let mut result = None;
-        while let Some(item) = self.inner.next() {
+        for item in self.inner.by_ref() {
             let vec = result.get_or_insert_with(Vec::new);
             if !(self.splitter)(&item) {
                 vec.push(item);

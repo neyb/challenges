@@ -36,7 +36,7 @@ where
                     let info = node_info(
                         from.clone(),
                         Rc::new(next_step.to),
-                        next_step.additionnal_cost,
+                        next_step.additional_cost,
                         &optimals,
                         &heuristic,
                     );
@@ -71,7 +71,7 @@ where
         C: Cost,
     {
         let info = Rc::new(info);
-        if is_improvement(&optimals, &info) {
+        if is_improvement(optimals, &info) {
             queue.push(Reverse(info.clone()));
             optimals.insert(Rc::clone(&info.node), info);
         }
@@ -95,7 +95,7 @@ where
     fn node_info<N, C>(
         from: Rc<NodeInfo<N, C>>,
         to: Rc<N>,
-        additionnal_cost: C,
+        additional_cost: C,
         optimals: &Optimals<N, C>,
         heuristic: impl Fn(&N) -> C,
     ) -> NodeInfo<N, C>
@@ -110,7 +110,7 @@ where
 
         NodeInfo {
             node: to,
-            cost: from.cost + additionnal_cost,
+            cost: from.cost + additional_cost,
             previous_ancestor: Some(from),
             heuristic,
         }
@@ -126,7 +126,7 @@ pub struct Path<Node, Cost> {
 #[derive(PartialEq, Eq)]
 pub struct Step<Node, Cost> {
     pub to: Node,
-    pub additionnal_cost: Cost,
+    pub additional_cost: Cost,
 }
 
 pub trait Cost: Ord + Copy + Add<Output = Self> + Sized + Default {}
@@ -198,7 +198,7 @@ mod test {
                 .filter(move |(at, _to, _weight)| from == *at)
                 .map(|(_from, to, weight)| Step {
                     to: *to,
-                    additionnal_cost: *weight,
+                    additional_cost: *weight,
                 })
         }
 
@@ -228,7 +228,7 @@ mod test {
             |_| {
                 once(Step {
                     to: 1,
-                    additionnal_cost: 1,
+                    additional_cost: 1,
                 })
             },
             |n| n == &1,
