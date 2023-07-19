@@ -28,7 +28,7 @@ fn part1(map: &Map) -> u32 {
 mod part2;
 
 fn part2(map: &Map) -> u32 {
-map.get_max_released::<part2::StatePart2>(26).unwrap()
+    map.get_max_released::<part2::StatePart2>(26).unwrap()
 }
 
 type ValveId = usize;
@@ -60,9 +60,7 @@ impl Map {
                 valves: HashMap::new(),
             },
             |mut map, valve_data| {
-                map.valves
-                    .entry(valve_data.id)
-                    .or_insert(valve_data);
+                map.valves.entry(valve_data.id).or_insert(valve_data);
                 map
             },
         )
@@ -130,10 +128,10 @@ impl Map {
     }
 
     fn rec_explore(
-        & self,
-        from_state: Box<dyn State+'_>,
+        &self,
+        from_state: Box<dyn State + '_>,
         timer: u8,
-        all_moves: & HashMap<& ValveId, Vec<Move<>>>,
+        all_moves: &HashMap<&ValveId, Vec<Move>>,
     ) -> Result<u32> {
         from_state.nexts(self, timer, all_moves)?.try_fold(
             from_state.released_pressure_at(timer),
@@ -199,9 +197,10 @@ trait State {
         map: &'a Map,
         timer: u8,
         all_moves: &'a HashMap<&'a ValveId, Vec<Move<'a>>>,
-    ) -> Result<Box<dyn Iterator<Item = Result<Box<dyn State+'a>>> + 'a>>;
+    ) -> Result<Box<dyn Iterator<Item = NextItem<'a>> + 'a>>;
     fn released_pressure_at(&self, time: u8) -> u32;
 }
+type NextItem<'a> = Result<Box<dyn State + 'a>>;
 
 #[cfg(test)]
 mod test {
