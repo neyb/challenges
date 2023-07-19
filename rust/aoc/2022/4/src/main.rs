@@ -11,7 +11,7 @@ fn main() {
 }
 
 fn parse(line: &String) -> (Range, Range) {
-    let (r1, r2) = line.split(",").collect_tuple().unwrap();
+    let (r1, r2) = line.split(',').collect_tuple().unwrap();
     (range_of(r1), range_of(r2))
 }
 
@@ -39,7 +39,7 @@ fn overlap(range1: &Range, range2: &Range) -> bool {
 }
 
 fn range_of(s: &str) -> Range {
-    let (start, end) = s.split("-").collect_tuple().unwrap();
+    let (start, end) = s.split('-').collect_tuple().unwrap();
     Range {
         start: start.parse().unwrap(),
         end: end.parse().unwrap(),

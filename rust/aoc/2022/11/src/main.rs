@@ -82,7 +82,7 @@ impl Monkeys {
             .monkeys
             .iter()
             .map(|monkey| monkey.throw.divisible_test)
-            .reduce(crate::lcm)
+            .reduce(lcm)
             // .reduce(|a, b| a * b)
             .unwrap();
 
@@ -215,7 +215,7 @@ impl FromStr for Operation {
     type Err = Error;
 
     fn from_str(s: &str) -> Result<Self> {
-        let var_name = &s.split(" ").collect_vec()[..];
+        let var_name = &s.split(' ').collect_vec()[..];
         match var_name {
             ["+", to_add] => Ok(Self::Add(to_add.parse()?)),
             ["*", "old"] => Ok(Self::Square),

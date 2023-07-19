@@ -3,7 +3,7 @@ use itertools::Itertools;
 use std::{collections::HashSet, str::FromStr};
 
 fn main() {
-    let moves = challenges_common::get_input_lines(&vec!["aoc", "2022", "9.txt"])
+    let moves = challenges_common::get_input_lines(&["aoc", "2022", "9.txt"])
         .map(|line| line.parse::<Move>().unwrap())
         .collect_vec();
 
@@ -140,7 +140,7 @@ impl FromStr for Move {
     type Err = Error;
 
     fn from_str(s: &str) -> Result<Self> {
-        match s.split(" ").collect_vec()[..] {
+        match s.split(' ').collect_vec()[..] {
             [direction, nb_step] => Ok(Self {
                 nb_steps: nb_step.parse()?,
                 direction: direction.parse()?,
@@ -297,7 +297,7 @@ mod test {
 
     #[test]
     fn _solution_part2() {
-        let moves = challenges_common::get_input_lines(&vec!["aoc", "2022", "9.txt"])
+        let moves = challenges_common::get_input_lines(&["aoc", "2022", "9.txt"])
             .map(|line| line.parse::<Move>().unwrap())
             .collect_vec();
 

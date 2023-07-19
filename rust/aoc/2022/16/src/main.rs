@@ -61,7 +61,7 @@ impl Map {
             },
             |mut map, valve_data| {
                 map.valves
-                    .entry(valve_data.id.clone())
+                    .entry(valve_data.id)
                     .or_insert(valve_data);
                 map
             },
@@ -125,7 +125,7 @@ impl Map {
         timer: u8,
     ) -> Result<u32> {
         let all_moves = self.all_moves();
-        let s = S::starting_state(&self)?;
+        let s = S::starting_state(self)?;
         self.rec_explore(Box::new(s), timer, &all_moves)
     }
 

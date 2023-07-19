@@ -138,7 +138,7 @@ mod cpu {
         fn from_str(s: &str) -> Result<Self> {
             use Instruction::*;
 
-            Ok(match s.split(" ").collect_vec()[..] {
+            Ok(match s.split(' ').collect_vec()[..] {
                 ["noop"] => Noop,
                 ["addx", value] => AddX(value.parse()?),
                 _ => Err(anyhow!("cannot parse instrution from {}", s))?,

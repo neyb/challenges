@@ -262,7 +262,7 @@ mod test {
             state.you,
             ActorState {
                 action: Action::Nothing,
-                position: &map.id_of("AA").unwrap(),
+                position: map.id_of("AA").unwrap(),
             }
         );
         assert_eq!(state.released_pressure, 0);
