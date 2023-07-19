@@ -108,7 +108,7 @@ impl Map {
         filter: impl Fn(&(Coord, &u8)) -> bool + 'a,
     ) -> impl Iterator<Item = Coord> + 'a {
         self.grid
-            .neighbours(&from)
+            .neighbours(from)
             .filter(filter)
             .map(|(to_coord, _)| to_coord)
     }
@@ -130,7 +130,6 @@ mod test {
         let map = read_map(&["aoc", "2022", "12-test.txt"]);
         let nodes = map
             .accessible_nodes_from(&Coord { x: 0, y: 0 })
-            .into_iter()
             .collect::<HashSet<_>>();
 
         assert_eq!(

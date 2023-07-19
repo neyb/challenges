@@ -4,7 +4,7 @@ use std::iter::successors;
 use itertools::Itertools;
 
 fn main() {
-    let map = challenges_common::get_input_lines(&vec!["aoc", "2022", "8.txt"])
+    let map = challenges_common::get_input_lines(&["aoc", "2022", "8.txt"])
         .map(|line| line.chars().collect_vec().into_iter())
         .map(|chars| chars.map(|c| c.to_digit(10).unwrap()));
     let grid = Grid::from(map);
@@ -21,10 +21,10 @@ fn visible_coord(grid: &Grid<Height>) -> HashSet<Coord> {
     let col = |x: usize| (0..grid.height()).map(move |y| Coord { x, y });
 
     let mut nodes: HashSet<Coord> = HashSet::new();
-    nodes.extend((0..grid.height()).flat_map(|y| keep_visible(line(y), &grid)));
-    nodes.extend((0..grid.height()).flat_map(|y| keep_visible(line(y).rev(), &grid)));
-    nodes.extend((0..grid.width()).flat_map(|x| keep_visible(col(x), &grid)));
-    nodes.extend((0..grid.width()).flat_map(|x| keep_visible(col(x).rev(), &grid)));
+    nodes.extend((0..grid.height()).flat_map(|y| keep_visible(line(y), grid)));
+    nodes.extend((0..grid.height()).flat_map(|y| keep_visible(line(y).rev(), grid)));
+    nodes.extend((0..grid.width()).flat_map(|x| keep_visible(col(x), grid)));
+    nodes.extend((0..grid.width()).flat_map(|x| keep_visible(col(x).rev(), grid)));
     nodes
 }
 
@@ -53,10 +53,10 @@ fn part2(grid: &Grid<Height>) -> usize {
 }
 
 fn scenic_score(grid: &Grid<Height>, coord: &Coord) -> usize {
-    let start_height = grid.at(&coord).unwrap();
+    let start_height = grid.at(coord).unwrap();
     let view_distance = |direction: &Direction| {
         let mut can_see_more = true;
-        grid.coords_from(&coord, direction)
+        grid.coords_from(coord, direction)
             .skip(1)
             .take_while(|(_, height)| {
                 let take = can_see_more;
@@ -231,7 +231,7 @@ mod test {
     }
 
     fn given_grid() -> Grid<u32> {
-        let map = challenges_common::get_input_lines(&vec!["aoc", "2022", "8-test.txt"])
+        let map = challenges_common::get_input_lines(&["aoc", "2022", "8-test.txt"])
             .map(|line| line.chars().collect_vec().into_iter())
             .map(|chars| chars.map(|c| c.to_digit(10).unwrap()));
         Grid::from(map)

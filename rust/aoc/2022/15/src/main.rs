@@ -13,12 +13,12 @@ type Int = i32;
 type UInt = u32;
 
 fn parse(path: &[&str]) -> Result<Vec<Sensor>> {
-    challenges_common::get_input_lines(&path)
+    challenges_common::get_input_lines(path)
         .map(|line| line.parse::<Sensor>())
         .collect()
 }
 
-fn part1(sensors: &Vec<Sensor>, row: Int) -> usize {
+fn part1(sensors: &[Sensor], row: Int) -> usize {
     let ranges = ranges_at(sensors, row);
 
     let nb_beacon_to_deduct = sensors
@@ -32,7 +32,7 @@ fn part1(sensors: &Vec<Sensor>, row: Int) -> usize {
     ranges.len() - nb_beacon_to_deduct
 }
 
-fn ranges_at(sensors: &Vec<Sensor>, row: i32) -> Ranges {
+fn ranges_at(sensors: &[Sensor], row: i32) -> Ranges {
     let ranges = sensors
         .iter()
         .filter_map(|sensor| sensor.excluded_beacon_positions_at_row(row));
@@ -40,7 +40,7 @@ fn ranges_at(sensors: &Vec<Sensor>, row: i32) -> Ranges {
     Ranges::from(ranges)
 }
 
-fn part2(sensors: &Vec<Sensor>, max: Int) -> Option<u64> {
+fn part2(sensors: &[Sensor], max: Int) -> Option<u64> {
     let row_range = Range { from: 0, to: max };
 
     for y in 0..=max {
@@ -90,7 +90,7 @@ struct Vector {
 
 impl Vector {
     fn manhattan(&self) -> UInt {
-        self.x.abs() as UInt + self.y.abs() as UInt
+        self.x.unsigned_abs() + self.y.unsigned_abs()
     }
 }
 
@@ -174,7 +174,7 @@ impl Ranges {
         self.ranges.sort_by(|r1, r2| r1.from.cmp(&r2.from));
         let mut current = None;
 
-        let ranges = std::mem::replace(&mut self.ranges, Vec::new());
+        let ranges = std::mem::take(&mut self.ranges);
 
         for range in ranges {
             match &current {

@@ -45,7 +45,7 @@ impl FromStr for Coord {
     type Err = Error;
 
     fn from_str(s: &str) -> Result<Self> {
-        if let Some((Ok(x), Ok(y))) = s.split(",").map(|s| s.parse()).collect_tuple() {
+        if let Some((Ok(x), Ok(y))) = s.split(',').map(|s| s.parse()).collect_tuple() {
             Ok(Self { x, y })
         } else {
             Err(anyhow!("cannot parse Coord from '{}'", s))
