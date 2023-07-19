@@ -11,7 +11,7 @@ fn main() {
     println!("part2: {}", part2(&map));
 }
 
-fn parse<'map>(path: &[&str]) -> Result<Map> {
+fn parse(path: &[&str]) -> Result<Map> {
     let mut hasher = ValveIdHasher::new();
     challenges_common::get_input_lines(path)
         .map(|line| parse_valve_data(&line, &mut hasher))

@@ -18,6 +18,7 @@ fn main() {
     )
 }
 
+#[allow(clippy::ptr_arg)]
 fn part1(instructions: &Vec<Instruction>) -> i32 {
     let mut computer = Computer::new(instructions.clone());
     (20u32..=220)
@@ -29,6 +30,7 @@ fn part1(instructions: &Vec<Instruction>) -> i32 {
         .sum()
 }
 
+#[allow(clippy::ptr_arg)]
 fn part2(instructions: &Vec<Instruction>) -> Screen {
     let mut computer = Computer::new(instructions.clone());
     computer.run_until_program_is_over();
@@ -156,11 +158,17 @@ mod screen {
         pub pixels: Vec<bool>,
     }
 
-    impl Screen {
-        pub fn new() -> Self {
+    impl Default for Screen {
+        fn default() -> Self {
             Self {
                 pixels: vec![false; 240],
             }
+        }
+    }
+
+    impl Screen {
+        pub fn new() -> Self {
+            Self::default()
         }
 
         pub fn tick(&mut self, clock: u32, x: i32) {

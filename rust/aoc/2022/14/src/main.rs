@@ -124,6 +124,7 @@ struct Map {
 }
 
 impl Map {
+    #[allow(clippy::ptr_arg)]
     fn from_paths(paths: &Vec<Path>) -> Map {
         let filled: HashSet<Coord> = paths.iter().flat_map(Path::coords).collect();
         let max_y = filled.iter().map(|coord| coord.y).max().unwrap_or(0);

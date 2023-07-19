@@ -10,7 +10,7 @@ fn main() {
     println!("part2: {}", part2(&pairs));
 }
 
-fn parse(line: &String) -> (Range, Range) {
+fn parse(line: &str) -> (Range, Range) {
     let (r1, r2) = line.split(',').collect_tuple().unwrap();
     (range_of(r1), range_of(r2))
 }
