@@ -1,39 +1,36 @@
-use std::cell::{Ref, RefCell};
-use std::ops::Deref;
 use anyhow::{anyhow, Result};
+use std::rc::Rc;
 
 use crate::*;
 
 pub struct RockFalls {
-    falls: RefCell<Vec<RockFall>>,
-    generator: RefCell<RockFallsGenerator>,
+    falls: Vec<Rc<RockFall>>,
+    generator: RockFallsGenerator,
 }
 
 impl RockFalls {
     pub(crate) fn new(jet_pattern: JetPattern) -> Self {
         Self {
-            falls: RefCell::new(Vec::new()),
-            generator: RefCell::new(RockFallsGenerator::new(jet_pattern)),
+            falls: Vec::new(),
+            generator: RockFallsGenerator::new(jet_pattern),
         }
     }
 
-    pub fn get_num(&mut self, fall_num: usize) -> Result<&RockFall> {
+    pub fn get_num(&mut self, fall_num: usize) -> Result<Rc<RockFall>> {
         self.get(fall_num - 1)
     }
 
-    pub fn get(&mut self, fall_index: usize) -> Result<&RockFall> {
-        (self.falls.borrow().len()..fall_index + 1).try_for_each(|_| {
+    pub fn get(&mut self, fall_index: usize) -> Result<Rc<RockFall>> {
+        (self.falls.len()..fall_index + 1).try_for_each(|_| {
             self.generator
-                .borrow_mut()
                 .next()
                 .unwrap() // infinite iterator
-                .map(|fall| self.falls.borrow_mut().push(fall))
+                .map(|fall| self.falls.push(Rc::new(fall)))
         })?;
 
         self.falls
-            .borrow()
-            .deref()
             .get(fall_index)
+            .cloned()
             .ok_or_else(|| anyhow!("fall index {} should have been added", fall_index))
     }
 }
