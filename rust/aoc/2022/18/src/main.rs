@@ -1,4 +1,4 @@
-use std::collections::HashSet;
+
 use std::str::FromStr;
 
 use anyhow::{anyhow, Result};
@@ -14,7 +14,7 @@ fn main() {
 }
 
 fn parse_cubes(path: &[&str]) -> Result<Vec<Cube>> {
-    challenges_common::get_input_lines(&path)
+    challenges_common::get_input_lines(path)
         .map(|line| line.parse::<Cube>())
         .collect::<Result<Vec<_>>>()
 }
@@ -32,7 +32,7 @@ impl FromStr for Cube {
     type Err = anyhow::Error;
 
     fn from_str(s: &str) -> Result<Self> {
-        let splitted = s.split(",").collect::<Vec<_>>();
+        let splitted = s.split(',').collect::<Vec<_>>();
         let get = |i: usize| -> Result<Unit> {
             let part = splitted
                 .get(i)
