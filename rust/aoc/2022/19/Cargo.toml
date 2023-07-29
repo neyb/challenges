@@ -8,5 +8,4 @@ edition = "2021"
 [dependencies]
 anyhow.workspace = true
 challenges_common.workspace = true
-itertools.workspace = true
 lazy-regex.workspace = true

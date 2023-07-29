@@ -78,7 +78,6 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "challenges_common",
- "itertools",
  "lazy-regex",
 ]
 
@@ -88,7 +87,6 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "challenges_common",
- "itertools",
  "lazy-regex",
 ]
 
@@ -98,7 +96,6 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "challenges_common",
- "itertools",
 ]
 
 [[package]]
@@ -107,7 +104,6 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "challenges_common",
- "itertools",
 ]
 
 [[package]]
@@ -116,7 +112,6 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "challenges_common",
- "itertools",
  "lazy-regex",
 ]
 
@@ -134,14 +129,20 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "challenges_common",
- "itertools",
+]
+
+[[package]]
+name = "aoc_2022_21"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "challenges_common",
 ]
 
 [[package]]
 name = "aoc_2022_3"
 version = "0.1.0"
 dependencies = [
- "anyhow",
  "challenges_common",
  "itertools",
 ]

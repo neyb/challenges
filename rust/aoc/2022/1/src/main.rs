@@ -29,11 +29,6 @@ fn parse<R: Read + Sized>(input: R) -> Vec<u32> {
         .lines()
         .map(|line_res| line_res.unwrap())
         .split(|line| line.is_empty())
-        .map(|group| {
-            group
-                .iter()
-                .map(|s| s.parse::<u32>().unwrap())
-                .sum()
-        })
+        .map(|group| group.iter().map(|s| s.parse::<u32>().unwrap()).sum())
         .collect()
 }

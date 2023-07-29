@@ -4,4 +4,4 @@ version = "0.1.0"
 
 [dependencies]
 itertools.workspace = true
-challenges_common = {path="../../../challenges_common"}
+challenges_common.workspace = true

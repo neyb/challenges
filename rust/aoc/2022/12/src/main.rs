@@ -43,11 +43,10 @@ fn part1(map: &Map) -> usize {
     let found_path = astar(
         map.start,
         |from| {
-            map.accessible_nodes_from(from)
-                .map(|coord| Step {
-                    to: coord,
-                    additional_cost: 1,
-                })
+            map.accessible_nodes_from(from).map(|coord| Step {
+                to: coord,
+                additional_cost: 1,
+            })
         },
         |coord| coord == &map.exit,
         |coord| coord.manhattan_dist_to(&map.exit),
@@ -84,9 +83,7 @@ impl Map {
             .coords()
             .flat_map(|from| {
                 self.accessible_nodes_from(&from)
-                    .map({
-                        move |to_coord| (from, to_coord)
-                    })
+                    .map(move |to_coord| (from, to_coord))
                     .collect_vec()
             })
             .collect()
