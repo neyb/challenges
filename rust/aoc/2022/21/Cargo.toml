@@ -1,0 +1,9 @@
+[package]
+name = "aoc_2022_21"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+anyhow.workspace = true
+challenges_common.workspace = true
+lazy-regex = "3.0.1"
