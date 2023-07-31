@@ -55,7 +55,7 @@ fn detect_cycle(rock_falls: &mut RockFalls) -> Result<DetectedCycle> {
     while {
         turtle_index += 1;
         hare_index += 2;
-        rock_falls.get_num(turtle_index)?.clone() != rock_falls.get_num(hare_index)?.clone()
+        rock_falls.get_num(turtle_index)? != rock_falls.get_num(hare_index)?
     } {}
     let first_meet_at = turtle_index;
 
@@ -64,7 +64,7 @@ fn detect_cycle(rock_falls: &mut RockFalls) -> Result<DetectedCycle> {
     while {
         turtle_index += 1;
         hare_index += 2;
-        rock_falls.get_num(turtle_index)?.clone() != rock_falls.get_num(hare_index)?.clone()
+        rock_falls.get_num(turtle_index)? != rock_falls.get_num(hare_index)?
     } {}
     let second_meet_at = turtle_index;
 
@@ -73,7 +73,7 @@ fn detect_cycle(rock_falls: &mut RockFalls) -> Result<DetectedCycle> {
     let starting_at_fall_index = {
         let mut index = first_meet_at - 1;
         loop {
-            if rock_falls.get(index)?.clone() == rock_falls.get(index + cycle_size)?.clone() {
+            if rock_falls.get(index)? == rock_falls.get(index + cycle_size)? {
                 if index == 0 {
                     break 0;
                 } else {
