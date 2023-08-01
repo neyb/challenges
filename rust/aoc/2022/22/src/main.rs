@@ -79,7 +79,7 @@ impl Map {
         coord_at: impl Fn(&Coord, &Direction) -> Coord,
     ) -> Coord {
         let mut result = start.clone();
-        for i in 0..nb_step {
+        for _ in 0..nb_step {
             let coord = coord_at(&result, direction);
             match self.get(&coord) {
                 Some(Node::Open) => result = coord,
@@ -202,7 +202,7 @@ impl State {
                 self.position =
                     map.move_until_wall_by(&self.position, &self.direction, *nb_steps, coord_at)
             }
-            Step::Turn(side) => self.direction = self.direction.turn(&side),
+            Step::Turn(side) => self.direction = self.direction.turn(side),
         }
     }
 
