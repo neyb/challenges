@@ -25,7 +25,7 @@ impl MapPart2 for Map {
 }
 
 struct Cube {
-    nodes: HashMap<Coord3D, (Node, Coord)>,
+    nodes: HashMap<Coord, (Node, Coord)>,
 }
 
 impl Cube {}

@@ -1,23 +1,23 @@
 use anyhow::{bail, Result};
 
-use Direction3D::*;
+use Direction::*;
 
 use crate::CoordUnit;
 
-struct Position3D {
-    coord: Coord3D,
-    orientation: Orientation3D,
+struct Position {
+    coord: Coord,
+    orientation: Orientation,
 }
 
 #[derive(Eq, PartialEq, Debug)]
-struct Orientation3D {
-    direction: Direction3D,
-    up: Direction3D,
+struct Orientation {
+    direction: Direction,
+    up: Direction,
 }
 
-impl Orientation3D {
-    fn turn(&self, turn: Side3D) -> Self {
-        use Side3D::*;
+impl Orientation {
+    fn turn(&self, turn: Side) -> Self {
+        use Side::*;
 
         let up = match turn {
             Left | Right => self.up,
@@ -31,7 +31,7 @@ impl Orientation3D {
             Left => (&self.up.as_vec().cross(&self.direction.as_vec()))
                 .try_into()
                 .unwrap(),
-            Right => Direction3D::try_from(&self.up.as_vec().cross(&self.direction.as_vec()))
+            Right => Direction::try_from(&self.up.as_vec().cross(&self.direction.as_vec()))
                 .unwrap()
                 .opposite(),
         };
@@ -41,12 +41,12 @@ impl Orientation3D {
 }
 
 #[derive(Clone)]
-pub struct Coord3D {
+pub struct Coord {
     vec: Vec3D,
 }
 
 #[derive(Copy, Clone, Eq, PartialEq, Debug)]
-enum Direction3D {
+enum Direction {
     Up,
     // z
     Down,
@@ -60,9 +60,9 @@ enum Direction3D {
     Back, // y
 }
 
-impl Direction3D {
+impl Direction {
     fn opposite(&self) -> Self {
-        use Direction3D::*;
+        use Direction::*;
 
         match self {
             Up => Down,
@@ -86,11 +86,11 @@ impl Direction3D {
     }
 }
 
-impl TryFrom<&Vec3D> for Direction3D {
+impl TryFrom<&Vec3D> for Direction {
     type Error = anyhow::Error;
 
     fn try_from(vec @ Vec3D { x, y, z }: &Vec3D) -> Result<Self> {
-        use Direction3D::*;
+        use Direction::*;
 
         Ok(match (x, y, z) {
             (1, 0, 0) => Right,
@@ -105,7 +105,7 @@ impl TryFrom<&Vec3D> for Direction3D {
 }
 
 #[derive(Copy, Clone)]
-enum Side3D {
+enum Side {
     Left,
     Right,
     Up,
@@ -145,11 +145,11 @@ impl Vec3D {
     }
 }
 
-struct Transformation3D {
+struct Transformation {
     values: [[CoordUnit; 4]; 4],
 }
 
-impl Transformation3D {
+impl Transformation {
     fn zero() -> Self {
         Self {
             values: [[0; 4]; 4],
@@ -172,7 +172,7 @@ impl Transformation3D {
         result
     }
 
-    fn rotate_half_pi(around: &Direction3D) -> Self {
+    fn rotate_half_pi(around: &Direction) -> Self {
         let mut result = Self::id();
 
         match around {
@@ -265,14 +265,14 @@ mod test {
 
     #[test]
     fn facing_right_turn_left() {
-        let orientation = Orientation3D {
+        let orientation = Orientation {
             direction: Right,
             up: Up,
         };
-        let new_orientation = orientation.turn(Side3D::Left);
+        let new_orientation = orientation.turn(Side::Left);
         assert_eq!(
             new_orientation,
-            Orientation3D {
+            Orientation {
                 up: Up,
                 direction: Back,
             }
@@ -281,14 +281,14 @@ mod test {
 
     #[test]
     fn facing_top_up_left_turn_down() {
-        let orientation = Orientation3D {
+        let orientation = Orientation {
             direction: Up,
             up: Left,
         };
-        let new_orientation = orientation.turn(Side3D::Down);
+        let new_orientation = orientation.turn(Side::Down);
         assert_eq!(
             new_orientation,
-            Orientation3D {
+            Orientation {
                 up: Up,
                 direction: Right,
             }
@@ -297,22 +297,22 @@ mod test {
 
     #[test]
     fn apply_translation() {
-        let transformation = Transformation3D::translate(&Vec3D::new(5, 8, 13));
+        let transformation = Transformation::translate(&Vec3D::new(5, 8, 13));
         let init = Vec3D::new(1, 2, 3);
         assert_eq!(transformation.apply(&init), Vec3D::new(6, 10, 16))
     }
 
     #[test]
     fn apply_rotation() {
-        let transformation = Transformation3D::rotate_half_pi(&Up);
+        let transformation = Transformation::rotate_half_pi(&Up);
         let init = Vec3D::new(1, 2, 3);
         assert_eq!(transformation.apply(&init), Vec3D::new(-2, 1, 3))
     }
 
     #[test]
     fn apply_translate_then_rotate() {
-        let transformation = Transformation3D::translate(&Vec3D::new(5, 8, 13))
-            .then(&Transformation3D::rotate_half_pi(&Up));
+        let transformation = Transformation::translate(&Vec3D::new(5, 8, 13))
+            .then(&Transformation::rotate_half_pi(&Up));
         let init = Vec3D::new(1, 2, 3);
         assert_eq!(transformation.apply(&init), Vec3D::new(-10, 6, 16))
     }
