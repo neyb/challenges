@@ -8,17 +8,18 @@ impl Map for crate::Map {
     fn coord_at(&self, coord: &Coord, direction: &Direction) -> Coord {
         let primary_target = coord.at(direction);
 
-        return match primary_target {
-            Some(primary_target) if self.get(&primary_target).is_some() => primary_target,
-            _ => {
-                let direction1 = &direction.opposite();
-                let mut result = coord.clone();
+        return if self.get(&primary_target).is_some() {
+            primary_target
+        } else {
+            let direction1 = &direction.opposite();
+            let mut result = coord.clone();
 
-                loop {
-                    match result.at(direction1) {
-                        Some(coord) if self.get(&coord).is_some() => result = coord,
-                        _ => break result,
-                    }
+            loop {
+                let coord = result.at(direction1);
+                if self.get(&coord).is_some() {
+                    result = coord
+                } else {
+                    break result;
                 }
             }
         };

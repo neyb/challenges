@@ -1,5 +1,6 @@
-use anyhow::{anyhow, bail, Result};
 use std::collections::HashMap;
+
+use anyhow::{anyhow, bail, Result};
 
 mod part1;
 mod part2;
@@ -16,7 +17,7 @@ fn main() {
     println!(
         "part2: {}",
         solve(&map, &path, |coord, direction| {
-            use part2::Map;
+            use part2::MapPart2;
             map.coord_at(coord, direction)
         })
     );
@@ -57,6 +58,7 @@ fn solve(map: &Map, path: &Path, coord_at: impl Fn(&Coord, &Direction) -> Coord)
 
 struct Map {
     nodes: HashMap<Coord, Node>,
+    faces_size: CoordUnit,
 }
 
 impl Map {
@@ -75,7 +77,7 @@ impl Map {
         &self,
         start: &Coord,
         direction: &Direction,
-        nb_step: usize,
+        nb_step: CoordUnit,
         coord_at: impl Fn(&Coord, &Direction) -> Coord,
     ) -> Coord {
         let mut result = start.clone();
@@ -91,47 +93,38 @@ impl Map {
     }
 }
 
-type CoordUnit = usize;
+type CoordUnit = i32;
 
-#[derive(Hash, Eq, PartialEq, Clone)]
+#[derive(Hash, Eq, PartialEq, Clone, Debug)]
 struct Coord {
     x: CoordUnit,
     y: CoordUnit,
 }
 
 impl Coord {
-    fn at(&self, direction: &Direction) -> Option<Self> {
+    fn new(x: CoordUnit, y: CoordUnit) -> Self {
+        Self { x, y }
+    }
+    fn at(&self, direction: &Direction) -> Self {
         use Direction::*;
 
         match direction {
-            Up => {
-                if self.y == 0 {
-                    None
-                } else {
-                    Some(Coord {
-                        x: self.x,
-                        y: self.y - 1,
-                    })
-                }
-            }
-            Left => {
-                if self.x == 0 {
-                    None
-                } else {
-                    Some(Coord {
-                        x: self.x - 1,
-                        y: self.y,
-                    })
-                }
-            }
-            Right => Some(Coord {
+            Up => Coord {
+                x: self.x,
+                y: self.y - 1,
+            },
+            Left => Coord {
+                x: self.x - 1,
+                y: self.y,
+            },
+            Right => Coord {
                 x: self.x + 1,
                 y: self.y,
-            }),
-            Down => Some(Coord {
+            },
+            Down => Coord {
                 x: self.x,
                 y: self.y + 1,
-            }),
+            },
         }
     }
 }
@@ -155,8 +148,8 @@ enum Step {
 
 #[derive(PartialEq, Debug)]
 enum Side {
-    Right,
     Left,
+    Right,
 }
 
 enum Direction {
@@ -233,12 +226,26 @@ impl TryFrom<&Vec<String>> for Map {
                 };
 
                 if let Some(node) = node {
-                    nodes.insert(Coord { x, y }, node);
+                    nodes.insert(
+                        Coord {
+                            x: x as CoordUnit,
+                            y: y as CoordUnit,
+                        },
+                        node,
+                    );
                 }
             }
         }
 
-        Ok(Self { nodes })
+        // the following code is wrong but should be able to get the faces_size is given data...
+        let faces_size = nodes
+            .keys()
+            .filter(|coord| coord.y == 0)
+            .map(|coord| coord.x)
+            .min()
+            .ok_or_else(|| anyhow!("could not "))?;
+
+        Ok(Self { nodes, faces_size })
     }
 }
 
