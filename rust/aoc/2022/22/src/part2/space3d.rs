@@ -2,7 +2,7 @@ use anyhow::{bail, Result};
 
 use Direction::*;
 
-use crate::CoordUnit;
+use crate::{Coord as Coord2D, CoordUnit};
 
 struct Position {
     coord: Coord,
@@ -145,7 +145,13 @@ impl Vec3D {
     }
 }
 
-struct Transformation {
+impl From<&Coord2D> for Vec3D {
+    fn from(Coord2D { x, y }: &Coord2D) -> Self {
+        Self::new(*x, *y, 0)
+    }
+}
+
+pub struct Transformation {
     values: [[CoordUnit; 4]; 4],
 }
 
@@ -164,7 +170,7 @@ impl Transformation {
         result
     }
 
-    fn translate(vec: &Vec3D) -> Self {
+    pub fn translate(vec: &Vec3D) -> Self {
         let mut result = Self::id();
         *result.get_mut(0, 3) = vec.x;
         *result.get_mut(1, 3) = vec.y;

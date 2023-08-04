@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 
+use crate::part2::Cube;
 use anyhow::{anyhow, bail, Result};
 
 mod part1;
@@ -14,13 +15,12 @@ fn main() {
             map.coord_at(coord, direction)
         })
     );
-    println!(
-        "part2: {}",
+    println!("part2: {}", {
+        let cube = Cube::try_from(&map).unwrap();
         solve(&map, &path, |coord, direction| {
-            use part2::MapPart2;
-            map.coord_at(coord, direction)
+            cube.coord_at(coord, direction)
         })
-    );
+    });
 }
 
 fn parse(path: &[&str]) -> Result<(Map, Path)> {
