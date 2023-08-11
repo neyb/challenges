@@ -9,7 +9,7 @@ use std::{
 
 pub fn astar<N, C, Nexts>(
     starting_at: N,
-    next: impl Fn(&N) -> Nexts,
+    mut next: impl FnMut(&N) -> Nexts,
     is_end: impl Fn(&N) -> bool,
     heuristic: impl Fn(&N) -> C,
 ) -> Option<Path<N, C>>
