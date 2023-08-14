@@ -29,7 +29,7 @@ fn part2(elves: &ElvesState) -> u16 {
 }
 
 fn parse(path: &[&str]) -> Result<ElvesState> {
-    challenges_common::get_input_content(path).parse()
+    challenges_common::get_input_content(path)?.parse()
 }
 
 type Unit = i16;

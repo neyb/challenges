@@ -1,5 +1,5 @@
 use core::cmp::Reverse;
-use std::iter::successors;
+use std::fmt::Debug;
 use std::{
     collections::{BinaryHeap, HashMap},
     hash::Hash,
@@ -20,9 +20,8 @@ where
 {
     let mut queue: Queue<N, C> = BinaryHeap::new();
     let mut optimals: Optimals<N, C> = HashMap::new();
-    let start = Rc::new(starting_at);
 
-    let info = NodeInfo::start(start.clone(), &heuristic);
+    let info = NodeInfo::start(starting_at, &heuristic);
     add_node(&mut queue, &mut optimals, info);
 
     while let Some(Reverse(from)) = queue.pop() {
@@ -30,7 +29,7 @@ where
             let reached = &from.node;
 
             if is_end(reached) {
-                return Some(rebuild_path(from));
+                return Some(rebuild_path(from, queue, optimals));
             } else {
                 for next_step in next(reached) {
                     let info = node_info(
@@ -77,19 +76,25 @@ where
         }
     }
 
-    fn rebuild_path<N: Node, C: Cost>(from: Rc<NodeInfo<N, C>>) -> Path<N, C> {
-        let mut nodes = successors(Some(&from), |current| match &current.previous_ancestor {
-            Some(node_info) => Some(node_info),
-            None => None,
-        })
-        .map(|node_info| N::clone(&node_info.node))
-        .collect::<Vec<_>>();
+    fn rebuild_path<N: Node, C: Cost>(
+        from: Rc<NodeInfo<N, C>>,
+        queue: Queue<N, C>,
+        optimals: Optimals<N, C>,
+    ) -> Path<N, C> {
+        drop(queue);
+        drop(optimals);
+
+        let cost = from.cost;
+        let mut nodes = Vec::new();
+        let mut next_node_info = Some(unwrap_rc_or_panic(from));
+        while let Some(current_node_info) = next_node_info {
+            nodes.push(unwrap_rc_or_panic(current_node_info.node));
+            next_node_info = current_node_info.previous_ancestor.map(unwrap_rc_or_panic);
+        }
+
         nodes.reverse();
 
-        Path {
-            nodes,
-            cost: from.cost,
-        }
+        Path { nodes, cost }
     }
 
     fn node_info<N, C>(
@@ -130,12 +135,12 @@ pub struct Step<Node, Cost> {
 }
 
 pub trait Cost: Ord + Copy + Add<Output = Self> + Sized + Default {}
-pub trait Node: Hash + Eq + Clone {}
+pub trait Node: Hash + Eq {}
 
 impl<T: Ord + Copy + Add<Output = Self> + Sized + Default> Cost for T {}
-impl<T: Hash + Eq + Clone> Node for T {}
+impl<T: Hash + Eq> Node for T {}
 
-#[derive(PartialEq, Eq)]
+#[derive(PartialEq, Eq, Debug)]
 struct NodeInfo<N, C>
 where
     N: Node,
@@ -148,10 +153,10 @@ where
 }
 
 impl<N: Node, C: Cost> NodeInfo<N, C> {
-    fn start(start: Rc<N>, heuristic: &dyn Fn(&N) -> C) -> Self {
+    fn start(start: N, heuristic: &dyn Fn(&N) -> C) -> Self {
         let heuristic = heuristic(&start);
         Self {
-            node: start,
+            node: Rc::new(start),
             previous_ancestor: None,
             cost: C::default(),
             heuristic,
@@ -172,6 +177,13 @@ impl<N: Node, C: Cost> PartialOrd for NodeInfo<N, C> {
 impl<N: Node, C: Cost> Ord for NodeInfo<N, C> {
     fn cmp(&self, other: &Self) -> std::cmp::Ordering {
         self.score().cmp(&other.score())
+    }
+}
+
+fn unwrap_rc_or_panic<T>(rc: Rc<T>) -> T {
+    match Rc::try_unwrap(rc) {
+        Ok(t) => t,
+        Err(_) => panic!("trying to unwrap a non single RC"),
     }
 }
 

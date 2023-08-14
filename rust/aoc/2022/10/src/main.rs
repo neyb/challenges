@@ -306,8 +306,9 @@ mod test {
         let mut computer = Computer::new(instructions);
         computer.run_until_program_is_over();
         assert_eq!(
-            format!("{}", computer.screen),
+            computer.screen.to_string(),
             challenges_common::get_input_content(&["aoc", "2022", "10-test-part2-expected.txt"])
+                .unwrap()
         )
     }
     #[test]
