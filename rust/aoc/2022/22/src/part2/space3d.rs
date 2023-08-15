@@ -1,4 +1,5 @@
 use anyhow::{bail, Result};
+use std::ops::Neg;
 
 use Direction::*;
 
@@ -47,17 +48,12 @@ pub struct Coord {
 
 #[derive(Copy, Clone, Eq, PartialEq, Debug)]
 enum Direction {
-    Up,
-    // z
-    Down,
-    // -z
-    Left,
-    // -x
-    Right,
-    // x
-    Front,
-    // -y
-    Back, // y
+    Up,    // z
+    Down,  // -z
+    Left,  // -x
+    Right, // x
+    Front, // -y
+    Back,  // y
 }
 
 impl Direction {
@@ -145,6 +141,18 @@ impl Vec3D {
     }
 }
 
+impl Neg for &Vec3D {
+    type Output = Vec3D;
+
+    fn neg(self) -> Self::Output {
+        Vec3D {
+            x: -self.x,
+            y: -self.y,
+            z: -self.z,
+        }
+    }
+}
+
 impl From<&Coord2D> for Vec3D {
     fn from(Coord2D { x, y }: &Coord2D) -> Self {
         Self::new(*x, *y, 0)
@@ -152,10 +160,46 @@ impl From<&Coord2D> for Vec3D {
 }
 
 pub struct Transformation {
-    values: [[CoordUnit; 4]; 4],
+    matrix: HomogeneousMatrix,
+    invert_matrix: HomogeneousMatrix,
 }
 
 impl Transformation {
+    fn translate(vec: &Vec3D) -> Self {
+        Self {
+            matrix: HomogeneousMatrix::translate(vec),
+            invert_matrix: HomogeneousMatrix::translate(&-vec),
+        }
+    }
+
+    fn rotate_half_pi(around: &Direction) -> Self {
+        Self {
+            matrix: HomogeneousMatrix::rotate_half_pi(around),
+            invert_matrix: HomogeneousMatrix::rotate_half_pi(&around.opposite()),
+        }
+    }
+
+    fn then(&self, other: &Self) -> Self {
+        Self {
+            matrix: self.matrix.then(&other.matrix),
+            invert_matrix: other.invert_matrix.then(&self.invert_matrix),
+        }
+    }
+
+    fn apply(&self, vec: &Vec3D) -> Vec3D {
+        self.matrix.apply(vec)
+    }
+
+    fn revert(&self, vec: &Vec3D) -> Vec3D {
+        self.invert_matrix.apply(vec)
+    }
+}
+
+struct HomogeneousMatrix {
+    values: [[CoordUnit; 4]; 4],
+}
+
+impl HomogeneousMatrix {
     fn zero() -> Self {
         Self {
             values: [[0; 4]; 4],
@@ -320,6 +364,19 @@ mod test {
         let transformation = Transformation::translate(&Vec3D::new(5, 8, 13))
             .then(&Transformation::rotate_half_pi(&Up));
         let init = Vec3D::new(1, 2, 3);
-        assert_eq!(transformation.apply(&init), Vec3D::new(-10, 6, 16))
+        let transformed = transformation.apply(&init);
+        assert_eq!(transformed, Vec3D::new(-10, 6, 16));
+        assert_eq!(init, transformation.revert(&transformed));
+    }
+
+    #[test]
+    fn applying_several_transformation_and_reverting_it() {
+        let transformation = Transformation::translate(&Vec3D::new(5, 8, 13))
+            .then(&Transformation::rotate_half_pi(&Up))
+            .then(&Transformation::translate(&Vec3D::new(-2, 32, 19)))
+            .then(&Transformation::rotate_half_pi(&Left));
+
+        let init = Vec3D::new(3, -5, 18);
+        assert_eq!(init, transformation.revert(&transformation.apply(&init)));
     }
 }

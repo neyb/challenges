@@ -8,7 +8,6 @@ use anyhow::Result;
 use space3d::{Coord as Coord3D, Transformation as Transformation3D};
 
 use crate::{Coord as Coord2D, CoordUnit, Direction as Direction2D, Map, Node};
-use crate::part2::space3d::Transformation;
 
 mod space3d;
 
@@ -62,11 +61,12 @@ impl TryFrom<&Map> for Cube {
         let transformations = HashMap::new();
 
         let origin = (0 as CoordUnit..)
-            .map(|x|Coord2D::new(x, 0))
+            .map(|x| Coord2D::new(x, 0))
             .find(|coord| map.get(&coord).is_some())
             .unwrap();
-        
-        let transformation = Transformation3D::translate(Vec3D::)
+
+        todo!();
+        // let transformation = Transformation3D::translate(Vec3D::)
 
         Ok(Self {
             faces_size,
