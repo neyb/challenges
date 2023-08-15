@@ -4,6 +4,7 @@ use std::ops::{Add, Neg, Sub};
 use crate as space2d;
 use crate::{Coord as Coord2D, CoordUnit};
 
+#[derive(Debug, PartialEq)]
 pub struct Position {
     coord: Coord,
     orientation: Orientation,
@@ -27,11 +28,8 @@ pub struct Orientation {
 }
 
 impl Orientation {
-    pub fn new(direction: Direction, up: Direction) -> Self {
-        Self {
-            front: direction,
-            up,
-        }
+    pub fn new(front: Direction, up: Direction) -> Self {
+        Self { front, up }
     }
 
     fn turn(&self, turn: Side) -> Self {
@@ -271,7 +269,7 @@ pub struct Coord {
 }
 
 impl Coord {
-    fn new(x: CoordUnit, y: CoordUnit, z: CoordUnit) -> Self {
+    pub fn new(x: CoordUnit, y: CoordUnit, z: CoordUnit) -> Self {
         Self { x, y, z }
     }
 
@@ -340,7 +338,7 @@ impl Transformation {
         self.matrix.apply_vec(vec)
     }
 
-    fn apply_position(&self, position: &Position) -> Position {
+    pub fn apply_position(&self, position: &Position) -> Position {
         self.matrix.apply_position(position)
     }
 
@@ -352,7 +350,7 @@ impl Transformation {
         self.invert_matrix.apply_coord(coord)
     }
 
-    fn revert_position(&self, position: &Position) -> Position {
+    pub fn revert_position(&self, position: &Position) -> Position {
         self.invert_matrix.apply_position(position)
     }
 }

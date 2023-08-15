@@ -42,7 +42,7 @@ fn parse(path: &[&str]) -> Result<(Map, Path)> {
 }
 
 fn solve(map: &Map, path: &Path, coord_at: impl Fn(&Coord, &Direction) -> Coord) -> u32 {
-    let state = path.steps.iter().fold(
+    let position = path.steps.iter().fold(
         Position {
             coord: map.first_node(),
             direction: Direction::Right,
@@ -53,7 +53,7 @@ fn solve(map: &Map, path: &Path, coord_at: impl Fn(&Coord, &Direction) -> Coord)
         },
     );
 
-    state.password()
+    position.password()
 }
 
 struct Map {
