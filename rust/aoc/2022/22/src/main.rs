@@ -43,8 +43,8 @@ fn parse(path: &[&str]) -> Result<(Map, Path)> {
 
 fn solve(map: &Map, path: &Path, coord_at: impl Fn(&Coord, &Direction) -> Coord) -> u32 {
     let state = path.steps.iter().fold(
-        State {
-            position: map.first_node(),
+        Position {
+            coord: map.first_node(),
             direction: Direction::Right,
         },
         |mut state, step| {
@@ -183,25 +183,25 @@ impl Direction {
     }
 }
 
-struct State {
-    position: Coord,
+struct Position {
+    coord: Coord,
     direction: Direction,
 }
 
-impl State {
+impl Position {
     fn apply(&mut self, step: &Step, map: &Map, coord_at: impl Fn(&Coord, &Direction) -> Coord) {
         match step {
             Step::GoStraight(nb_steps) => {
-                self.position =
-                    map.move_until_wall_by(&self.position, &self.direction, *nb_steps, coord_at)
+                self.coord =
+                    map.move_until_wall_by(&self.coord, &self.direction, *nb_steps, coord_at)
             }
             Step::Turn(side) => self.direction = self.direction.turn(side),
         }
     }
 
     fn password(&self) -> u32 {
-        (self.position.y as u32 + 1) * 1000
-            + (self.position.x as u32 + 1) * 4
+        (self.coord.y as u32 + 1) * 1000
+            + (self.coord.x as u32 + 1) * 4
             + match self.direction {
                 Direction::Up => 3,
                 Direction::Left => 2,
