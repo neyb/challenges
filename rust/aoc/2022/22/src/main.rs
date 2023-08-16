@@ -10,16 +10,14 @@ fn main() {
     let (map, path) = parse(&["aoc", "2022", "22.txt"]).unwrap();
     println!(
         "part1: {}",
-        solve(&map, &path, |coord, direction| {
+        solve(&map, &path, |position| {
             use part1::Map;
-            map.coord_at(coord, direction)
+            map.jump(position)
         })
     );
     println!("part2: {}", {
         let cube = Cube::try_from(&map).unwrap();
-        solve(&map, &path, |coord, direction| {
-            cube.coord_at(coord, direction)
-        })
+        solve(&map, &path, |position| cube.jump(position))
     });
 }
 
@@ -41,14 +39,14 @@ fn parse(path: &[&str]) -> Result<(Map, Path)> {
     Ok((map.try_into()?, path.parse()?))
 }
 
-fn solve(map: &Map, path: &Path, coord_at: impl Fn(&Coord, &Direction) -> Coord) -> u32 {
+fn solve(map: &Map, path: &Path, jump: impl Fn(&Position) -> Coord) -> u32 {
     let position = path.steps.iter().fold(
         Position {
             coord: map.first_node(),
             direction: Direction::Right,
         },
         |mut state, step| {
-            state.apply(step, map, |coord, direction| coord_at(coord, direction));
+            state.apply(step, map, |position| jump(position));
             state
         },
     );
@@ -73,18 +71,17 @@ impl Map {
         self.nodes.get(coord)
     }
 
-    fn move_until_wall_by(
+    fn move_front_until_wall_by(
         &self,
-        start: &Coord,
-        direction: &Direction,
+        position: &Position,
         nb_step: CoordUnit,
-        coord_at: impl Fn(&Coord, &Direction) -> Coord,
+        jump: impl Fn(&Position) -> Coord,
     ) -> Coord {
-        let mut resulting_coord = start.clone();
+        let mut resulting_coord = position.coord.clone();
         for _ in 0..nb_step {
-            let coord = Some(resulting_coord.at(direction))
+            let coord = Some(resulting_coord.at(&position.direction))
                 .filter(|new_coord| self.get(new_coord).is_some())
-                .unwrap_or_else(|| coord_at(&resulting_coord, direction));
+                .unwrap_or_else(|| jump(&position));
 
             match self.get(&coord) {
                 Some(Node::Open) => resulting_coord = coord,
@@ -193,11 +190,10 @@ struct Position {
 }
 
 impl Position {
-    fn apply(&mut self, step: &Step, map: &Map, coord_at: impl Fn(&Coord, &Direction) -> Coord) {
+    fn apply(&mut self, step: &Step, map: &Map, jump: impl Fn(&Position) -> Coord) {
         match step {
             Step::GoStraight(nb_steps) => {
-                self.coord =
-                    map.move_until_wall_by(&self.coord, &self.direction, *nb_steps, coord_at)
+                self.coord = map.move_front_until_wall_by(&self, *nb_steps, jump)
             }
             Step::Turn(side) => self.direction = self.direction.turn(side),
         }

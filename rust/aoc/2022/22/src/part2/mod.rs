@@ -6,9 +6,11 @@ use anyhow::Result;
 
 use space3d::Vec3D;
 
-use crate::{Coord, CoordUnit, Map};
+use crate::{CoordUnit, Map};
 
 use crate as space2d;
+use crate::part2::space3d::Direction::Front;
+use crate::part2::space3d::Transformation;
 
 mod space3d;
 
@@ -19,50 +21,77 @@ pub(super) struct Cube {
 }
 
 impl Cube {
-    pub(crate) fn coord_at(
-        &self,
-        coord: &space2d::Coord,
-        direction: &space2d::Direction,
-        map: &Map,
-    ) -> space2d::Coord {
-        match Some(coord.at(direction)).filter(|new_coord| map.get(new_coord).is_some()) {
-            Some(new_coord) => new_coord,
-            None => {
-                let position2d = space2d::Position {
-                    coord: coord.clone(),
-                    direction: *direction,
-                };
+    pub(super) fn jump(&self, position: &space2d::Position) -> space2d::Coord {
+        let position2d = space2d::Position {
+            coord: position.coord.clone(),
+            direction: position.direction,
+        };
 
-                let mut position3d = self.apply(&position2d);
-                position3d.move_front();
-                position3d.turn(&space3d::Side::Down);
-                position3d.move_front();
+        let mut position3d = self.apply(&position2d);
+        position3d.move_front();
+        position3d.turn(&space3d::Side::Down);
+        position3d.move_front();
 
-                self.revert(&position3d).coord
-            }
-        }
+        self.revert(&position3d).coord
     }
 
     fn apply(&self, position: &space2d::Position) -> space3d::Position {
         self.transformations
-            .get(&self.face_coord(&position.coord))
+            .get(&self.face_coord_of_2d_coord(&position.coord))
             .unwrap()
             .apply_position(&position.into())
     }
 
     fn revert(&self, position: &space3d::Position) -> space2d::Position {
-        todo!()
+        self.transformations
+            .get(&self.face_coord_of_3d_coord(&position.coord))
+            .unwrap()
+            .revert_position(position)
+            .try_into()
+            .unwrap()
     }
 
-    fn face_coord(&self, origin: &space2d::Coord) -> FaceCoord {
+    fn face_coord_of_2d_coord(&self, coord: &space2d::Coord) -> FaceCoord {
         FaceCoord(space2d::Coord::new(
-            origin.x / self.faces_size,
-            origin.y / self.faces_size,
+            coord.x / self.faces_size,
+            coord.y / self.faces_size,
         ))
+    }
+
+    fn face_coord_of_3d_coord(&self, coord: &space3d::Coord) -> FaceCoord {
+        let space3d::Coord { x, y, z } = coord;
+        use space3d::Direction::*;
+        let coord_face_direction = match (x, y, z) {
+            (0, _, _) => Left,
+            (&x, _, _) if x == self.faces_size + 1 => Right,
+            (_, 0, _) => Up,
+            (_, &y, _) if y == self.faces_size + 1 => Down,
+            (_, _, 0) => Front,
+            (_, _, &z) if z == self.faces_size + 1 => Back,
+            _ => panic!("oO"),
+        };
+        self.faces_by_direction
+            .get(&coord_face_direction)
+            .expect(&format!(
+                "no faces for direction {:?}",
+                coord_face_direction
+            ))
+            .clone()
     }
 
     fn origin_of(&self, face: &FaceCoord) -> space2d::Coord {
         space2d::Coord::new(face.x * self.faces_size, face.y * self.faces_size)
+    }
+
+    fn insert_transformation(
+        &mut self,
+        transformation: Transformation,
+        face_coord: FaceCoord,
+        direction: space3d::Direction,
+    ) {
+        self.transformations
+            .insert(face_coord.clone(), transformation);
+        self.faces_by_direction.insert(direction, face_coord);
     }
 }
 
@@ -91,13 +120,23 @@ impl TryFrom<&Map> for Cube {
         let origin_transformation =
             space3d::Transformation::translate(&Vec3D::new(1 - origin.x, 1 - origin.y, 0));
 
-        let face_coord = cube.face_coord(&origin);
-        cube.transformations
-            .insert(face_coord.clone(), origin_transformation);
-        todo!("insert faces_by_direction");
+        let face_coord = cube.face_coord_of_2d_coord(&origin);
+        cube.insert_transformation(
+            origin_transformation,
+            face_coord.clone(),
+            space3d::Direction::Front,
+        );
+
+        explore_and_register_transformations(
+            &face_coord,
+            &space3d::Direction::Front,
+            map,
+            &mut cube,
+        )?;
 
         fn explore_and_register_transformations(
             from: &FaceCoord,
+            from_direction: &space3d::Direction,
             map: &Map,
             cube: &mut Cube,
         ) -> Result<()> {
@@ -122,25 +161,22 @@ impl TryFrom<&Map> for Cube {
                     let left_of_direction_in_from_ref = from_transformation
                         .apply_vec(&Vec3D::from(&dir.turn(&space2d::Side::Left)));
 
-                    let transformation: space3d::Transformation = from_transformation
-                        .then(&space3d::Transformation::rotate_half_pi(
-                            &space3d::Direction::try_from(&left_of_direction_in_from_ref)?,
-                        ))
-                        .then(&space3d::Transformation::translate(
-                            &origin_move_in_from_referential,
-                        ));
-                    cube.transformations
-                        .insert(face_coord.clone(), transformation);
-                    todo!("insert faces_by_direction");
+                    let rotate_direction =
+                        space3d::Direction::try_from(&left_of_direction_in_from_ref)?;
 
-                    explore_and_register_transformations(&face_coord, map, cube)?;
+                    let rotation = Transformation::rotate_half_pi(&rotate_direction);
+                    let transformation: Transformation = from_transformation
+                        .then(&rotation)
+                        .then(&Transformation::translate(&origin_move_in_from_referential));
+                    let direction = transformation.apply_direction(&from_direction);
+                    cube.insert_transformation(transformation, face_coord.clone(), direction);
+
+                    explore_and_register_transformations(&face_coord, &direction, map, cube)?;
                 }
             }
 
             Ok(())
         }
-
-        explore_and_register_transformations(&face_coord, map, &mut cube)?;
 
         Ok(cube)
     }

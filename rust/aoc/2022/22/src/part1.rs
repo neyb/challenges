@@ -1,27 +1,21 @@
-use crate::{Coord, Direction};
+use crate::{Coord, Position};
 
 pub(crate) trait Map {
-    fn coord_at(&self, coord: &Coord, direction: &Direction) -> Coord;
+    fn jump(&self, position: &Position) -> Coord;
 }
 
 impl Map for crate::Map {
-    fn coord_at(&self, coord: &Coord, direction: &Direction) -> Coord {
-        let primary_target = coord.at(direction);
+    fn jump(&self, position: &Position) -> Coord {
+        let opposite = &position.direction.opposite();
+        let mut result = position.coord.clone();
 
-        return if self.get(&primary_target).is_some() {
-            primary_target
-        } else {
-            let direction1 = &direction.opposite();
-            let mut result = coord.clone();
-
-            loop {
-                let coord = result.at(direction1);
-                if self.get(&coord).is_some() {
-                    result = coord
-                } else {
-                    break result;
-                }
+        loop {
+            let coord = result.at(opposite);
+            if self.get(&coord).is_some() {
+                result = coord
+            } else {
+                break result;
             }
-        };
+        }
     }
 }

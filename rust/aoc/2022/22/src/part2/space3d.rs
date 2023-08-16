@@ -6,7 +6,7 @@ use crate::{Coord as Coord2D, CoordUnit};
 
 #[derive(Debug, PartialEq)]
 pub(super) struct Position {
-    coord: Coord,
+    pub(super) coord: Coord,
     orientation: Orientation,
 }
 
@@ -82,7 +82,7 @@ impl Orientation {
     }
 }
 
-#[derive(Copy, Clone, Eq, PartialEq, Debug)]
+#[derive(Copy, Clone, Eq, PartialEq, Hash, Debug)]
 pub(super) enum Direction {
     Back,  // z
     Front, // -z
@@ -306,9 +306,9 @@ impl From<&crate::Direction> for Vec3D {
 
 #[derive(Debug, Eq, PartialEq)]
 pub(super) struct Coord {
-    x: CoordUnit,
-    y: CoordUnit,
-    z: CoordUnit,
+    pub(super) x: CoordUnit,
+    pub(super) y: CoordUnit,
+    pub(super) z: CoordUnit,
 }
 
 impl Coord {
@@ -387,6 +387,10 @@ impl Transformation {
 
     pub(super) fn apply_coord(&self, coord: &Coord) -> Coord {
         self.matrix.apply_coord(coord)
+    }
+
+    pub(super) fn apply_direction(&self, direction: &Direction) -> Direction {
+        (&self.apply_vec(&direction.as_vec())).try_into().unwrap()
     }
 
     pub(super) fn apply_vec(&self, vec: &Vec3D) -> Vec3D {
