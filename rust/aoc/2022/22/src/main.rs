@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
-use crate::part2::Cube;
 use anyhow::{anyhow, bail, Result};
+use part2::Cube;
 
 mod part1;
 mod part2;
@@ -80,16 +80,19 @@ impl Map {
         nb_step: CoordUnit,
         coord_at: impl Fn(&Coord, &Direction) -> Coord,
     ) -> Coord {
-        let mut result = start.clone();
+        let mut resulting_coord = start.clone();
         for _ in 0..nb_step {
-            let coord = coord_at(&result, direction);
+            let coord = Some(resulting_coord.at(direction))
+                .filter(|new_coord| self.get(new_coord).is_some())
+                .unwrap_or_else(|| coord_at(&resulting_coord, direction));
+
             match self.get(&coord) {
-                Some(Node::Open) => result = coord,
+                Some(Node::Open) => resulting_coord = coord,
                 _ => break,
             }
         }
 
-        result
+        resulting_coord
     }
 }
 
