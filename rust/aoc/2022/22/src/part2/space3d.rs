@@ -1,34 +1,61 @@
-use anyhow::{bail, Result};
+use anyhow::{bail, Error, Result};
 use std::ops::{Add, Neg, Sub};
 
 use crate as space2d;
 use crate::{Coord as Coord2D, CoordUnit};
 
 #[derive(Debug, PartialEq)]
-pub struct Position {
+pub(super) struct Position {
     coord: Coord,
     orientation: Orientation,
 }
 
 impl Position {
-    pub fn new(coord: Coord, orientation: Orientation) -> Self {
+    pub(super) fn new(coord: Coord, orientation: Orientation) -> Self {
         Self { coord, orientation }
     }
 
-    pub fn move_front(&mut self) {
+    pub(super) fn move_front(&mut self) {
         let direction = &self.orientation.front;
         self.coord.move_towards(direction);
     }
 }
 
+impl From<&space2d::Position> for Position {
+    fn from(position: &space2d::Position) -> Self {
+        let coord = Coord::from(&position.coord);
+
+        Position::new(
+            coord,
+            Orientation::new(Direction::from(&position.direction), Direction::Front),
+        )
+    }
+}
+
+impl TryInto<space2d::Position> for Position {
+    type Error = Error;
+
+    fn try_into(self) -> Result<space2d::Position> {
+        if self.coord.z != 0 {
+            bail!("cannot tranform {:?}", self)
+        }
+
+        // space2d::Position {
+        //     coord:,
+        //     direction:,
+        // }
+        todo!()
+    }
+}
+
 #[derive(Eq, PartialEq, Debug)]
-pub struct Orientation {
+pub(super) struct Orientation {
     front: Direction,
     up: Direction,
 }
 
 impl Orientation {
-    pub fn new(front: Direction, up: Direction) -> Self {
+    pub(super) fn new(front: Direction, up: Direction) -> Self {
         Self { front, up }
     }
 
@@ -57,7 +84,7 @@ impl Orientation {
 }
 
 #[derive(Copy, Clone, Eq, PartialEq, Debug)]
-pub enum Direction {
+pub(super) enum Direction {
     Back,  // z
     Front, // -z
     Left,  // -x
@@ -133,30 +160,30 @@ enum Side {
 }
 
 #[derive(Clone, Debug, Eq, PartialEq)]
-pub struct Vec3D {
+pub(super) struct Vec3D {
     x: CoordUnit,
     y: CoordUnit,
     z: CoordUnit,
 }
 
 impl Vec3D {
-    pub fn new(x: CoordUnit, y: CoordUnit, z: CoordUnit) -> Self {
+    pub(super) fn new(x: CoordUnit, y: CoordUnit, z: CoordUnit) -> Self {
         Self { x, y, z }
     }
 
-    pub fn i() -> Self {
+    pub(super) fn i() -> Self {
         Self::new(1, 0, 0)
     }
 
-    pub fn j() -> Self {
+    pub(super) fn j() -> Self {
         Self::new(0, 1, 0)
     }
 
-    pub fn k() -> Self {
+    pub(super) fn k() -> Self {
         Self::new(0, 0, 1)
     }
 
-    pub fn from_start_to_end(start: &Coord, end: &Coord) -> Self {
+    pub(super) fn from_start_to_end(start: &Coord, end: &Coord) -> Self {
         Self::new(end.x - start.x, end.y - start.y, end.z - start.z)
     }
 
@@ -262,14 +289,14 @@ impl From<&crate::Direction> for Vec3D {
 }
 
 #[derive(Debug, Eq, PartialEq)]
-pub struct Coord {
+pub(super) struct Coord {
     x: CoordUnit,
     y: CoordUnit,
     z: CoordUnit,
 }
 
 impl Coord {
-    pub fn new(x: CoordUnit, y: CoordUnit, z: CoordUnit) -> Self {
+    pub(super) fn new(x: CoordUnit, y: CoordUnit, z: CoordUnit) -> Self {
         Self { x, y, z }
     }
 
@@ -303,54 +330,54 @@ impl From<&Coord2D> for Coord {
     }
 }
 
-pub struct Transformation {
+pub(super) struct Transformation {
     matrix: HomogeneousMatrix,
     invert_matrix: HomogeneousMatrix,
 }
 
 impl Transformation {
-    pub fn translate(vec: &Vec3D) -> Self {
+    pub(super) fn translate(vec: &Vec3D) -> Self {
         Self {
             matrix: HomogeneousMatrix::translate(vec),
             invert_matrix: HomogeneousMatrix::translate(&-vec),
         }
     }
 
-    pub fn rotate_half_pi(around: &Direction) -> Self {
+    pub(super) fn rotate_half_pi(around: &Direction) -> Self {
         Self {
             matrix: HomogeneousMatrix::rotate_half_pi(around),
             invert_matrix: HomogeneousMatrix::rotate_half_pi(&around.opposite()),
         }
     }
 
-    pub fn then(&self, other: &Self) -> Self {
+    pub(super) fn then(&self, other: &Self) -> Self {
         Self {
             matrix: self.matrix.then(&other.matrix),
             invert_matrix: other.invert_matrix.then(&self.invert_matrix),
         }
     }
 
-    pub fn apply_coord(&self, coord: &Coord) -> Coord {
+    pub(super) fn apply_coord(&self, coord: &Coord) -> Coord {
         self.matrix.apply_coord(coord)
     }
 
-    pub fn apply_vec(&self, vec: &Vec3D) -> Vec3D {
+    pub(super) fn apply_vec(&self, vec: &Vec3D) -> Vec3D {
         self.matrix.apply_vec(vec)
     }
 
-    pub fn apply_position(&self, position: &Position) -> Position {
+    pub(super) fn apply_position(&self, position: &Position) -> Position {
         self.matrix.apply_position(position)
     }
 
-    pub fn revert_vec(&self, vec: &Vec3D) -> Vec3D {
+    pub(super) fn revert_vec(&self, vec: &Vec3D) -> Vec3D {
         self.invert_matrix.apply_vec(vec)
     }
 
-    pub fn revert(&self, coord: &Coord) -> Coord {
+    pub(super) fn revert(&self, coord: &Coord) -> Coord {
         self.invert_matrix.apply_coord(coord)
     }
 
-    pub fn revert_position(&self, position: &Position) -> Position {
+    pub(super) fn revert_position(&self, position: &Position) -> Position {
         self.invert_matrix.apply_position(position)
     }
 }
@@ -374,7 +401,7 @@ impl HomogeneousMatrix {
         result
     }
 
-    pub fn translate(vec: &Vec3D) -> Self {
+    pub(super) fn translate(vec: &Vec3D) -> Self {
         let mut result = Self::id();
         *result.get_mut(0, 3) = vec.x;
         *result.get_mut(1, 3) = vec.y;

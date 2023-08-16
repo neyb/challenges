@@ -4,7 +4,7 @@ use std::ops::Deref;
 
 use anyhow::Result;
 
-use space3d::{Direction as Direction3D, Transformation as Transformation3D, Vec3D};
+use space3d::Vec3D;
 
 use crate::{CoordUnit, Map};
 
@@ -12,25 +12,10 @@ use crate as space2d;
 
 mod space3d;
 
-pub(crate) trait MapPart2 {
-    fn coord_at(&self, coord: &space2d::Coord, direction: &space2d::Direction) -> space2d::Coord;
-}
-
-impl MapPart2 for Map {
-    fn coord_at(&self, coord: &space2d::Coord, direction: &space2d::Direction) -> space2d::Coord {
-        let primary_target = coord.at(direction);
-        if self.get(&primary_target).is_some() {
-            primary_target
-        } else {
-            use crate::Direction::*;
-            todo!()
-        }
-    }
-}
-
-pub(crate) struct Cube {
+pub(super) struct Cube {
     faces_size: CoordUnit,
-    transformations: HashMap<FaceCoord, Transformation3D>,
+    transformations: HashMap<FaceCoord, space3d::Transformation>,
+    faces_by_direction: HashMap<space3d::Direction, FaceCoord>,
 }
 
 impl Cube {
@@ -43,23 +28,13 @@ impl Cube {
     }
 
     fn apply(&self, position: &space2d::Position) -> space3d::Position {
-        let coord = space3d::Coord::from(&position.coord);
-
-        let unmapped_position = space3d::Position::new(
-            coord,
-            space3d::Orientation::new(
-                space3d::Direction::from(&position.direction),
-                space3d::Direction::Front,
-            ),
-        );
-
         self.transformations
             .get(&self.face_coord(&position.coord))
             .unwrap()
-            .apply_position(&unmapped_position)
+            .apply_position(&position.into())
     }
 
-    fn revert(&self, _position: &space3d::Position) -> space2d::Position {
+    fn revert(&self, position: &space3d::Position) -> space2d::Position {
         todo!()
     }
 
@@ -89,6 +64,7 @@ impl TryFrom<&Map> for Cube {
         let mut cube = Self {
             faces_size,
             transformations: HashMap::new(),
+            faces_by_direction: HashMap::new(),
         };
 
         let origin = (0 as CoordUnit..)
@@ -97,11 +73,12 @@ impl TryFrom<&Map> for Cube {
             .unwrap();
 
         let origin_transformation =
-            Transformation3D::translate(&Vec3D::new(1 - origin.x, 1 - origin.y, 0));
+            space3d::Transformation::translate(&Vec3D::new(1 - origin.x, 1 - origin.y, 0));
 
         let face_coord = cube.face_coord(&origin);
         cube.transformations
             .insert(face_coord.clone(), origin_transformation);
+        todo!("insert faces_by_direction");
 
         fn explore_and_register_transformations(
             from: &FaceCoord,
@@ -129,15 +106,16 @@ impl TryFrom<&Map> for Cube {
                     let left_of_direction_in_from_ref = from_transformation
                         .apply_vec(&Vec3D::from(&dir.turn(&space2d::Side::Left)));
 
-                    let transformation: Transformation3D = from_transformation
-                        .then(&Transformation3D::rotate_half_pi(&Direction3D::try_from(
-                            &left_of_direction_in_from_ref,
-                        )?))
-                        .then(&Transformation3D::translate(
+                    let transformation: space3d::Transformation = from_transformation
+                        .then(&space3d::Transformation::rotate_half_pi(
+                            &space3d::Direction::try_from(&left_of_direction_in_from_ref)?,
+                        ))
+                        .then(&space3d::Transformation::translate(
                             &origin_move_in_from_referential,
                         ));
                     cube.transformations
                         .insert(face_coord.clone(), transformation);
+                    todo!("insert faces_by_direction");
 
                     explore_and_register_transformations(&face_coord, map, cube)?;
                 }
@@ -202,5 +180,8 @@ mod test {
                 )
             );
         }
+
+        #[test]
+        fn should_map_a_random_point_in_first_face() {}
     }
 }
