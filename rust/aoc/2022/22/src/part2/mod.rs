@@ -53,13 +53,10 @@ impl Cube {
             ),
         );
 
-        let mut position = self
-            .transformations
+        self.transformations
             .get(&self.face_coord(&position.coord))
             .unwrap()
-            .apply_position(&unmapped_position);
-
-        todo!()
+            .apply_position(&unmapped_position)
     }
 
     fn revert(&self, _position: &space3d::Position) -> space2d::Position {
