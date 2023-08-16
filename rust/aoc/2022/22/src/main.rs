@@ -155,6 +155,7 @@ enum Side {
     Right,
 }
 
+#[derive(Copy, Clone)]
 enum Direction {
     Up,
     Left,

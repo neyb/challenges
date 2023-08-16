@@ -6,7 +6,7 @@ use anyhow::Result;
 
 use space3d::Vec3D;
 
-use crate::{CoordUnit, Map};
+use crate::{Coord, CoordUnit, Map};
 
 use crate as space2d;
 
@@ -21,10 +21,26 @@ pub(super) struct Cube {
 impl Cube {
     pub(crate) fn coord_at(
         &self,
-        _coord: &space2d::Coord,
-        _direction: &space2d::Direction,
+        coord: &space2d::Coord,
+        direction: &space2d::Direction,
+        map: &Map,
     ) -> space2d::Coord {
-        todo!()
+        match Some(coord.at(direction)).filter(|new_coord| map.get(new_coord).is_some()) {
+            Some(new_coord) => new_coord,
+            None => {
+                let position2d = space2d::Position {
+                    coord: coord.clone(),
+                    direction: *direction,
+                };
+
+                let mut position3d = self.apply(&position2d);
+                position3d.move_front();
+                position3d.turn(space3d::Side::Down);
+                position3d.move_front();
+
+                self.revert(&position3d).coord
+            }
+        }
     }
 
     fn apply(&self, position: &space2d::Position) -> space3d::Position {

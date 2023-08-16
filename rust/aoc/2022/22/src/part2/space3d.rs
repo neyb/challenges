@@ -19,6 +19,10 @@ impl Position {
         let direction = &self.orientation.front;
         self.coord.move_towards(direction);
     }
+
+    pub(super) fn turn(&mut self, side: &Side) {
+        self.orientation = self.orientation.turn(*side);
+    }
 }
 
 impl From<&space2d::Position> for Position {
@@ -152,7 +156,7 @@ impl From<&space2d::Direction> for Direction {
 }
 
 #[derive(Copy, Clone)]
-enum Side {
+pub enum Side {
     Left,
     Right,
     Up,
