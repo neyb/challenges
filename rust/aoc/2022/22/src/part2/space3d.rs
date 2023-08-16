@@ -40,15 +40,10 @@ impl TryInto<space2d::Position> for Position {
     type Error = Error;
 
     fn try_into(self) -> Result<space2d::Position> {
-        if self.coord.z != 0 {
-            bail!("cannot tranform {:?}", self)
-        }
-
-        // space2d::Position {
-        //     coord:,
-        //     direction:,
-        // }
-        todo!()
+        Ok(space2d::Position {
+            coord: self.coord.try_into()?,
+            direction: self.orientation.front.try_into()?,
+        })
     }
 }
 
@@ -152,6 +147,23 @@ impl From<&space2d::Direction> for Direction {
             Right => Direction::Right,
             Down => Direction::Down,
         }
+    }
+}
+
+impl TryInto<space2d::Direction> for Direction {
+    type Error = Error;
+
+    fn try_into(self) -> Result<crate::Direction> {
+        use Direction::*;
+        Ok(match self {
+            Back | Front => {
+                bail!("{:?} match no direction", self)
+            }
+            Left => space2d::Direction::Left,
+            Right => space2d::Direction::Right,
+            Up => space2d::Direction::Up,
+            Down => space2d::Direction::Down,
+        })
     }
 }
 
@@ -331,6 +343,18 @@ impl Coord {
 impl From<&Coord2D> for Coord {
     fn from(Coord2D { x, y }: &Coord2D) -> Self {
         Self::new(*x, *y, 0)
+    }
+}
+
+impl TryInto<space2d::Coord> for Coord {
+    type Error = Error;
+
+    fn try_into(self) -> Result<Coord2D> {
+        if self.z != 0 {
+            bail!("cannot tranform {:?}", self)
+        }
+
+        Ok(space2d::Coord::new(self.x, self.y))
     }
 }
 

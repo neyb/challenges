@@ -35,7 +35,7 @@ impl Cube {
 
                 let mut position3d = self.apply(&position2d);
                 position3d.move_front();
-                position3d.turn(space3d::Side::Down);
+                position3d.turn(&space3d::Side::Down);
                 position3d.move_front();
 
                 self.revert(&position3d).coord
