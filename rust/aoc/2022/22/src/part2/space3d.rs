@@ -210,18 +210,6 @@ impl Vec3D {
             z: self.x * other.y - self.y * other.x,
         }
     }
-
-    fn get(&self, idx: usize) -> CoordUnit {
-        match idx {
-            0 => self.x,
-            1 => self.y,
-            2 => self.z,
-            _ => panic!(
-                "only 3 elements in 3Dvec, trying accessing it with index {}",
-                idx
-            ),
-        }
-    }
 }
 
 impl Add for &Vec3D {
@@ -399,10 +387,6 @@ impl Transformation {
 
     pub(super) fn apply_position(&self, position: &Position) -> Position {
         self.matrix.apply_position(position)
-    }
-
-    pub(super) fn revert_vec(&self, vec: &Vec3D) -> Vec3D {
-        self.invert_matrix.apply_vec(vec)
     }
 
     pub(super) fn revert(&self, coord: &Coord) -> Coord {

@@ -56,7 +56,6 @@ fn solve(map: &Map, path: &Path, jump: impl Fn(&Position) -> Coord) -> u32 {
 
 struct Map {
     nodes: HashMap<Coord, Node>,
-    faces_size: CoordUnit,
 }
 
 impl Map {
@@ -237,15 +236,7 @@ impl TryFrom<&Vec<String>> for Map {
             }
         }
 
-        // the following code is wrong but should be able to get the faces_size is given data...
-        let faces_size = nodes
-            .keys()
-            .filter(|coord| coord.y == 0)
-            .map(|coord| coord.x)
-            .min()
-            .ok_or_else(|| anyhow!("could not "))?;
-
-        Ok(Self { nodes, faces_size })
+        Ok(Self { nodes })
     }
 }
 

@@ -9,8 +9,6 @@ use space3d::Vec3D;
 use crate::{CoordUnit, Map};
 
 use crate as space2d;
-use crate::part2::space3d::Direction::Front;
-use crate::part2::space3d::Transformation;
 
 mod space3d;
 
@@ -72,10 +70,7 @@ impl Cube {
         };
         self.faces_by_direction
             .get(&coord_face_direction)
-            .expect(&format!(
-                "no faces for direction {:?}",
-                coord_face_direction
-            ))
+            .unwrap_or_else(|| panic!("no faces for direction {:?}", coord_face_direction))
             .clone()
     }
 
@@ -85,7 +80,7 @@ impl Cube {
 
     fn insert_transformation(
         &mut self,
-        transformation: Transformation,
+        transformation: space3d::Transformation,
         face_coord: FaceCoord,
         direction: space3d::Direction,
     ) {
@@ -164,11 +159,11 @@ impl TryFrom<&Map> for Cube {
                     let rotate_direction =
                         space3d::Direction::try_from(&left_of_direction_in_from_ref)?;
 
-                    let rotation = Transformation::rotate_half_pi(&rotate_direction);
-                    let transformation: Transformation = from_transformation
-                        .then(&rotation)
-                        .then(&Transformation::translate(&origin_move_in_from_referential));
-                    let direction = transformation.apply_direction(&from_direction);
+                    let rotation = space3d::Transformation::rotate_half_pi(&rotate_direction);
+                    let transformation = from_transformation.then(&rotation).then(
+                        &space3d::Transformation::translate(&origin_move_in_from_referential),
+                    );
+                    let direction = transformation.apply_direction(from_direction);
                     cube.insert_transformation(transformation, face_coord.clone(), direction);
 
                     explore_and_register_transformations(&face_coord, &direction, map, cube)?;
