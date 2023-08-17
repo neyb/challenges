@@ -106,7 +106,7 @@ impl Direction {
         }
     }
 
-    fn as_vec(&self) -> Vec3D {
+    pub(super) fn as_vec(&self) -> Vec3D {
         use Direction::*;
         match self {
             Right => Vec3D::i(),
@@ -346,6 +346,7 @@ impl TryInto<space2d::Coord> for Coord {
     }
 }
 
+#[derive(PartialEq, Debug)]
 pub(super) struct Transformation {
     matrix: HomogeneousMatrix,
     invert_matrix: HomogeneousMatrix,
@@ -398,6 +399,7 @@ impl Transformation {
     }
 }
 
+#[derive(PartialEq, Debug)]
 struct HomogeneousMatrix {
     values: [[CoordUnit; 4]; 4],
 }

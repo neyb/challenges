@@ -4,18 +4,17 @@ use std::ops::Deref;
 
 use anyhow::Result;
 
-use space3d::Vec3D;
-
 use crate::{CoordUnit, Map};
 
 use crate as space2d;
+use crate::part2::space3d::Transformation;
 
 mod space3d;
 
 pub(super) struct Cube {
     faces_size: CoordUnit,
     transformations: HashMap<FaceCoord, space3d::Transformation>,
-    faces_by_direction: HashMap<space3d::Direction, FaceCoord>,
+    face_coords_by_direction: HashMap<space3d::Direction, FaceCoord>,
 }
 
 impl Cube {
@@ -68,7 +67,7 @@ impl Cube {
             (_, _, &z) if z == self.faces_size + 1 => Back,
             _ => panic!("oO"),
         };
-        self.faces_by_direction
+        self.face_coords_by_direction
             .get(&coord_face_direction)
             .unwrap_or_else(|| panic!("no faces for direction {:?}", coord_face_direction))
             .clone()
@@ -86,7 +85,7 @@ impl Cube {
     ) {
         self.transformations
             .insert(face_coord.clone(), transformation);
-        self.faces_by_direction.insert(direction, face_coord);
+        self.face_coords_by_direction.insert(direction, face_coord);
     }
 }
 
@@ -104,7 +103,7 @@ impl TryFrom<&Map> for Cube {
         let mut cube = Self {
             faces_size,
             transformations: HashMap::new(),
-            faces_by_direction: HashMap::new(),
+            face_coords_by_direction: HashMap::new(),
         };
 
         let origin = (0 as CoordUnit..)
@@ -113,7 +112,7 @@ impl TryFrom<&Map> for Cube {
             .unwrap();
 
         let origin_transformation =
-            space3d::Transformation::translate(&Vec3D::new(1 - origin.x, 1 - origin.y, 0));
+            space3d::Transformation::translate(&space3d::Vec3D::new(1 - origin.x, 1 - origin.y, 0));
 
         let face_coord = cube.face_coord_of_2d_coord(&origin);
         cube.insert_transformation(
@@ -121,13 +120,6 @@ impl TryFrom<&Map> for Cube {
             face_coord.clone(),
             space3d::Direction::Front,
         );
-
-        explore_and_register_transformations(
-            &face_coord,
-            &space3d::Direction::Front,
-            map,
-            &mut cube,
-        )?;
 
         fn explore_and_register_transformations(
             from: &FaceCoord,
@@ -144,25 +136,28 @@ impl TryFrom<&Map> for Cube {
                 let face_coord = from.at(&dir);
                 let origin = cube.origin_of(&face_coord);
                 if map.get(&origin).is_some() && !cube.transformations.contains_key(&face_coord) {
-                    let from_origin = cube.origin_of(from);
                     let from_transformation = cube.transformations.get(from).unwrap();
-                    let origin_move: Vec3D = Vec3D::from_start_to_end(
-                        &space3d::Coord::from(&from_origin),
-                        &space3d::Coord::from(&origin),
-                    ) + Vec3D::k();
-                    let origin_move_in_from_referential =
-                        from_transformation.apply_vec(&origin_move);
 
-                    let left_of_direction_in_from_ref = from_transformation
-                        .apply_vec(&Vec3D::from(&dir.turn(&space2d::Side::Left)));
+                    let translation_before_rotation =
+                        Transformation::translate(&space3d::Vec3D::from_start_to_end(
+                            &from_transformation.apply_coord(&space3d::Coord::from(&origin)),
+                            &space3d::Coord::new(0, 0, 0),
+                        ))
+                        .then(&Transformation::translate(
+                            &space3d::Direction::from(&dir).as_vec(),
+                        ));
+                    let rotation = get_rotation(&dir, from_transformation)?;
+                    let translation_after_rotation =
+                        Transformation::translate(&space3d::Vec3D::from_start_to_end(
+                            &space3d::Coord::new(0, 0, 0),
+                            &from_transformation.apply_coord(&space3d::Coord::from(&origin)),
+                        ));
 
-                    let rotate_direction =
-                        space3d::Direction::try_from(&left_of_direction_in_from_ref)?;
+                    let transformation = from_transformation
+                        .then(&translation_before_rotation)
+                        .then(&rotation)
+                        .then(&translation_after_rotation);
 
-                    let rotation = space3d::Transformation::rotate_half_pi(&rotate_direction);
-                    let transformation = from_transformation.then(&rotation).then(
-                        &space3d::Transformation::translate(&origin_move_in_from_referential),
-                    );
                     let direction = transformation.apply_direction(from_direction);
                     cube.insert_transformation(transformation, face_coord.clone(), direction);
 
@@ -170,8 +165,29 @@ impl TryFrom<&Map> for Cube {
                 }
             }
 
+            fn get_rotation(
+                dir: &space2d::Direction,
+                from_transformation: &Transformation,
+            ) -> Result<Transformation> {
+                let left_of_direction_in_from_ref = from_transformation
+                    .apply_vec(&space3d::Vec3D::from(&dir.turn(&space2d::Side::Left)));
+
+                let rotate_direction =
+                    space3d::Direction::try_from(&left_of_direction_in_from_ref)?;
+
+                let rotation = space3d::Transformation::rotate_half_pi(&rotate_direction);
+                Ok(rotation)
+            }
+
             Ok(())
         }
+
+        explore_and_register_transformations(
+            &face_coord,
+            &space3d::Direction::Front,
+            map,
+            &mut cube,
+        )?;
 
         Ok(cube)
     }
@@ -198,8 +214,10 @@ impl Deref for FaceCoord {
 mod test {
     mod creating_cube {
         use crate as space2d;
-        use crate::part2::space3d;
+        use crate::part2::{space3d, FaceCoord};
+        use crate::CoordUnit;
 
+        use crate::part2::space3d::Transformation;
         use crate::part2::Cube;
 
         #[test]
@@ -209,7 +227,47 @@ mod test {
         }
 
         #[test]
-        fn should_map_first_origin_to_1_1_0() {
+        fn should_have_right_faces_size() {
+            let (map, _) = crate::parse(&["aoc", "2022", "22-test.txt"]).unwrap();
+            let cube = Cube::try_from(&map).unwrap();
+            assert_eq!(cube.faces_size, 4);
+        }
+
+        #[test]
+        fn should_create_6_ok_transformations() {
+            let (map, _) = crate::parse(&["aoc", "2022", "22-test.txt"]).unwrap();
+            let cube = Cube::try_from(&map).unwrap();
+            assert_eq!(cube.transformations.len(), 6);
+
+            let transformation_at = |x: CoordUnit, y: CoordUnit| {
+                cube.transformations
+                    .get(&FaceCoord(space2d::Coord::new(x, y)))
+                    .unwrap()
+            };
+
+            assert_eq!(
+                transformation_at(2, 0),
+                &Transformation::translate(&space3d::Vec3D::new(-7, 1, 0))
+            );
+
+            assert_eq!(
+                transformation_at(2, 1),
+                &Transformation::translate(&space3d::Vec3D::new(-8, -4, 0))
+                    .then(&Transformation::rotate_half_pi(&space3d::Direction::Right))
+                    .then(&Transformation::translate(&space3d::Vec3D::new(1, 5, 1)))
+            );
+        }
+
+        #[test]
+        #[ignore]
+        fn should_have_6_face_coords_by_direction() {
+            let (map, _) = crate::parse(&["aoc", "2022", "22-test.txt"]).unwrap();
+            let cube = Cube::try_from(&map).unwrap();
+            assert_eq!(cube.face_coords_by_direction.len(), 6);
+        }
+
+        #[test]
+        fn should_map_8_0_to_1_1_0() {
             let (map, _) = crate::parse(&["aoc", "2022", "22-test.txt"]).unwrap();
             let cube = Cube::try_from(&map).unwrap();
             let position = space2d::Position {
@@ -224,6 +282,26 @@ mod test {
                 space3d::Position::new(
                     space3d::Coord::new(1, 1, 0),
                     space3d::Orientation::new(space3d::Direction::Right, space3d::Direction::Front)
+                )
+            );
+        }
+
+        #[test]
+        fn should_map_8_4_to_1_5_1() {
+            let (map, _) = crate::parse(&["aoc", "2022", "22-test.txt"]).unwrap();
+            let cube = Cube::try_from(&map).unwrap();
+            let position = space2d::Position {
+                coord: space2d::Coord::new(8, 4),
+                direction: space2d::Direction::Right,
+            };
+
+            let position3d = cube.apply(&position);
+
+            assert_eq!(
+                position3d,
+                space3d::Position::new(
+                    space3d::Coord::new(1, 5, 1),
+                    space3d::Orientation::new(space3d::Direction::Right, space3d::Direction::Down)
                 )
             );
         }
