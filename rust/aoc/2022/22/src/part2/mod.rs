@@ -81,8 +81,8 @@ impl Cube {
         &mut self,
         transformation: space3d::Transformation,
         face_coord: FaceCoord,
-        direction: space3d::Direction,
     ) {
+        let direction = transformation.apply_direction(&space3d::Direction::Front);
         self.transformations
             .insert(face_coord.clone(), transformation);
         self.face_coords_by_direction.insert(direction, face_coord);
@@ -115,15 +115,10 @@ impl TryFrom<&Map> for Cube {
             space3d::Transformation::translate(&space3d::Vec3D::new(1 - origin.x, 1 - origin.y, 0));
 
         let face_coord = cube.face_coord_of_2d_coord(&origin);
-        cube.insert_transformation(
-            origin_transformation,
-            face_coord.clone(),
-            space3d::Direction::Front,
-        );
+        cube.insert_transformation(origin_transformation, face_coord.clone());
 
         fn explore_and_register_transformations(
             from: &FaceCoord,
-            from_direction: &space3d::Direction,
             map: &Map,
             cube: &mut Cube,
         ) -> Result<()> {
@@ -160,10 +155,9 @@ impl TryFrom<&Map> for Cube {
                         .then(&rotate)
                         .then(&translate_from_origin);
 
-                    let direction = transformation.apply_direction(from_direction);
-                    cube.insert_transformation(transformation, face_coord.clone(), direction);
+                    cube.insert_transformation(transformation, face_coord.clone());
 
-                    explore_and_register_transformations(&face_coord, &direction, map, cube)?;
+                    explore_and_register_transformations(&face_coord, map, cube)?;
                 }
             }
 
@@ -198,12 +192,7 @@ impl TryFrom<&Map> for Cube {
             Ok(())
         }
 
-        explore_and_register_transformations(
-            &face_coord,
-            &space3d::Direction::Front,
-            map,
-            &mut cube,
-        )?;
+        explore_and_register_transformations(&face_coord, map, &mut cube)?;
 
         Ok(cube)
     }
@@ -237,8 +226,7 @@ mod test {
         use crate::CoordUnit;
         use std::collections::HashMap;
 
-        use crate::part2::space3d::Direction::Up;
-        use crate::part2::space3d::Transformation;
+        use crate::part2::space3d::Direction::{Right, Up};
         use crate::part2::Cube;
 
         #[test]
@@ -287,43 +275,52 @@ mod test {
             );
         }
 
-        #[test]
-        fn should_map_8_4_to_1_5_1() {
+        fn test_mapping(coord: space2d::Coord, expected_position: space3d::Position) {
             let (map, _) = crate::parse(&["aoc", "2022", "22-test.txt"]).unwrap();
             let cube = Cube::try_from(&map).unwrap();
             let position = space2d::Position {
-                coord: space2d::Coord::new(8, 4),
+                coord,
                 direction: space2d::Direction::Right,
             };
 
             let position3d = cube.apply(&position);
 
-            assert_eq!(
-                position3d,
+            assert_eq!(position3d, expected_position);
+        }
+
+        #[test]
+        fn should_map_8_4_to_1_5_1() {
+            use space3d::Direction::*;
+            test_mapping(
+                space2d::Coord::new(8, 4),
                 space3d::Position::new(
                     space3d::Coord::new(1, 5, 1),
-                    space3d::Orientation::new(space3d::Direction::Right, space3d::Direction::Down)
-                )
+                    space3d::Orientation::new(Right, Down),
+                ),
             );
         }
 
         #[test]
         fn should_map_4_4_to_0_1_1() {
-            let (map, _) = crate::parse(&["aoc", "2022", "22-test.txt"]).unwrap();
-            let cube = Cube::try_from(&map).unwrap();
-            let position = space2d::Position {
-                coord: space2d::Coord::new(4, 4),
-                direction: space2d::Direction::Right,
-            };
-
-            let position3d = cube.apply(&position);
-
-            assert_eq!(
-                position3d,
+            use space3d::Direction::*;
+            test_mapping(
+                space2d::Coord::new(4, 4),
                 space3d::Position::new(
                     space3d::Coord::new(0, 1, 1),
-                    space3d::Orientation::new(space3d::Direction::Down, space3d::Direction::Left)
-                )
+                    space3d::Orientation::new(Down, Left),
+                ),
+            );
+        }
+
+        #[test]
+        fn should_map_0_4_to_5_0_1() {
+            use space3d::Direction::*;
+            test_mapping(
+                space2d::Coord::new(0, 4),
+                space3d::Position::new(
+                    space3d::Coord::new(5, 0, 1),
+                    space3d::Orientation::new(Left, Up),
+                ),
             );
         }
 
