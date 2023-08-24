@@ -10,10 +10,7 @@ fn main() {
     let (map, path) = parse(&["aoc", "2022", "22.txt"]).unwrap();
     println!(
         "part1: {}",
-        solve(&map, &path, |position| {
-            use part1::Map;
-            map.jump(position)
-        })
+        solve(&map, &path, |position| { part1::jump(&map, position) })
     );
     println!("part2: {}", {
         let cube = Cube::try_from(&map).unwrap();
@@ -39,7 +36,7 @@ fn parse(path: &[&str]) -> Result<(Map, Path)> {
     Ok((map.try_into()?, path.parse()?))
 }
 
-fn solve(map: &Map, path: &Path, jump: impl Fn(&Position) -> Coord) -> u32 {
+fn solve(map: &Map, path: &Path, jump: impl Fn(&Position) -> Position) -> u32 {
     let position = path.steps.iter().fold(
         Position {
             coord: map.first_node(),
@@ -74,21 +71,24 @@ impl Map {
         &self,
         position: &Position,
         nb_step: CoordUnit,
-        jump: impl Fn(&Position) -> Coord,
-    ) -> Coord {
-        let mut resulting_coord = position.coord.clone();
+        jump: impl Fn(&Position) -> Position,
+    ) -> Position {
+        let mut resulting_position = position.clone();
         for _ in 0..nb_step {
-            let coord = Some(resulting_coord.at(&position.direction))
-                .filter(|new_coord| self.get(new_coord).is_some())
-                .unwrap_or_else(|| jump(&position));
+            let position = Some(Position {
+                coord: resulting_position.coord.at(&position.direction),
+                ..resulting_position
+            })
+            .filter(|new_position| self.get(&new_position.coord).is_some())
+            .unwrap_or_else(|| jump(&position));
 
-            match self.get(&coord) {
-                Some(Node::Open) => resulting_coord = coord,
+            match self.get(&position.coord) {
+                Some(Node::Open) => resulting_position = position,
                 _ => break,
             }
         }
 
-        resulting_coord
+        resulting_position
     }
 }
 
@@ -183,16 +183,17 @@ impl Direction {
     }
 }
 
+#[derive(Clone)]
 struct Position {
     coord: Coord,
     direction: Direction,
 }
 
 impl Position {
-    fn apply(&mut self, step: &Step, map: &Map, jump: impl Fn(&Position) -> Coord) {
+    fn apply(&mut self, step: &Step, map: &Map, jump: impl Fn(&Position) -> Position) {
         match step {
             Step::GoStraight(nb_steps) => {
-                self.coord = map.move_front_until_wall_by(&self, *nb_steps, jump)
+                *self = map.move_front_until_wall_by(self, *nb_steps, jump)
             }
             Step::Turn(side) => self.direction = self.direction.turn(side),
         }
@@ -308,5 +309,29 @@ mod test {
 
         assert_eq!(map.nodes.len(), 96);
         assert_eq!(path, "10R5L5R10L4R5L5".parse().unwrap())
+    }
+
+    #[test]
+    fn part1_given_test() {
+        let (map, path) = parse(&["aoc", "2022", "22-test.txt"]).unwrap();
+        assert_eq!(
+            solve(&map, &path, |position| { part1::jump(&map, position) }),
+            6032
+        );
+    }
+
+    #[test]
+    fn part1() {
+        let (map, path) = parse(&["aoc", "2022", "22.txt"]).unwrap();
+        assert_eq!(
+            solve(&map, &path, |position| { part1::jump(&map, position) }),
+            181128
+        );
+    }
+    #[test]
+    fn part2_given_test() {
+        let (map, path) = parse(&["aoc", "2022", "22-test.txt"]).unwrap();
+        let cube = Cube::try_from(&map).unwrap();
+        assert_eq!(solve(&map, &path, |position| cube.jump(position)), 6032);
     }
 }

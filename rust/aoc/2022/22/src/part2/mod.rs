@@ -18,19 +18,12 @@ pub(super) struct Cube {
 }
 
 impl Cube {
-    // FIXME jump an change the direction
-    pub(super) fn jump(&self, position: &space2d::Position) -> space2d::Coord {
-        let position2d = space2d::Position {
-            coord: position.coord.clone(),
-            direction: position.direction,
-        };
-
-        let mut position3d = self.apply(&position2d);
+    pub(super) fn jump(&self, position: &space2d::Position) -> space2d::Position {
+        let mut position3d = self.apply(&position);
         position3d.move_front();
         position3d.turn(&space3d::Side::Down);
         position3d.move_front();
-
-        self.revert(&position3d).coord
+        self.revert(&position3d)
     }
 
     fn apply(&self, position: &space2d::Position) -> space3d::Position {
