@@ -18,6 +18,7 @@ pub(super) struct Cube {
 }
 
 impl Cube {
+    // FIXME jump an change the direction
     pub(super) fn jump(&self, position: &space2d::Position) -> space2d::Coord {
         let position2d = space2d::Position {
             coord: position.coord.clone(),
@@ -141,8 +142,9 @@ impl TryFrom<&Map> for Cube {
                     let translate_to_origin = Transformation::translate(
                         &space3d::Vec3D::from_start_to_end(&fold_position, &space3d::Coord::orig()),
                     );
-                    let translate_dir =
-                        Transformation::translate(&space3d::Direction::from(&dir).as_vec());
+                    let translate_dir = Transformation::translate(
+                        &from_transformation.apply_vec(&space3d::Direction::from(&dir).as_vec()),
+                    );
                     let rotate = get_rotation(&dir, from_transformation)?;
 
                     let translate_from_origin = Transformation::translate(
@@ -313,19 +315,40 @@ mod test {
         }
 
         #[test]
-        fn should_map_0_4_to_5_0_1() {
+        fn should_map_0_4_to_4_0_1() {
             use space3d::Direction::*;
             test_mapping(
                 space2d::Coord::new(0, 4),
                 space3d::Position::new(
-                    space3d::Coord::new(5, 0, 1),
+                    space3d::Coord::new(4, 0, 1),
                     space3d::Orientation::new(Left, Up),
                 ),
             );
         }
 
         #[test]
-        fn should_map_a_random_point_in_first_face() {}
+        fn should_map_8_8_to_1_4_5() {
+            use space3d::Direction::*;
+            test_mapping(
+                space2d::Coord::new(8, 8),
+                space3d::Position::new(
+                    space3d::Coord::new(1, 4, 5),
+                    space3d::Orientation::new(Right, Back),
+                ),
+            );
+        }
+
+        #[test]
+        fn should_map_12_8_to_5_4_4() {
+            use space3d::Direction::*;
+            test_mapping(
+                space2d::Coord::new(12, 8),
+                space3d::Position::new(
+                    space3d::Coord::new(5, 4, 4),
+                    space3d::Orientation::new(Front, Right),
+                ),
+            );
+        }
 
         #[test]
         fn should_have_6_face_coords_by_direction() {
