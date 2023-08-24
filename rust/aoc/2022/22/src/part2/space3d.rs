@@ -304,7 +304,7 @@ impl Coord {
         Self { x, y, z }
     }
 
-    fn orig() -> Self {
+    pub(crate) fn orig() -> Self {
         Self::new(0, 0, 0)
     }
 
