@@ -1,5 +1,6 @@
 [workspace]
 members = ["challenges_common", "aoc/*/*"]
+resolver = "2"
 
 [workspace.dependencies]
 challenges_common = { path = "./challenges_common" }
