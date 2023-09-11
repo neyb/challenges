@@ -1,5 +1,5 @@
 [workspace]
-members = ["challenges_common", "aoc/*/*"]
+members = ["challenges_common", "aoc/*/*", "leetcode/*"]
 resolver = "2"
 
 [workspace.dependencies]
