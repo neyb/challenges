@@ -308,7 +308,6 @@ mod test {
         assert_eq!(
             computer.screen.to_string(),
             challenges_common::get_input_content(&["aoc", "2022", "10-test-part2-expected.txt"])
-                .unwrap()
         )
     }
     #[test]

@@ -16,7 +16,7 @@ type Unit = u16;
 type Count = u16;
 
 fn parse(path: &[&str]) -> Result<MapWithState> {
-    let content = challenges_common::get_input_content(path)?;
+    let content = challenges_common::get_input_content(path);
     let map = content.parse()?;
     let wind_state = content.parse()?;
     let state = State::new(&map, &wind_state);

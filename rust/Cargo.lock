@@ -227,6 +227,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "aoc_2023_01"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "challenges_common",
+ "lazy-regex",
+]
+
+[[package]]
 name = "challenges_common"
 version = "0.1.0"
 dependencies = [
@@ -276,14 +285,6 @@ name = "lazy_static"
 version = "1.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e2abad23fbc42b3700f2f279844dc832adb2b2eb069b2df918f455c4e18cc646"
-
-[[package]]
-name = "leetcode_1342"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "challenges_common",
-]
 
 [[package]]
 name = "memchr"

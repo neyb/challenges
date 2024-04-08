@@ -28,7 +28,7 @@ struct JetPattern {
 
 impl JetPattern {
     fn parse_location(location: &[&str]) -> JetPattern {
-        let content = get_input_content(location).unwrap();
+        let content = get_input_content(location);
         JetPattern::parse(&content).unwrap()
     }
 
