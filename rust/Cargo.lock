@@ -236,6 +236,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "aoc_2023_02"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "challenges_common",
+]
+
+[[package]]
 name = "challenges_common"
 version = "0.1.0"
 dependencies = [
