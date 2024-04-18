@@ -1,65 +1,19 @@
 use std::mem;
 use std::str::FromStr;
 
-use itertools::Itertools;
-
 use challenges_common::graph::{Coord, Grid};
 
-fn main() {
+fn main() -> anyhow::Result<()> {
     let content = challenges_common::get_input_content(&["aoc", "2023", "03.txt"]);
-    println!("part 1: {}", part_1::run(&content).expect("part 1 failed"));
-    println!("part 2: {}", part_2::run(&content).expect("part 2 failed"));
+    let map = content.parse()?;
+    println!("part 1: {}", part_1::run(&map).expect("part 1 failed"));
+    println!("part 2: {}", part_2::run(&map).expect("part 2 failed"));
+    Ok(())
 }
 
 struct Map {
     grid: Grid<char>,
     numbers: Vec<(u32, Vec<Coord>)>,
-}
-
-impl Map {
-    fn parts_numbers_sum(&self) -> u32 {
-        self.numbers
-            .iter()
-            .filter_map(|(number, positions)| {
-                let is_part_number = positions
-                    .iter()
-                    .flat_map(|position| position.neighbours(true))
-                    .any(|position| matches!(self.grid.at(&position), Some(&c) if !c.is_ascii_digit() && c != '.'));
-
-                if is_part_number {
-                    Some(number)
-                } else {
-                    None
-                }
-            })
-            .sum()
-    }
-
-    fn gears_ratio_sum(&self) -> u32 {
-        self.grid
-            .coords()
-            .filter(|coord| self.grid.at(coord) == Some(&'*'))
-            .filter_map(|coord| {
-                let gear_neighbours_coord = coord.neighbours(true).collect_vec();
-
-                let numbers = self
-                    .numbers
-                    .iter()
-                    .filter(|(_, coords)| {
-                        coords
-                            .iter()
-                            .any(|number_coord| gear_neighbours_coord.contains(number_coord))
-                    })
-                    .map(|(number, _)| number)
-                    .collect_vec();
-
-                match numbers.as_slice() {
-                    [&n1, &n2] => Some(n1 * n2),
-                    _ => None,
-                }
-            })
-            .sum()
-    }
 }
 
 impl FromStr for Map {
@@ -102,15 +56,40 @@ impl FromStr for Map {
 }
 
 mod part_1 {
+    use crate::Map;
     use anyhow::Result;
 
-    pub fn run(content: impl AsRef<str>) -> Result<u32> {
-        let map: crate::Map = content.as_ref().parse()?;
+    pub fn run(map: &Map) -> Result<u32> {
         Ok(map.parts_numbers_sum())
+    }
+
+    trait Part1Map {
+        fn parts_numbers_sum(&self) -> u32;
+    }
+
+    impl Part1Map for Map {
+        fn parts_numbers_sum(&self) -> u32 {
+            self.numbers
+                .iter()
+                .filter_map(|(number, positions)| {
+                    let is_part_number = positions
+                        .iter()
+                        .flat_map(|position| position.neighbours(true))
+                        .any(|position| matches!(self.grid.at(&position), Some(&c) if !c.is_ascii_digit() && c != '.'));
+
+                    if is_part_number {
+                        Some(number)
+                    } else {
+                        None
+                    }
+                })
+                .sum()
+        }
     }
 
     #[cfg(test)]
     mod test {
+        use crate::Map;
         use itertools::Itertools;
 
         #[test]
@@ -131,16 +110,49 @@ mod part_1 {
                 .map(|line| line.trim())
                 .join("\n");
 
-            assert_eq!(super::run(input).unwrap(), 4361)
+            assert_eq!(super::run(&input.parse::<Map>().unwrap()).unwrap(), 4361)
         }
     }
 }
 
 mod part_2 {
+    use crate::Map;
     use anyhow::Result;
+    use itertools::Itertools;
 
-    pub fn run(content: impl AsRef<str>) -> Result<u32> {
-        let map: crate::Map = content.as_ref().parse()?;
+    pub fn run(map: &Map) -> Result<u32> {
         Ok(map.gears_ratio_sum())
+    }
+
+    trait Part2Map {
+        fn gears_ratio_sum(&self) -> u32;
+    }
+
+    impl Part2Map for Map {
+        fn gears_ratio_sum(&self) -> u32 {
+            self.grid
+                .coords()
+                .filter(|coord| self.grid.at(coord) == Some(&'*'))
+                .filter_map(|coord| {
+                    let gear_neighbours_coord = coord.neighbours(true).collect_vec();
+
+                    let numbers = self
+                        .numbers
+                        .iter()
+                        .filter(|(_, coords)| {
+                            coords
+                                .iter()
+                                .any(|number_coord| gear_neighbours_coord.contains(number_coord))
+                        })
+                        .map(|(number, _)| number)
+                        .collect_vec();
+
+                    match numbers.as_slice() {
+                        [&n1, &n2] => Some(n1 * n2),
+                        _ => None,
+                    }
+                })
+                .sum()
+        }
     }
 }
