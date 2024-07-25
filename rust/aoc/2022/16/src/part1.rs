@@ -35,7 +35,7 @@ impl<'map> State for StatePart1<'map> {
         map: &'a Map,
         timer: u8,
         all_moves: &'a HashMap<&'a ValveId, Vec<Move<'a>>>,
-    ) -> Result<Box<dyn Iterator<Item = Result<Box<dyn State+'a>>> + 'a>> {
+    ) -> Result<Box<dyn Iterator<Item = Result<Box<dyn State + 'a>>> + 'a>> {
         Ok(Box::new(
             all_moves
                 .get(self.position)
@@ -62,7 +62,7 @@ impl<'map> State for StatePart1<'map> {
                     Ok(state) => state.passed_time <= timer,
                     _ => true,
                 })
-                .map(|res_state| res_state.map(|state| Box::new(state) as Box<dyn State>))
+                .map(|res_state| res_state.map(|state| Box::new(state) as Box<dyn State>)),
         ))
     }
 

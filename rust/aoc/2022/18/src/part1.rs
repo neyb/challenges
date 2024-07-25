@@ -25,7 +25,7 @@ pub(crate) fn count_sized(cubes_vec: &Vec<Cube>) -> usize {
 
 #[cfg(test)]
 mod test {
-    
+
     use crate::parse_cubes;
     use crate::part1::count_sized;
 

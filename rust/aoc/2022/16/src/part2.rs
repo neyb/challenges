@@ -216,7 +216,7 @@ impl<'map> State for StatePart2<'map> {
         map: &'a Map,
         timer: u8,
         all_moves: &'a HashMap<&'a ValveId, Vec<Move<'a>>>,
-    ) -> Result<Box<dyn Iterator<Item = Result<Box<dyn State+'a>>> + 'a>>    {
+    ) -> Result<Box<dyn Iterator<Item = Result<Box<dyn State + 'a>>> + 'a>> {
         use Action::*;
 
         // let to_box_dyn = |res_state:Result<StatePart2>|
@@ -226,20 +226,19 @@ impl<'map> State for StatePart2<'map> {
             (Nothing, _) => Box::new(
                 self.nexts_action_from_position(&self.you, timer, all_moves)?
                     .map(move |actor_state| self.with_you(actor_state).wait(map))
-                    .map(|res_state| res_state.map(|state|Box::new(state) as Box<dyn State+'a>))
-                ,
+                    .map(|res_state| res_state.map(|state| Box::new(state) as Box<dyn State + 'a>)),
             ),
             (_, Nothing) => Box::new(
                 self.nexts_action_from_position(&self.elephant, timer, all_moves)?
                     .map(|actor_state| self.with_elephant(actor_state).wait(map))
-                    .map(|res_state| res_state.map(|state|Box::new(state) as Box<dyn State+'a>))
-            ) ,
-            // this code should never be called... can be replaced with a bail
-            (Moving { .. }, _) | (_, Moving { .. }) => Box::new(once(self.clone().wait(map))
-                .map(|res_state| res_state.map(|state|Box::new(state) as Box<dyn State+'a>))
+                    .map(|res_state| res_state.map(|state| Box::new(state) as Box<dyn State + 'a>)),
             ),
-            (Stopped, Stopped) => Box::new(empty())
-            ,
+            // this code should never be called... can be replaced with a bail
+            (Moving { .. }, _) | (_, Moving { .. }) => Box::new(
+                once(self.clone().wait(map))
+                    .map(|res_state| res_state.map(|state| Box::new(state) as Box<dyn State + 'a>)),
+            ),
+            (Stopped, Stopped) => Box::new(empty()),
         })
     }
 

@@ -106,8 +106,9 @@ impl Value {
                 Ok(Value::List(values))
             }
             Some(char) if char.is_ascii_digit() => {
-                let value_as_str: String =
-                    chars.peeking_take_while(|char| char.is_ascii_digit()).collect();
+                let value_as_str: String = chars
+                    .peeking_take_while(|char| char.is_ascii_digit())
+                    .collect();
                 Ok(Value::Integer(value_as_str.parse()?))
             }
             char => Err(anyhow!("unexpected char : {:?}", char)),
