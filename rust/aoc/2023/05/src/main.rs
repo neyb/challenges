@@ -10,4 +10,3 @@ fn main() {
     println!("part 1: {}", part1::run(&content));
     println!("part 2: {}", part2::run(&content));
 }
-

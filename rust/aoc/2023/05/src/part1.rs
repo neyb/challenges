@@ -1,8 +1,8 @@
+use crate::common::*;
 use anyhow::anyhow;
 use challenges_common::MyIterTools;
-use std::str::FromStr;
-use crate::common::*;
 use itertools::Itertools;
+use std::str::FromStr;
 
 pub fn run(content: &str) -> Position {
     let almanac: Almanac = content.parse().unwrap();

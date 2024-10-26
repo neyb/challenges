@@ -1,6 +1,6 @@
+use itertools::Itertools;
 use std::ops::Range;
 use std::str::FromStr;
-use itertools::Itertools;
 
 pub type Position = u64;
 pub type PositionTransformation = i64;
@@ -65,7 +65,7 @@ impl Transformation {
     fn concerns(&self, value: Position) -> bool {
         self.source_range.contains(&value)
     }
-    
+
     fn map(&self, value: Position) -> Position {
         if self.source_range.contains(&value) {
             (value as PositionTransformation + self.transformation) as Position
