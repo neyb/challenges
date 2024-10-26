@@ -1,9 +1,35 @@
 use crate::ranges::{JoinedResult, Remaining, WithoutResult};
+use std::ops::Add;
 
 #[derive(Clone, PartialEq, Debug)]
 pub struct Range<P> {
-    start: P,
-    end: P,
+    pub start: P,
+    pub end: P,
+}
+
+impl<P> Range<P>
+where
+    P: Ord + Copy + Stepable,
+{
+    pub fn new(start: P, end: P) -> Option<Self> {
+        if start <= end {
+            Some(Self { start, end })
+        } else {
+            None
+        }
+    }
+}
+
+impl<P> Range<P>
+where
+    P: Copy + Add<Output = P> + Stepable,
+{
+    pub fn with_length(start: P, length: P) -> Self {
+        Self {
+            start,
+            end: (start + length).prev(),
+        }
+    }
 }
 
 impl<P> super::Range for Range<P>
@@ -12,7 +38,7 @@ where
 {
     type Element = P;
 
-    fn start(&self) -> Self::Element {
+     fn start(&self) -> Self::Element {
         self.start
     }
 
@@ -35,7 +61,10 @@ where
     }
 
     fn join(&self, other: &Self) -> JoinedResult<Self> {
-        if self.overlap(other) || self.start.prev() == other.end() || self.end.next() == other.start() {
+        if self.overlap(other)
+            || self.start.prev() == other.end()
+            || self.end.next() == other.start()
+        {
             let start = self.start.min(other.start);
             let end = self.end.max(other.end);
             JoinedResult::Joined(Self::new(start, end).unwrap())
@@ -75,23 +104,16 @@ where
 
 impl<P> Range<P>
 where
-    P: Ord + Copy + Stepable,
-{
-    pub fn new(start: P, end: P) -> Option<Self> {
-        if start <= end {
-            Some(Self { start, end })
-        } else {
-            None
-        }
-    }
-}
-
-impl<P> Range<P>
-where
     P: Ord + Copy + Stepable + std::ops::Sub<Output = P>,
 {
     fn len(&self) -> P {
         self.end - self.start
+    }
+}
+
+impl <P> From<&std::ops::Range<P>> for Range<P> where P: Stepable + Copy {
+    fn from(value: &std::ops::Range<P>) -> Self {
+        Self{ start:value.start, end:value.end.prev()}
     }
 }
 

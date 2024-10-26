@@ -19,7 +19,7 @@ impl Almanac {
         self.seeds.numbers.iter().map(move |seed| {
             self.mappings
                 .iter()
-                .fold(*seed, |value, mapping| mapping.map(value))
+                .fold(*seed, |value, mapping| mapping.map_position(value))
         })
     }
 }

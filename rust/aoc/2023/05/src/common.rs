@@ -6,11 +6,11 @@ pub type Position = u64;
 pub type PositionTransformation = i64;
 
 pub struct Mapping {
-    transformations: Vec<Transformation>,
+    pub transformations: Vec<Transformation>,
 }
 
 impl Mapping {
-    pub fn map(&self, value: Position) -> Position {
+    pub fn map_position(&self, value: Position) -> Position {
         match self
             .transformations
             .iter()
@@ -50,8 +50,8 @@ impl FromStr for Mapping {
 
 #[derive(Debug, PartialEq)]
 pub struct Transformation {
-    source_range: Range<Position>,
-    transformation: PositionTransformation,
+    pub source_range: Range<Position>,
+    pub transformation: PositionTransformation,
 }
 
 impl Transformation {

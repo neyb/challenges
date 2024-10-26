@@ -1,22 +1,33 @@
 use std::fmt::Debug;
 
-mod continuous;
-mod discontinuous;
+pub mod continuous;
+pub mod discontinuous;
 
 #[derive(Debug, PartialEq)]
 pub struct Ranges<R: Range> {
-    ranges: Vec<R>,
+    pub ranges: Vec<R>,
 }
 
 impl<R: Range> Ranges<R> {
-    fn empty() -> Self {
+    pub fn empty() -> Self {
         Self { ranges: Vec::new() }
     }
 
-    fn new(ranges: Vec<R>) -> Self {
+    pub fn new(ranges: Vec<R>) -> Self {
         let mut result = Self { ranges };
         result.simplify();
         result
+    }
+
+    pub fn map(&self, mutation: impl Fn(&R) -> R) -> Self {
+        Self {
+            ranges: self.ranges.iter().map(|range| mutation(range)).collect(),
+        }
+    }
+
+    pub fn merge(&mut self, ranges: Ranges<R>) {
+        self.ranges.extend(ranges.ranges);
+        self.simplify()
     }
 
     fn remove_ranges(&mut self, ranges: &Ranges<R>) -> Self {
@@ -28,7 +39,7 @@ impl<R: Range> Ranges<R> {
         all_removed
     }
 
-    fn remove_range(&mut self, range: &R) -> Self {
+    pub fn remove_range(&mut self, range: &R) -> Self {
         let mut all_removed = Self { ranges: Vec::new() };
 
         let previous_ranges = std::mem::take(&mut self.ranges);
@@ -80,7 +91,18 @@ impl<R: Range> Ranges<R> {
     }
 }
 
-trait Range: Sized {
+impl<R> Clone for Ranges<R>
+where
+    R: Range + Clone,
+{
+    fn clone(&self) -> Self {
+        Self {
+            ranges: self.ranges.clone(),
+        }
+    }
+}
+
+pub trait Range: Sized {
     type Element: Ord + Copy;
 
     fn start(&self) -> Self::Element;
@@ -130,23 +152,29 @@ mod tests {
         }
 
         #[test]
-        fn simplify_should_join_1_to_2_and_2_to_4(){
+        fn simplify_should_join_1_to_2_and_2_to_4() {
             let mut ranges = Ranges::new(vec![
-                discontinuous::Range::new(1,2).unwrap(),
-                discontinuous::Range::new(2,4).unwrap(),
+                discontinuous::Range::new(1, 2).unwrap(),
+                discontinuous::Range::new(2, 4).unwrap(),
             ]);
 
-            assert_eq!(ranges.ranges, vec![discontinuous::Range::new(1,4).unwrap()])
+            assert_eq!(
+                ranges.ranges,
+                vec![discontinuous::Range::new(1, 4).unwrap()]
+            )
         }
 
         #[test]
-        fn simplify_should_join_1_to_2_and_3_to_4(){
+        fn simplify_should_join_1_to_2_and_3_to_4() {
             let mut ranges = Ranges::new(vec![
-                discontinuous::Range::new(1,2).unwrap(),
-                discontinuous::Range::new(3,4).unwrap(),
+                discontinuous::Range::new(1, 2).unwrap(),
+                discontinuous::Range::new(3, 4).unwrap(),
             ]);
 
-            assert_eq!(ranges.ranges, vec![discontinuous::Range::new(1,4).unwrap()])
+            assert_eq!(
+                ranges.ranges,
+                vec![discontinuous::Range::new(1, 4).unwrap()]
+            )
         }
     }
 }
