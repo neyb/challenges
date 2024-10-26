@@ -1,9 +1,9 @@
-use itertools::Either;
 use std::fmt::Debug;
 
 mod continuous;
 mod discontinuous;
 
+#[derive(Debug, PartialEq)]
 pub struct Ranges<R: Range> {
     ranges: Vec<R>,
 }
@@ -38,10 +38,11 @@ impl<R: Range> Ranges<R> {
                 all_removed.ranges.push(removed);
             }
             match remaining {
-                Remaining::Joined(range) => self.ranges.push(range),
-                Remaining::Splitted(first, second) => {
-                    self.ranges.push(first);
-                    self.ranges.push(second);
+                Remaining::Empty => {}
+                Remaining::Single(range) => self.ranges.push(range),
+                Remaining::Splitted { before, after } => {
+                    self.ranges.push(before);
+                    self.ranges.push(after);
                 }
             }
         }
@@ -66,7 +67,7 @@ impl<R: Range> Ranges<R> {
                     JoinedResult::Joined(joined) => {
                         current = Some(joined);
                     }
-                    JoinedResult::Disjoint => {
+                    JoinedResult::Disjoint(_, _) => {
                         self.ranges.push(current.replace(range).unwrap());
                     }
                 },
@@ -96,7 +97,7 @@ trait Range: Sized {
 
 enum JoinedResult<R> {
     Joined(R),
-    Disjoint,
+    Disjoint(R, R),
 }
 
 struct WithoutResult<R> {
@@ -105,28 +106,47 @@ struct WithoutResult<R> {
 }
 
 enum Remaining<R> {
-    Joined(R),
-    Splitted(R, R),
+    Empty,
+    Single(R),
+    Splitted { before: R, after: R },
 }
 
 #[cfg(test)]
 mod tests {
-    use super::*;
-
     mod discontinuous {
         use super::super::*;
 
         #[test]
         fn empty_ranges_should_be_empty() {
-            let ranges:Ranges<discontinuous::NotEmptyRange<i32>> = Ranges::empty();
+            let ranges: Ranges<discontinuous::Range<i32>> = Ranges::empty();
             assert_eq!(ranges.ranges.len(), 0);
         }
 
         #[test]
         fn can_create_ranges() {
-            let range = discontinuous::NotEmptyRange::new(1, 2);
+            let range = discontinuous::Range::new(1, 2).unwrap();
             let mut ranges = Ranges::new(vec![range]);
             assert_eq!(ranges.ranges.len(), 1);
+        }
+
+        #[test]
+        fn simplify_should_join_1_to_2_and_2_to_4(){
+            let mut ranges = Ranges::new(vec![
+                discontinuous::Range::new(1,2).unwrap(),
+                discontinuous::Range::new(2,4).unwrap(),
+            ]);
+
+            assert_eq!(ranges.ranges, vec![discontinuous::Range::new(1,4).unwrap()])
+        }
+
+        #[test]
+        fn simplify_should_join_1_to_2_and_3_to_4(){
+            let mut ranges = Ranges::new(vec![
+                discontinuous::Range::new(1,2).unwrap(),
+                discontinuous::Range::new(3,4).unwrap(),
+            ]);
+
+            assert_eq!(ranges.ranges, vec![discontinuous::Range::new(1,4).unwrap()])
         }
     }
 }

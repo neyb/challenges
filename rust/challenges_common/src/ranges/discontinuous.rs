@@ -1,16 +1,12 @@
-use crate::ranges::{JoinedResult, WithoutResult};
+use crate::ranges::{JoinedResult, Remaining, WithoutResult};
 
-pub enum Range<P> {
-    Empty,
-    NotEmpty(NotEmptyRange<P>),
-}
-
-struct NotEmptyRange<P> {
+#[derive(Clone, PartialEq, Debug)]
+pub struct Range<P> {
     start: P,
     end: P,
 }
 
-impl<P> super::Range for NotEmptyRange<P>
+impl<P> super::Range for Range<P>
 where
     P: Ord + Stepable + Copy,
 {
@@ -29,35 +25,68 @@ where
     }
 
     fn overlap(&self, other: &Self) -> bool {
-        self.contains(other.start)
-            || self.contains(other.end)
-            || other.contains(self.start)
-            || other.contains(self.end)
+        self.start <= other.end && self.end >= other.start
     }
 
     fn intersection(&self, other: &Self) -> Option<Self> {
-        todo!()
+        let start = self.start.max(other.start);
+        let end = self.end.min(other.end);
+        Self::new(start, end)
     }
 
     fn join(&self, other: &Self) -> JoinedResult<Self> {
-        todo!()
+        if self.overlap(other) || self.start.prev() == other.end() || self.end.next() == other.start() {
+            let start = self.start.min(other.start);
+            let end = self.end.max(other.end);
+            JoinedResult::Joined(Self::new(start, end).unwrap())
+        } else {
+            JoinedResult::Disjoint(self.clone(), other.clone())
+        }
     }
 
     fn without(&self, other: &Self) -> WithoutResult<Self> {
-        todo!()
+        match self.intersection(other) {
+            None => WithoutResult {
+                remaining: Remaining::Single(self.clone()),
+                removed: None,
+            },
+            Some(removed) => {
+                let remaining_before = Self::new(self.start, removed.start.prev());
+                let remaining_after = Self::new(removed.end.next(), self.end);
+
+                match (remaining_before, remaining_after) {
+                    (Some(before), Some(after)) => WithoutResult {
+                        remaining: Remaining::Splitted { before, after },
+                        removed: Some(removed),
+                    },
+                    (Some(single), _) | (_, Some(single)) => WithoutResult {
+                        remaining: Remaining::Single(single),
+                        removed: Some(removed),
+                    },
+                    _ => WithoutResult {
+                        remaining: Remaining::Empty,
+                        removed: Some(removed),
+                    },
+                }
+            }
+        }
     }
 }
 
-impl<P> NotEmptyRange<P>
+impl<P> Range<P>
 where
     P: Ord + Copy + Stepable,
 {
-    pub fn new(start: P, end: P) -> Self {
-        Self { start, end }
+    pub fn new(start: P, end: P) -> Option<Self> {
+        if start <= end {
+            Some(Self { start, end })
+        } else {
+            None
+        }
     }
 }
 
-impl<P> NotEmptyRange<P>
+impl<P> Range<P>
 where
     P: Ord + Copy + Stepable + std::ops::Sub<Output = P>,
 {
@@ -71,7 +100,7 @@ pub trait Stepable {
     fn prev(&self) -> Self;
 }
 
-macro_rules! impl_stepable {
+macro_rules! impl_stepable_num {
     ($($t:ty),*) => {
         $(
             impl Stepable for $t {
@@ -87,4 +116,4 @@ macro_rules! impl_stepable {
     };
 }
 
-impl_stepable!(i8, i16, i32, i64, i128, isize, u8, u16, u32, u64, u128, usize);
+impl_stepable_num!(i8, i16, i32, i64, i128, isize, u8, u16, u32, u64, u128, usize);
