@@ -1,0 +1,2 @@
+where_single_line = true
+brace_style = "PreferSameLine"
