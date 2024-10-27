@@ -67,7 +67,7 @@ impl ElvesState {
             {
                 wishes
                     .entry(elf_state.0.at(&wished_direction))
-                    .or_insert_with(Vec::new)
+                    .or_default()
                     .push(elf_state.clone())
             }
         }

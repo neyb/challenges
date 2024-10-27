@@ -60,12 +60,12 @@ struct Rock {
 
 impl Rock {
     fn parts(&self) -> Vec<Coord> {
-        return self
+        self
             .shape
             .parts()
             .iter()
             .map(|part| part.move_by(&self.origin))
-            .collect();
+            .collect()
     }
 
     fn can_move(&self, direction: &Direction, state: &State) -> bool {

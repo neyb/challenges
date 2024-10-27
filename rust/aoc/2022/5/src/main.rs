@@ -56,7 +56,7 @@ impl Cargo {
         let from = Vec::from(from);
         let to_move = Vec::from(to_move);
         self.get_mut(a_move.from).crates = from;
-        self.get_mut(a_move.to).crates.extend(to_move.into_iter());
+        self.get_mut(a_move.to).crates.extend(to_move);
     }
 
     fn get(&self, position: u8) -> &Stack {
@@ -92,7 +92,7 @@ impl From<&Vec<String>> for Cargo {
             .rev()
             .collect_vec();
 
-        let nb_crates = lines.get(0).unwrap().len();
+        let nb_crates = lines.first().unwrap().len();
 
         let stacks = (0..nb_crates)
             .map(|i| {
@@ -146,8 +146,7 @@ mod test {
     #[test]
     fn given_test_part1() {
         let (mut cargo, moves) = parse(
-            vec![
-                "    [D]    ",
+            ["    [D]    ",
                 "[N] [C]    ",
                 "[Z] [M] [P]",
                 " 1   2   3 ",
@@ -155,8 +154,7 @@ mod test {
                 "move 1 from 2 to 1",
                 "move 3 from 1 to 3",
                 "move 2 from 2 to 1",
-                "move 1 from 1 to 2",
-            ]
+                "move 1 from 1 to 2"]
             .iter()
             .map(|l| l.to_string()),
         );
@@ -167,8 +165,7 @@ mod test {
     #[test]
     fn given_test_part2() {
         let (mut cargo, moves) = parse(
-            vec![
-                "    [D]    ",
+            ["    [D]    ",
                 "[N] [C]    ",
                 "[Z] [M] [P]",
                 " 1   2   3 ",
@@ -176,8 +173,7 @@ mod test {
                 "move 1 from 2 to 1",
                 "move 3 from 1 to 3",
                 "move 2 from 2 to 1",
-                "move 1 from 1 to 2",
-            ]
+                "move 1 from 1 to 2"]
             .iter()
             .map(|l| l.to_string()),
         );

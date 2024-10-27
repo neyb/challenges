@@ -25,12 +25,12 @@ fn parse(path: &[&str]) -> Result<(Map, Path)> {
         .split(|line| line.is_empty())
         .collect::<Vec<_>>();
 
-    let map = input.get(0).ok_or_else(|| anyhow!("no map in input"))?;
+    let map = input.first().ok_or_else(|| anyhow!("no map in input"))?;
 
     let path = input
         .get(1)
         .ok_or_else(|| anyhow!("no path in input"))?
-        .get(0)
+        .first()
         .ok_or_else(|| anyhow!("empty path"))?;
 
     Ok((map.try_into()?, path.parse()?))

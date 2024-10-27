@@ -147,13 +147,13 @@ mod tests {
         #[test]
         fn can_create_ranges() {
             let range = discontinuous::Range::new(1, 2).unwrap();
-            let mut ranges = Ranges::new(vec![range]);
+            let ranges = Ranges::new(vec![range]);
             assert_eq!(ranges.ranges.len(), 1);
         }
 
         #[test]
         fn simplify_should_join_1_to_2_and_2_to_4() {
-            let mut ranges = Ranges::new(vec![
+            let ranges = Ranges::new(vec![
                 discontinuous::Range::new(1, 2).unwrap(),
                 discontinuous::Range::new(2, 4).unwrap(),
             ]);
@@ -166,7 +166,7 @@ mod tests {
 
         #[test]
         fn simplify_should_join_1_to_2_and_3_to_4() {
-            let mut ranges = Ranges::new(vec![
+            let ranges = Ranges::new(vec![
                 discontinuous::Range::new(1, 2).unwrap(),
                 discontinuous::Range::new(3, 4).unwrap(),
             ]);

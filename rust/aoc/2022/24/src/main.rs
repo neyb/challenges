@@ -26,7 +26,7 @@ fn parse(path: &[&str]) -> Result<MapWithState> {
 fn part1(map_with_state: &MapWithState) -> Count {
     let mut cache = WindStates::new(map_with_state.state.winds.clone());
     let map_with_state = map_with_state.clone();
-    let map_with_state = map_with_state.to_exit(&mut cache);
+    let map_with_state = map_with_state.into_exit(&mut cache);
     map_with_state.state.turn
 }
 
@@ -34,9 +34,9 @@ fn part2(map_with_state: &MapWithState) -> Count {
     let mut cache = WindStates::new(map_with_state.state.winds.clone());
     let map_with_state = map_with_state.clone();
 
-    let map_with_state = map_with_state.to_exit(&mut cache);
-    let map_with_state = map_with_state.to_entry(&mut cache);
-    let map_with_state = map_with_state.to_exit(&mut cache);
+    let map_with_state = map_with_state.into_exit(&mut cache);
+    let map_with_state = map_with_state.into_entry(&mut cache);
+    let map_with_state = map_with_state.into_exit(&mut cache);
 
     map_with_state.state.turn
 }
@@ -67,7 +67,7 @@ struct MapWithState {
 }
 
 impl MapWithState {
-    fn to_exit(self, winds_states: &mut WindStates) -> Self {
+    fn into_exit(self, winds_states: &mut WindStates) -> Self {
         let map = &self.map;
 
         let state = astar(
@@ -93,7 +93,7 @@ impl MapWithState {
         MapWithState { state, ..self }
     }
 
-    fn to_entry(self, winds_states: &mut WindStates) -> Self {
+    fn into_entry(self, winds_states: &mut WindStates) -> Self {
         let map = &self.map;
 
         let state = astar(
@@ -211,7 +211,7 @@ impl State {
         let wind_state = wind_states.at(turn, map);
 
         let same_position = self.position.clone();
-        let vec1 = vec![
+        vec![
             same_position.at(&Up),
             same_position.at(&Down),
             same_position.at(&Left),
@@ -227,8 +227,7 @@ impl State {
             winds: wind_state.clone(),
             position,
         })
-        .collect();
-        vec1
+        .collect()
     }
 }
 
@@ -249,8 +248,8 @@ impl WindState {
                     (coord, wind)
                 })
             })
-            .fold(HashMap::new(), |mut map, (coord, wind)| {
-                map.entry(coord).or_insert_with(Vec::new).push(wind.clone());
+            .fold(HashMap::new(), |mut map:HashMap<_,Vec<_>>, (coord, wind)| {
+                map.entry(coord).or_default().push(wind.clone());
                 map
             });
 

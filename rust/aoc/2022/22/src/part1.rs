@@ -15,6 +15,6 @@ pub(super) fn jump(map: &Map, position: &Position) -> Position {
 
     Position {
         coord,
-        direction: position.direction.clone(),
+        direction: position.direction,
     }
 }

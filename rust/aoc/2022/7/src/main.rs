@@ -27,7 +27,7 @@ fn parse(input_lines: impl IntoIterator<Item = impl AsRef<str>>) -> Vec<Command>
 fn build_root(commands: &Vec<Command>) -> Result<FileNode> {
     let mut context = Context::new();
     for command in commands {
-        (context).apply(command)?;
+        context.apply(command)?;
     }
     Ok(context.root)
 }
@@ -239,7 +239,7 @@ impl Context {
                         .ok_or(Error::msg("current path should not be empty"))?;
                 }
                 CdTarget::Dir { name } => {
-                    let file: *mut FileNode = (self.current_node_mut())
+                    let file: *mut FileNode = self.current_node_mut()
                         .child_mut(name)
                         .ok_or(Error::msg("no such file"))?;
                     self.current_path.push(file)

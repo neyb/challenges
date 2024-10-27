@@ -120,7 +120,7 @@ impl Direction {
 }
 
 impl TryFrom<&Vec3D> for Direction {
-    type Error = anyhow::Error;
+    type Error = Error;
 
     fn try_from(vec @ Vec3D { x, y, z }: &Vec3D) -> Result<Self> {
         use Direction::*;

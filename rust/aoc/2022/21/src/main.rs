@@ -11,7 +11,7 @@ fn main() {
 }
 
 fn part1(monkeys: &Monkeys) -> Result<Number> {
-    monkeys.get("root")?.yell(&monkeys)
+    monkeys.get("root")?.yell(monkeys)
 }
 
 fn part2(monkeys: &Monkeys) -> Result<Number> {
@@ -92,8 +92,8 @@ impl Monkey {
                 searched: &str,
                 monkeys: &Monkeys,
             ) -> Result<Number> {
-                let a = monkeys.get(&a)?;
-                let b = monkeys.get(&b)?;
+                let a = monkeys.get(a)?;
+                let b = monkeys.get(b)?;
 
                 match (a.yell(monkeys), b.yell(monkeys)) {
                     (Ok(n), Err(_)) => b.deduct_value_to_yell(expected_b(n), searched, monkeys),
@@ -177,7 +177,7 @@ enum Operation {
 
 impl Operation {
     fn calc(&self, monkeys: &Monkeys) -> Result<Number> {
-        let get = |name: &str| monkeys.get(name)?.yell(&monkeys);
+        let get = |name: &str| monkeys.get(name)?.yell(monkeys);
 
         let result = match self {
             Operation::Sum(a, b) => get(a)? + get(b)?,

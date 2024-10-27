@@ -12,7 +12,7 @@ fn main() {
     println!("part1: {}", score_after(&blueprints, 24));
     println!(
         "part2: {}",
-        blueprints.get(0).unwrap().best_geodes_count_after(32)
+        blueprints.first().unwrap().best_geodes_count_after(32)
             * blueprints.get(1).unwrap().best_geodes_count_after(32)
             * blueprints.get(2).unwrap().best_geodes_count_after(32)
     );
@@ -879,7 +879,7 @@ mod test {
     #[test]
     fn given_test_part2_bp1() {
         let blueprints = parse(&["aoc", "2022", "19-test.txt"]);
-        let blueprint = blueprints.get(0).unwrap();
+        let blueprint = blueprints.first().unwrap();
         assert_eq!(blueprint.best_geodes_count_after(32), 56);
     }
 
