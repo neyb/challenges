@@ -105,7 +105,7 @@ impl FromStr for Category {
                 let (_, [start, length]) = capt.extract();
                 let start = start.parse()?;
                 let length = length.parse()?;
-                Ok(Range::with_length(start, length))
+                Range::with_length(start, length).ok_or_else(||anyhow!(""))
             })
             .try_collect()?;
 
