@@ -33,7 +33,7 @@ impl FromStr for Almanac {
         let seeds = group_iterator
             .next()
             .ok_or_else(|| anyhow!("cannot get seeds group"))?
-            .get(0)
+            .first()
             .ok_or_else(|| anyhow!("cannot get seeds line"))?
             .parse()?;
 

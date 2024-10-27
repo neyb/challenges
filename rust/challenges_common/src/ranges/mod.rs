@@ -21,7 +21,7 @@ impl<R: Range> Ranges<R> {
 
     pub fn map(&self, mutation: impl Fn(&R) -> R) -> Self {
         Self {
-            ranges: self.ranges.iter().map(|range| mutation(range)).collect(),
+            ranges: self.ranges.iter().map(mutation).collect(),
         }
     }
 
@@ -30,7 +30,7 @@ impl<R: Range> Ranges<R> {
         self.simplify()
     }
 
-    fn remove_ranges(&mut self, ranges: &Ranges<R>) -> Self {
+    pub fn remove_ranges(&mut self, ranges: &Ranges<R>) -> Self {
         let mut all_removed = Self::empty();
         for range in ranges.ranges.iter() {
             let removed = self.remove_range(range);
@@ -117,17 +117,17 @@ pub trait Range: Sized {
     fn without(&self, other: &Self) -> WithoutResult<Self>;
 }
 
-enum JoinedResult<R> {
+pub enum JoinedResult<R> {
     Joined(R),
     Disjoint(R, R),
 }
 
-struct WithoutResult<R> {
+pub struct WithoutResult<R> {
     remaining: Remaining<R>,
     removed: Option<R>,
 }
 
-enum Remaining<R> {
+pub enum Remaining<R> {
     Empty,
     Single(R),
     Splitted { before: R, after: R },

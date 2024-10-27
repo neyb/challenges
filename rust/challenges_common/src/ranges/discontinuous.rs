@@ -105,15 +105,6 @@ where
     }
 }
 
-impl<P> Range<P>
-where
-    P: Ord + Copy + Stepable + std::ops::Sub<Output=P>,
-{
-    fn len(&self) -> P {
-        self.end - self.start
-    }
-}
-
 impl<P> From<&std::ops::Range<P>> for Range<P>
 where
     P: Stepable + Copy,

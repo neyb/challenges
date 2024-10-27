@@ -1,6 +1,6 @@
 use crate::common::*;
 use anyhow::{anyhow, Result};
-use challenges_common::ranges::{discontinuous, Range as RangeTrait, Ranges as OrigRanges};
+use challenges_common::ranges::{discontinuous, Ranges as OrigRanges};
 use challenges_common::MyIterTools;
 use itertools::Itertools;
 use std::str::FromStr;
@@ -30,7 +30,7 @@ impl Almanac {
         self.mappings
             .iter()
             .fold(self.seeds.clone(), |category, mapping| {
-                category.apply_mapping(&mapping)
+                category.apply_mapping(mapping)
             })
     }
 }
@@ -38,13 +38,13 @@ impl Almanac {
 impl FromStr for Almanac {
     type Err = anyhow::Error;
 
-    fn from_str(s: &str) -> anyhow::Result<Self> {
+    fn from_str(s: &str) -> Result<Self> {
         let mut group_iterator = s.lines().split(|line| line.is_empty());
 
         let seeds = group_iterator
             .next()
             .ok_or_else(|| anyhow!("cannot get seeds group"))?
-            .get(0)
+            .first()
             .ok_or_else(|| anyhow!("cannot get seeds line"))?
             .parse()?;
 
@@ -60,12 +60,6 @@ pub struct Category {
 }
 
 impl Category {
-    pub fn empty() -> Self {
-        Self {
-            ranges: Ranges::empty(),
-        }
-    }
-
     fn new(ranges: Ranges) -> Self {
         Self { ranges }
     }
@@ -88,16 +82,14 @@ impl Category {
             target_ranges.merge(to_add)
         }
         target_ranges.merge(orig_ranges);
-        Category {
-            ranges: target_ranges,
-        }
+        Category::new(target_ranges)
     }
 }
 
 impl FromStr for Category {
     type Err = anyhow::Error;
 
-    fn from_str(s: &str) -> anyhow::Result<Self> {
+    fn from_str(s: &str) -> Result<Self> {
         let regex = lazy_regex::regex!(r"(\d+) (\d+)");
         let ranges = regex
             .captures_iter(s)
