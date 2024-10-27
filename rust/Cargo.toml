@@ -6,6 +6,9 @@ members = [
 ]
 resolver = "2"
 
+[workspace.metadata]
+
+
 [workspace.dependencies]
 challenges_common = { path = "./challenges_common" }
 anyhow = "*"
@@ -15,3 +18,4 @@ regex = "*"
 petgraph = "*"
 rpds = "*"
 lazy_static = "*"
+num-traits = "0.2"

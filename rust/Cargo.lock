@@ -265,10 +265,27 @@ dependencies = [
 ]
 
 [[package]]
+name = "aoc_2023_05"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "challenges_common",
+ "itertools",
+ "lazy-regex",
+]
+
+[[package]]
+name = "autocfg"
+version = "1.4.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ace50bade8e6234aa140d9a2f552bbee1db4d353f69b8217bc503490fc1a9f26"
+
+[[package]]
 name = "challenges_common"
 version = "0.1.0"
 dependencies = [
  "itertools",
+ "num-traits",
 ]
 
 [[package]]
@@ -320,6 +337,15 @@ name = "memchr"
 version = "2.7.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "6c8640c5d730cb13ebd907d8d04b52f55ac9a2eec55b440c8892f40d56c76c1d"
+
+[[package]]
+name = "num-traits"
+version = "0.2.19"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "071dfc062690e90b734c0b2273ce72ad0ffa95f0c74596bc250dcfd960262841"
+dependencies = [
+ "autocfg",
+]
 
 [[package]]
 name = "once_cell"
