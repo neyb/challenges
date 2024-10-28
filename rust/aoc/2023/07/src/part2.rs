@@ -1,4 +1,4 @@
-use crate::{Card,  HandType};
+use crate::{Card, HandType};
 use itertools::Itertools;
 use std::cmp::Ordering;
 use std::collections::HashMap;

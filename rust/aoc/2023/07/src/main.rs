@@ -77,8 +77,7 @@ fn parse_hand<H: Hand>(s: &str) -> Result<H> {
     Ok(cards.into())
 }
 
-trait Hand: Ord + From<Vec<Card>> {
-}
+trait Hand: Ord + From<Vec<Card>> {}
 
 #[derive(PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
 enum Card {
