@@ -3,7 +3,8 @@ use std::fmt::{Display, Formatter, Write};
 
 fn main() {
     let snafus = parse(&["aoc", "2022", "25.txt"]);
-    println!("part1: {}", part1(&snafus))
+    println!("part1: {}", part1(&snafus));
+    println!("part2: ...there's no part2...");
 }
 
 fn parse(path: &[&str]) -> Vec<SNAFUNumber> {
