@@ -1,13 +1,6 @@
 [workspace]
-members = [
-    "challenges_common",
-    "aoc/*/*", "aoc/2023/07",
-    #    "leetcode/*",
-]
+members = ["challenges_common", "aoc/*/*"]
 resolver = "2"
-
-[workspace.metadata]
-
 
 [workspace.dependencies]
 challenges_common = { path = "./challenges_common" }
