@@ -1,5 +1,5 @@
 mod astar;
-mod grid;
+pub mod grid;
 
 pub use astar::*;
 pub use grid::*;

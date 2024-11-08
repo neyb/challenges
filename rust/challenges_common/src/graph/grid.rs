@@ -1,4 +1,5 @@
 use itertools::Itertools;
+use std::str::FromStr;
 
 pub struct Grid<N> {
     width: usize,
@@ -65,6 +66,72 @@ where
             width: width.unwrap_or(0),
             content,
         }
+    }
+}
+
+use thiserror::Error;
+#[derive(Error, Debug)]
+pub enum CannotParseGrid {
+    #[error("Cannot parse grid from \"{0}\": {1}")]
+    CannotParseNode(String, #[source] CannotParseElementFromChar),
+    #[error("Cannot parse grid from \"{str}\": all lines does not have the same length: line {line_index} has length {line_length}")]
+    AllLinesDoesNotHaveSameLength {
+        str: String,
+        line_index: usize,
+        line_length: usize,
+    },
+}
+
+#[derive(Error, Debug)]
+#[error("Cannot parse element from char: {char}")]
+pub struct CannotParseElementFromChar {
+    char: char,
+}
+
+impl From<char> for CannotParseElementFromChar {
+    fn from(char: char) -> Self {
+        Self { char }
+    }
+}
+
+impl<N> FromStr for Grid<N>
+where
+    N: TryFrom<char>,
+    N::Error: Into<CannotParseElementFromChar>,
+{
+    type Err = CannotParseGrid;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        let mut content = Vec::with_capacity(s.len());
+        let mut width = None;
+
+        for (line_index, line) in s.lines().enumerate() {
+            match width {
+                None => {
+                    width = Some(line.len());
+                }
+                Some(width) if width != line.len() => {
+                    return Err(CannotParseGrid::AllLinesDoesNotHaveSameLength {
+                        str: s.to_string(),
+                        line_index,
+                        line_length: line.len(),
+                    })
+                }
+                _ => (),
+            };
+
+            for c in line.chars() {
+                content.push(
+                    N::try_from(c)
+                        .map_err(|e| CannotParseGrid::CannotParseNode(s.to_string(), e.into()))?,
+                );
+            }
+        }
+
+        Ok(Self {
+            width: width.unwrap_or(0),
+            content,
+        })
     }
 }
 
