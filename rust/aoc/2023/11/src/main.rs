@@ -26,6 +26,8 @@ struct Universe {
 
 impl Universe {
     fn with_galaxies(galaxies: Vec<Galaxy>) -> Self {
+        use std::collections::HashSet;
+
         let mut xs = HashSet::new();
         let mut ys = HashSet::new();
 
@@ -105,6 +107,7 @@ impl Universe {
     }
 }
 
+use std::str::FromStr;
 impl FromStr for Universe {
     type Err = CannotParseUniverse;
 
@@ -128,6 +131,7 @@ impl FromStr for Universe {
     }
 }
 
+use thiserror::Error;
 #[derive(Error, Debug)]
 enum CannotParseUniverse {
     #[error("Unexpected char: {0}")]
@@ -135,9 +139,6 @@ enum CannotParseUniverse {
 }
 
 use challenges_common::graph::Coord;
-use std::collections::HashSet;
-use std::str::FromStr;
-use thiserror::Error;
 struct Galaxy {
     coord: Coord,
 }
