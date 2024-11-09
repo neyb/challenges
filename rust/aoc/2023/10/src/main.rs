@@ -295,7 +295,7 @@ mod tests {
         }
 
         #[test]
-        fn givent_test_4() {
+        fn given_test_4() {
             let content = challenges_common::get_input_content(&["aoc", "2023", "10-test-4.txt"]);
             assert_eq!(run_part2(&content).unwrap(), 8);
         }
