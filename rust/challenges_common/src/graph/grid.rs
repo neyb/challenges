@@ -1,6 +1,7 @@
 use itertools::Itertools;
 use std::str::FromStr;
 
+#[derive(Debug)]
 pub struct Grid<N> {
     width: usize,
     content: Vec<N>,

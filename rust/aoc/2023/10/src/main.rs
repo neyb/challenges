@@ -1,12 +1,13 @@
 use anyhow::{Context, Result};
 use challenges_common::graph::{grid, Coord};
-use itertools::Itertools;
-use std::collections::HashSet;
+use std::cmp::PartialEq;
+use std::collections::HashMap;
 use std::str::FromStr;
 
 fn main() {
     let content = challenges_common::get_input_content(&["aoc", "2023", "10.txt"]);
-    println!("part 1: {}", run(&content).unwrap())
+    println!("part 1: {}", run(&content).unwrap());
+    println!("part 2: {}", run_part2(&content).unwrap());
 }
 
 type Len = usize;
@@ -14,10 +15,17 @@ type Len = usize;
 fn run(content: &str) -> Result<Len> {
     let map: Map = content.parse()?;
     map.find_animal_loop()
-        .map(|path| (path.nodes.len() + 1) / 2)
+        .map(|path| path.element.len() / 2)
         .context("Cannot find longest loop")
 }
 
+fn run_part2(content: &str) -> Result<usize> {
+    let map: Map = content.parse()?;
+    let animal_loop = map.find_animal_loop().context("Cannot find longest loop")?;
+    Ok(map.count_inside_loop(&animal_loop))
+}
+
+#[derive(Debug)]
 struct Map {
     grid: grid::Grid<Node>,
     animal_coord: Coord,
@@ -27,21 +35,23 @@ impl Map {
     fn find_animal_loop(&self) -> Option<Path> {
         let mut current_coord = self.animal_coord;
         let mut current_direction = Direction::Right;
-        let mut path = Path { nodes: vec![] };
+        let mut path = Path { element: vec![] };
         loop {
             let next_coord = coord_at(&current_coord, &current_direction);
             let next_node = self.grid.at(&next_coord)?;
 
             if matches!(next_node, Node::Animal) {
+                path.element.push(PathElement {
+                    pipe: Pipe(current_direction, Direction::Right),
+                    coord: next_coord,
+                });
                 return Some(path);
             }
 
             let exit_direction = next_node.follow_pipe(&current_direction.opposite())?;
-            path.nodes.push(PathElement {
-                node: *next_node,
-                coord: current_coord,
-                entry_direction: current_direction,
-                exit_direction,
+            path.element.push(PathElement {
+                pipe: Pipe(current_direction, exit_direction.opposite()),
+                coord: next_coord,
             });
 
             current_direction = exit_direction;
@@ -49,49 +59,86 @@ impl Map {
         }
     }
 
-    fn get_groups(&self, animal_loop: &Path) -> Vec<Group> {
-        let mut visited = HashSet::from_iter(animal_loop.nodes.iter().map(|elt| elt.coord));
+    fn count_inside_loop(&self, animal_loop: &Path) -> usize {
+        use ExploreState::*;
 
-        self.grid
-            .coords()
-            .filter_map(|coord| self.get_group_starting_at(&coord, &mut visited))
-            .collect()
-    }
+        let mut inside_count = 0;
 
-    fn get_group_starting_at(&self, coord: &Coord, visited: &mut HashSet<Coord>) -> Option<Group> {
-        if visited.contains(&coord) {
-            return None;
-        }
+        let pipe_by_coord: HashMap<Coord, Pipe> = animal_loop
+            .element
+            .iter()
+            .map(|elt| (elt.coord, elt.pipe))
+            .collect();
+        for y in 0..self.grid.height() {
+            let mut explore_state = NotOnPipe { inside: false };
+            for x in 0..self.grid.width() {
+                let coord = Coord { x, y };
 
-        let mut group = Group::new();
-        let mut coords_to_explore = vec![*coord];
-        while let Some(current_coord) = coords_to_explore.pop() {
-            if !(visited.contains(&current_coord)) {
-                coords_to_explore
-                    .extend(Direction::all().map(|dir| coord_at(&current_coord, &dir)));
-                group.push(current_coord);
-                visited.insert(current_coord);
+                match pipe_by_coord.get(&coord) {
+                    None => {
+                        if matches!(explore_state, NotOnPipe { inside: true }) {
+                            inside_count += 1;
+                        }
+                    }
+                    Some(pipe) if pipe.is_vertical() => {
+                        explore_state = match explore_state {
+                            NotOnPipe { inside } => NotOnPipe { inside: !inside },
+                            es @ OnPipe { .. } => es,
+                        };
+                    }
+                    Some(pipe) if pipe.is_horizontal() => {}
+                    // node is an angle, so it has only 1 vert dir
+                    Some(pipe) => {
+                        use Direction::*;
+
+                        let vert_direction = match pipe {
+                            Pipe(Up, _) | Pipe(_, Up) => Up,
+                            Pipe(Down, _) | Pipe(_, Down) => Down,
+                            _ => panic!("pipe seems horizontal..."),
+                        };
+
+                        explore_state = match explore_state {
+                            NotOnPipe { inside } => OnPipe {
+                                from: vert_direction,
+                                prev_inside: inside,
+                            },
+                            OnPipe { from, prev_inside } => NotOnPipe {
+                                inside: if from == vert_direction {
+                                    prev_inside
+                                } else {
+                                    !prev_inside
+                                },
+                            },
+                        }
+                    }
+                }
             }
         }
-        Some(group)
+        inside_count
     }
 }
 
-fn coord_at(coord: &grid::Coord, direction: &Direction) -> grid::Coord {
+#[derive(PartialEq)]
+enum ExploreState {
+    NotOnPipe { inside: bool },
+    OnPipe { from: Direction, prev_inside: bool },
+}
+
+fn coord_at(coord: &Coord, direction: &Direction) -> Coord {
     match direction {
-        Direction::Up => grid::Coord {
+        Direction::Up => Coord {
             x: coord.x,
             y: coord.y - 1,
         },
-        Direction::Down => grid::Coord {
+        Direction::Down => Coord {
             x: coord.x,
             y: coord.y + 1,
         },
-        Direction::Left => grid::Coord {
+        Direction::Left => Coord {
             x: coord.x - 1,
             y: coord.y,
         },
-        Direction::Right => grid::Coord {
+        Direction::Right => Coord {
             x: coord.x + 1,
             y: coord.y,
         },
@@ -111,22 +158,6 @@ impl FromStr for Map {
     }
 }
 
-struct Group {
-    nodes: HashSet<Coord>,
-}
-
-impl Group {
-    fn new() -> Self {
-        Self {
-            nodes: HashSet::new(),
-        }
-    }
-
-    fn push(&mut self, coord: Coord) {
-        self.nodes.insert(coord);
-    }
-}
-
 #[derive(thiserror::Error, Debug)]
 enum CannotParseMap {
     #[error("Cannot parse map: {0}")]
@@ -139,7 +170,7 @@ enum CannotParseMap {
     NoAnimalFound,
 }
 
-#[derive(Eq, PartialEq, Copy, Clone)]
+#[derive(Eq, PartialEq, Copy, Clone, Debug)]
 enum Direction {
     Up,
     Down,
@@ -148,15 +179,6 @@ enum Direction {
 }
 
 impl Direction {
-    fn all() -> [Direction; 4] {
-        [
-            Direction::Up,
-            Direction::Down,
-            Direction::Left,
-            Direction::Right,
-        ]
-    }
-
     fn opposite(&self) -> Self {
         match self {
             Direction::Up => Direction::Down,
@@ -167,20 +189,39 @@ impl Direction {
     }
 }
 
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Debug)]
 enum Node {
     Empty,
     Animal,
-    Pipe(Direction, Direction),
+    Pipe(Pipe),
 }
 
 impl Node {
     fn follow_pipe(&self, from: &Direction) -> Option<Direction> {
         match self {
-            Node::Pipe(d1, d2) if d1 == from => Some(*d2),
-            Node::Pipe(d1, d2) if d2 == from => Some(*d1),
+            Node::Pipe(Pipe(d1, d2)) if d1 == from => Some(*d2),
+            Node::Pipe(Pipe(d1, d2)) if d2 == from => Some(*d1),
             _ => None,
         }
+    }
+}
+
+#[derive(Clone, Copy, Debug)]
+struct Pipe(Direction, Direction);
+
+impl Pipe {
+    fn is_vertical(&self) -> bool {
+        matches!(
+            self,
+            Pipe(Direction::Up, Direction::Down) | Pipe(Direction::Down, Direction::Up)
+        )
+    }
+
+    fn is_horizontal(&self) -> bool {
+        matches!(
+            self,
+            Pipe(Direction::Left, Direction::Right) | Pipe(Direction::Right, Direction::Left)
+        )
     }
 }
 
@@ -191,41 +232,72 @@ impl TryFrom<char> for Node {
         Ok(match value {
             '.' => Node::Empty,
             'S' => Node::Animal,
-            '|' => Node::Pipe(Direction::Up, Direction::Down),
-            '-' => Node::Pipe(Direction::Left, Direction::Right),
-            'L' => Node::Pipe(Direction::Up, Direction::Right),
-            'J' => Node::Pipe(Direction::Left, Direction::Up),
-            '7' => Node::Pipe(Direction::Left, Direction::Down),
-            'F' => Node::Pipe(Direction::Right, Direction::Down),
+            '|' => Node::Pipe(Pipe(Direction::Up, Direction::Down)),
+            '-' => Node::Pipe(Pipe(Direction::Left, Direction::Right)),
+            'L' => Node::Pipe(Pipe(Direction::Up, Direction::Right)),
+            'J' => Node::Pipe(Pipe(Direction::Left, Direction::Up)),
+            '7' => Node::Pipe(Pipe(Direction::Left, Direction::Down)),
+            'F' => Node::Pipe(Pipe(Direction::Right, Direction::Down)),
             _ => return Err(value.into()),
         })
     }
 }
 
+#[derive(Debug)]
 struct Path {
-    nodes: Vec<PathElement>,
+    element: Vec<PathElement>,
 }
 
+#[derive(Debug)]
 struct PathElement {
-    node: Node,
-    coord: grid::Coord,
-    entry_direction: Direction,
-    exit_direction: Direction,
+    pipe: Pipe,
+    coord: Coord,
 }
 
 #[cfg(test)]
 mod tests {
-    use super::*;
 
-    #[test]
-    fn given_test_1() {
-        let content = challenges_common::get_input_content(&["aoc", "2023", "10-test-1.txt"]);
-        assert_eq!(run(&content).unwrap(), 4);
+    mod part1 {
+        use crate::*;
+
+        #[test]
+        fn given_test_1() {
+            let content = challenges_common::get_input_content(&["aoc", "2023", "10-test-1.txt"]);
+            assert_eq!(run(&content).unwrap(), 4);
+        }
+
+        #[test]
+        fn given_test_2() {
+            let content = challenges_common::get_input_content(&["aoc", "2023", "10-test-2.txt"]);
+            assert_eq!(run(&content).unwrap(), 8);
+        }
     }
 
-    #[test]
-    fn given_test_2() {
-        let content = challenges_common::get_input_content(&["aoc", "2023", "10-test-2.txt"]);
-        assert_eq!(run(&content).unwrap(), 8);
+    mod part2 {
+        use crate::*;
+
+        #[test]
+        fn given_test_1() {
+            let content = challenges_common::get_input_content(&["aoc", "2023", "10-test-1.txt"]);
+            assert_eq!(run_part2(&content).unwrap(), 1);
+        }
+
+        #[test]
+        fn given_test_2() {
+            let content = challenges_common::get_input_content(&["aoc", "2023", "10-test-2.txt"]);
+            assert_eq!(run_part2(&content).unwrap(), 1);
+        }
+
+        #[test]
+        fn given_test_3() {
+            let content = challenges_common::get_input_content(&["aoc", "2023", "10-test-3.txt"]);
+            assert_eq!(run_part2(&content).unwrap(), 4);
+        }
+
+        #[test]
+        fn givent_test_4() {
+            let content = challenges_common::get_input_content(&["aoc", "2023", "10-test-4.txt"]);
+            assert_eq!(run_part2(&content).unwrap(), 8);
+        }
     }
 }
