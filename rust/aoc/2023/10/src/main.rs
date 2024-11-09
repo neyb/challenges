@@ -1,5 +1,7 @@
 use anyhow::{Context, Result};
-use challenges_common::graph::grid;
+use challenges_common::graph::{grid, Coord};
+use itertools::Itertools;
+use std::collections::HashSet;
 use std::str::FromStr;
 
 fn main() {
@@ -7,41 +9,71 @@ fn main() {
     println!("part 1: {}", run(&content).unwrap())
 }
 
-type Len = u32;
+type Len = usize;
 
 fn run(content: &str) -> Result<Len> {
     let map: Map = content.parse()?;
-    map.find_longest_loop_from_animal()
-        .map(|len| len / 2)
+    map.find_animal_loop()
+        .map(|path| (path.nodes.len() + 1) / 2)
         .context("Cannot find longest loop")
 }
 
 struct Map {
     grid: grid::Grid<Node>,
-    animal_coord: grid::Coord,
+    animal_coord: Coord,
 }
 
 impl Map {
-    fn find_longest_loop_from_animal(&self) -> Option<Len> {
-        self.find_longest_loop_from(Direction::Right)
-    }
-
-    fn find_longest_loop_from(&self, direction: Direction) -> Option<Len> {
+    fn find_animal_loop(&self) -> Option<Path> {
         let mut current_coord = self.animal_coord;
-        let mut current_direction = direction;
-        let mut len = 0;
+        let mut current_direction = Direction::Right;
+        let mut path = Path { nodes: vec![] };
         loop {
             let next_coord = coord_at(&current_coord, &current_direction);
             let next_node = self.grid.at(&next_coord)?;
 
-            len += 1;
             if matches!(next_node, Node::Animal) {
-                return Some(len);
+                return Some(path);
             }
 
-            current_direction = next_node.follow_pipe(&current_direction.opposite())?;
+            let exit_direction = next_node.follow_pipe(&current_direction.opposite())?;
+            path.nodes.push(PathElement {
+                node: *next_node,
+                coord: current_coord,
+                entry_direction: current_direction,
+                exit_direction,
+            });
+
+            current_direction = exit_direction;
             current_coord = next_coord;
         }
+    }
+
+    fn get_groups(&self, animal_loop: &Path) -> Vec<Group> {
+        let mut visited = HashSet::from_iter(animal_loop.nodes.iter().map(|elt| elt.coord));
+
+        self.grid
+            .coords()
+            .filter_map(|coord| self.get_group_starting_at(&coord, &mut visited))
+            .collect()
+    }
+
+    fn get_group_starting_at(&self, coord: &Coord, visited: &mut HashSet<Coord>) -> Option<Group> {
+        if visited.contains(&coord) {
+            return None;
+        }
+
+        let mut group = Group::new();
+        let mut coords_to_explore = vec![*coord];
+        while let Some(current_coord) = coords_to_explore.pop() {
+            if !(visited.contains(&current_coord)) {
+                coords_to_explore
+                    .extend(Direction::all().map(|dir| coord_at(&current_coord, &dir)));
+                group.push(current_coord);
+                visited.insert(current_coord);
+            }
+        }
+        Some(group)
     }
 }
 
@@ -79,6 +111,22 @@ impl FromStr for Map {
     }
 }
 
+struct Group {
+    nodes: HashSet<Coord>,
+}
+
+impl Group {
+    fn new() -> Self {
+        Self {
+            nodes: HashSet::new(),
+        }
+    }
+
+    fn push(&mut self, coord: Coord) {
+        self.nodes.insert(coord);
+    }
+}
+
 #[derive(thiserror::Error, Debug)]
 enum CannotParseMap {
     #[error("Cannot parse map: {0}")]
@@ -100,6 +148,15 @@ enum Direction {
 }
 
 impl Direction {
+    fn all() -> [Direction; 4] {
+        [
+            Direction::Up,
+            Direction::Down,
+            Direction::Left,
+            Direction::Right,
+        ]
+    }
+
     fn opposite(&self) -> Self {
         match self {
             Direction::Up => Direction::Down,
@@ -110,6 +167,7 @@ impl Direction {
     }
 }
 
+#[derive(Copy, Clone)]
 enum Node {
     Empty,
     Animal,
@@ -142,6 +200,17 @@ impl TryFrom<char> for Node {
             _ => return Err(value.into()),
         })
     }
+}
+
+struct Path {
+    nodes: Vec<PathElement>,
+}
+
+struct PathElement {
+    node: Node,
+    coord: grid::Coord,
+    entry_direction: Direction,
+    exit_direction: Direction,
 }
 
 #[cfg(test)]

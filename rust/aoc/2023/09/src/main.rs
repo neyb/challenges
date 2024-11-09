@@ -1,8 +1,17 @@
 fn main() {
     let content = challenges_common::get_input_content(&["aoc", "2023", "09.txt"]);
-    let lines: Lines = content.parse().unwrap();
-    println!("part1: {}", lines.nexts_sums().unwrap());
-    println!("part2: {}", lines.prev_sums().unwrap());
+    println!("part1: {}", run_part1(&content).unwrap());
+    println!("part2: {}", run_part2(&content).unwrap());
+}
+
+fn run_part1(content: &str) -> Result<Value> {
+    let lines: Lines = content.parse()?;
+    lines.nexts_sums()
+}
+
+fn run_part2(content: &str) -> Result<Value> {
+    let lines: Lines = content.parse()?;
+    lines.prev_sums()
 }
 
 use anyhow::Result;
@@ -21,8 +30,6 @@ impl Lines {
     }
 
     fn nexts_sums(&self) -> Result<Value> {
-        let x: Vec<Value> = self.lines.iter().map(|l| l.next_value()).try_collect()?;
-
         self.lines
             .iter()
             .map(|l| l.next_value())
@@ -116,9 +123,11 @@ impl FromStr for Line {
 
 #[cfg(test)]
 mod tests {
+    use super::run_part1;
+
     #[test]
     fn test_run() {
         let content = challenges_common::get_input_content(&["aoc", "2023", "09-test.txt"]);
-        assert_eq!(run(&content).unwrap(), 114);
+        assert_eq!(run_part1(&content).unwrap(), 114);
     }
 }

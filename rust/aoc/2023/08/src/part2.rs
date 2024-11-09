@@ -63,10 +63,6 @@ impl<'m> Runner<'m> {
         Ok(paths_length.into_iter().flatten().collect())
     }
 
-    fn has_reached_destination(&mut self) -> bool {
-        self.current_nodes.iter().all(|node| node.id.ends_with('Z'))
-    }
-
     fn next_move(&mut self) -> Result<&'m Move> {
         let i = self.current_move_index;
         self.current_move_index = (i + 1) % self.map.moves.len();
