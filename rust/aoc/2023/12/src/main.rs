@@ -1,6 +1,6 @@
 fn main() {
     let content = challenges_common::get_input_content(&["aoc", "2023", "12.txt"]);
-    println!("part 1: {:?}", part1::run(&content).unwrap());
+    // println!("part 1: {:?}", part1::run(&content).unwrap());
     println!("part 2: {:?}", part2::run(&content).unwrap());
 }
 
@@ -49,18 +49,16 @@ impl Line {
             return nb_arrangements;
         }
 
-        {
-            let nb_needed_springs = self
-                .groups
-                .iter()
-                .skip(from_record)
-                .map(|&len| len as usize)
-                .fold(0, |acc, len| if acc == 0 { len } else { acc + len + 1 });
-            if self.springs.len() >= from_spring
-                && self.springs.len() - from_spring < nb_needed_springs
-            {
-                return 0;
-            }
+        if not_enough_springs(self, from_spring, from_record) {
+            return 0;
+        }
+
+        if not_enough_remaining_potential_damaged(self, from_spring, from_record) {
+            return 0;
+        }
+
+        if has_too_many_remaining_damaged(self, from_spring, from_record) {
+            return 0;
         }
 
         return match self.springs.get(from_spring) {
@@ -72,23 +70,14 @@ impl Line {
                 }
             }
             Some(spring) => match spring {
-                Spring::Operational => handle_operational(self, from_spring, from_record, memo),
+                Spring::Operational => self.nb_arrangements_rec(from_spring + 1, from_record, memo),
                 Spring::Damaged => handle_damaged(self, from_spring, from_record, memo),
                 Spring::Unknown => {
-                    handle_operational(self, from_spring, from_record, memo)
+                    self.nb_arrangements_rec(from_spring + 1, from_record, memo)
                         + handle_damaged(self, from_spring, from_record, memo)
                 }
             },
         };
-
-        fn handle_operational(
-            line: &Line,
-            from_spring: usize,
-            from_record: usize,
-            memo: &mut Memo,
-        ) -> Len {
-            line.nb_arrangements_rec(from_spring + 1, from_record, memo)
-        }
 
         fn handle_damaged(
             line: &Line,
@@ -100,6 +89,7 @@ impl Line {
                 None => 0,
                 Some(damaged_len) => {
                     let damaged_len = *damaged_len as usize;
+
                     if (0..damaged_len).any(|i| {
                         matches!(
                             line.springs.get(from_spring + i),
@@ -108,6 +98,7 @@ impl Line {
                     }) {
                         return 0;
                     }
+
                     if matches!(
                         line.springs.get(from_spring + damaged_len),
                         Some(Spring::Damaged)
@@ -118,6 +109,54 @@ impl Line {
                     line.nb_arrangements_rec(from_spring + damaged_len + 1, from_record + 1, memo)
                 }
             }
+        }
+
+        fn not_enough_springs(line: &Line, from_spring: usize, from_record: usize) -> bool {
+            let nb_needed_springs = line
+                .groups
+                .iter()
+                .skip(from_record)
+                .map(|&len| len as usize)
+                .fold(0, |acc, len| if acc == 0 { len } else { acc + len + 1 });
+            line.springs.len() >= from_spring
+                && line.springs.len() - from_spring < nb_needed_springs
+        }
+
+        fn not_enough_remaining_potential_damaged(
+            line: &Line,
+            from_spring: usize,
+            from_record: usize,
+        ) -> bool {
+            let nb_needed_springs = line
+                .groups
+                .iter()
+                .skip(from_record)
+                .map(|&len| len as usize)
+                .sum();
+            let remaining_potential_damaged_springs = line
+                .springs
+                .iter()
+                .skip(from_spring)
+                .filter(|spring| matches!(spring, Spring::Damaged | Spring::Unknown))
+                .count();
+
+            remaining_potential_damaged_springs < nb_needed_springs
+        }
+
+        fn has_too_many_remaining_damaged(
+            line: &Line,
+            from_spring: usize,
+            from_record: usize,
+        ) -> bool {
+            let max_damaged: Len = line.groups.iter().skip(from_record).sum();
+            let damaged_count = line
+                .springs
+                .iter()
+                .skip(from_spring)
+                .filter(|&&s| s == Spring::Damaged)
+                .count();
+
+            damaged_count > max_damaged as usize
         }
     }
 }
