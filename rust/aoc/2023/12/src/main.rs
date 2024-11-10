@@ -47,90 +47,86 @@ impl Line {
             return nb_arrangements;
         }
 
-        if not_enough_springs(self, from_spring, from_record) {
-            memo.insert((from_spring, from_record), 0);
-            return 0;
-        }
+        let result = compute_nb_arrangements_rec(self, from_spring, from_record, memo);
+        memo.insert((from_spring, from_record), result);
+        return result;
 
-        return match self.springs.get(from_spring) {
-            None => {
-                if from_record >= self.groups.len() {
-                    memo.insert((from_spring, from_record), 1);
-                    1
-                } else {
-                    memo.insert((from_spring, from_record), 0);
-                    0
-                }
-            }
-            Some(spring) => match spring {
-                Spring::Operational => {
-                    let r = self.nb_arrangements_rec(from_spring + 1, from_record, memo);
-                    memo.insert((from_spring, from_record), r);
-                    r
-                }
-                Spring::Damaged => {
-                    let r = handle_damaged(self, from_spring, from_record, memo);
-                    memo.insert((from_spring, from_record), r);
-                    r
-                }
-                Spring::Unknown => {
-                    let r = self.nb_arrangements_rec(from_spring + 1, from_record, memo)
-                        + handle_damaged(self, from_spring, from_record, memo);
-                    memo.insert((from_spring, from_record), r);
-                    r
-                }
-            },
-        };
-
-        fn handle_damaged(
+        fn compute_nb_arrangements_rec(
             line: &Line,
             from_spring: usize,
             from_record: usize,
             memo: &mut Memo,
         ) -> Len {
-            match line.groups.get(from_record) {
-                None => 0,
-                Some(damaged_len) => {
-                    let damaged_len = *damaged_len as usize;
+            if not_enough_springs(line, from_spring, from_record) {
+                return 0;
+            }
 
-                    if (0..damaged_len).any(|i| {
-                        matches!(
-                            line.springs.get(from_spring + i),
-                            None | Some(Spring::Operational)
+            return match line.springs.get(from_spring) {
+                None => {
+                    if from_record >= line.groups.len() {
+                        1
+                    } else {
+                        0
+                    }
+                }
+                Some(spring) => match spring {
+                    Spring::Operational => {
+                        line.nb_arrangements_rec(from_spring + 1, from_record, memo)
+                    }
+                    Spring::Damaged => handle_damaged(line, from_spring, from_record, memo),
+                    Spring::Unknown => {
+                        line.nb_arrangements_rec(from_spring + 1, from_record, memo)
+                            + handle_damaged(line, from_spring, from_record, memo)
+                    }
+                },
+            };
+
+            fn handle_damaged(
+                line: &Line,
+                from_spring: usize,
+                from_record: usize,
+                memo: &mut Memo,
+            ) -> Len {
+                match line.groups.get(from_record) {
+                    None => 0,
+                    Some(damaged_len) => {
+                        let damaged_len = *damaged_len as usize;
+
+                        if (0..damaged_len).any(|i| {
+                            matches!(
+                                line.springs.get(from_spring + i),
+                                None | Some(Spring::Operational)
+                            )
+                        }) {
+                            return 0;
+                        }
+
+                        if matches!(
+                            line.springs.get(from_spring + damaged_len),
+                            Some(Spring::Damaged)
+                        ) {
+                            return 0;
+                        }
+
+                        line.nb_arrangements_rec(
+                            from_spring + damaged_len + 1,
+                            from_record + 1,
+                            memo,
                         )
-                    }) {
-                        memo.insert((from_spring, from_record), 0);
-                        return 0;
                     }
-
-                    if matches!(
-                        line.springs.get(from_spring + damaged_len),
-                        Some(Spring::Damaged)
-                    ) {
-                        memo.insert((from_spring, from_record), 0);
-                        return 0;
-                    }
-
-                    let r = line.nb_arrangements_rec(
-                        from_spring + damaged_len + 1,
-                        from_record + 1,
-                        memo,
-                    );
-                    memo.insert((from_spring, from_record), r);
-                    r
                 }
             }
-        }
 
-        fn not_enough_springs(line: &Line, from_spring: usize, from_record: usize) -> bool {
-            let nb_needed_springs = line
-                .groups
-                .iter()
-                .skip(from_record)
-                .map(|&len| len as usize)
-                .fold(0, |acc, len| if acc == 0 { len } else { acc + len + 1 });
-            line.springs.len() >= from_spring
-                && line.springs.len() - from_spring < nb_needed_springs
+            fn not_enough_springs(line: &Line, from_spring: usize, from_record: usize) -> bool {
+                let nb_needed_springs = line
+                    .groups
+                    .iter()
+                    .skip(from_record)
+                    .map(|&len| len as usize)
+                    .fold(0, |acc, len| if acc == 0 { len } else { acc + len + 1 });
+                line.springs.len() >= from_spring
+                    && line.springs.len() - from_spring < nb_needed_springs
+            }
         }
     }
 }
