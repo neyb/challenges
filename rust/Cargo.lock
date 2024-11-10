@@ -340,6 +340,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "aoc_2023_12"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "challenges_common",
+ "itertools",
+ "thiserror",
+]
+
+[[package]]
 name = "autocfg"
 version = "1.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
