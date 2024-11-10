@@ -1,6 +1,6 @@
 fn main() {
     let content = challenges_common::get_input_content(&["aoc", "2023", "12.txt"]);
-    // println!("part 1: {:?}", part1::run(&content).unwrap());
+    println!("part 1: {:?}", part1::run(&content).unwrap());
     println!("part 2: {:?}", part2::run(&content).unwrap());
 }
 
@@ -10,7 +10,6 @@ mod part2;
 use anyhow::Result;
 use itertools::Itertools;
 use std::collections::HashMap;
-use std::mem;
 use std::str::FromStr;
 use thiserror::Error;
 
@@ -28,20 +27,19 @@ impl Line {
         self.nb_arrangements_rec(0, 0, &mut memo)
     }
 
-    fn duplicate(&mut self, times: usize) {
-        let springs_len = self.springs.len() * times;
-        let springs = mem::replace(&mut self.springs, Vec::with_capacity(springs_len));
-
-        let record_len = self.groups.len() * times;
-        let records = mem::replace(&mut self.groups, Vec::with_capacity(record_len));
+    fn duplicate(&mut self, times: usize) -> Self {
+        let mut springs = Vec::with_capacity(self.springs.len() * times);
+        let mut groups = Vec::with_capacity(self.groups.len() * times);
 
         for i in 0..times {
             if i > 0 {
-                self.springs.push(Spring::Unknown);
+                springs.push(Spring::Unknown);
             }
-            self.springs.extend(springs.clone());
-            self.groups.extend(records.clone());
+            springs.extend(self.springs.clone());
+            groups.extend(self.groups.clone());
         }
+
+        Self { springs, groups }
     }
 
     fn nb_arrangements_rec(&self, from_spring: usize, from_record: usize, memo: &mut Memo) -> Len {
@@ -50,31 +48,46 @@ impl Line {
         }
 
         if not_enough_springs(self, from_spring, from_record) {
+            memo.insert((from_spring, from_record), 0);
             return 0;
         }
 
         if not_enough_remaining_potential_damaged(self, from_spring, from_record) {
+            memo.insert((from_spring, from_record), 0);
             return 0;
         }
 
         if has_too_many_remaining_damaged(self, from_spring, from_record) {
+            memo.insert((from_spring, from_record), 0);
             return 0;
         }
 
         return match self.springs.get(from_spring) {
             None => {
                 if from_record >= self.groups.len() {
+                    memo.insert((from_spring, from_record), 1);
                     1
                 } else {
+                    memo.insert((from_spring, from_record), 0);
                     0
                 }
             }
             Some(spring) => match spring {
-                Spring::Operational => self.nb_arrangements_rec(from_spring + 1, from_record, memo),
-                Spring::Damaged => handle_damaged(self, from_spring, from_record, memo),
+                Spring::Operational => {
+                    let r = self.nb_arrangements_rec(from_spring + 1, from_record, memo);
+                    memo.insert((from_spring, from_record), r);
+                    r
+                }
+                Spring::Damaged => {
+                    let r = handle_damaged(self, from_spring, from_record, memo);
+                    memo.insert((from_spring, from_record), r);
+                    r
+                }
                 Spring::Unknown => {
-                    self.nb_arrangements_rec(from_spring + 1, from_record, memo)
-                        + handle_damaged(self, from_spring, from_record, memo)
+                    let r = self.nb_arrangements_rec(from_spring + 1, from_record, memo)
+                        + handle_damaged(self, from_spring, from_record, memo);
+                    memo.insert((from_spring, from_record), r);
+                    r
                 }
             },
         };
@@ -96,6 +109,7 @@ impl Line {
                             None | Some(Spring::Operational)
                         )
                     }) {
+                        memo.insert((from_spring, from_record), 0);
                         return 0;
                     }
 
@@ -103,10 +117,17 @@ impl Line {
                         line.springs.get(from_spring + damaged_len),
                         Some(Spring::Damaged)
                     ) {
+                        memo.insert((from_spring, from_record), 0);
                         return 0;
                     }
 
-                    line.nb_arrangements_rec(from_spring + damaged_len + 1, from_record + 1, memo)
+                    let r = line.nb_arrangements_rec(
+                        from_spring + damaged_len + 1,
+                        from_record + 1,
+                        memo,
+                    );
+                    memo.insert((from_spring, from_record), r);
+                    r
                 }
             }
         }

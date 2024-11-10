@@ -1,19 +1,17 @@
-use crate::Line;
+use crate::{Len, Line};
 
-pub(crate) fn run(content: &str) -> anyhow::Result<crate::Len> {
-    let mut sum = 0;
-    for (n, line) in content.lines().enumerate() {
-        let mut line: Line = line.parse()?;
-        line.duplicate(5);
-        let nb_arrangements = line.nb_arrangement();
-        println!("line {}: {nb_arrangements}", n + 1);
-        sum += nb_arrangements;
-    }
-    Ok(sum)
+pub(crate) fn run(content: &str) -> anyhow::Result<Len> {
+    content
+        .lines()
+        .map(|line| line.parse::<Line>().map(|mut line| line.duplicate(5)))
+        .try_fold(0, |acc, line| -> anyhow::Result<Len> {
+            Ok(acc + line?.nb_arrangement())
+        })
 }
 
 #[cfg(test)]
 mod tests {
+
     #[test]
     fn given_test_first_line_has_1_arrangement() {
         let content = challenges_common::get_input_content(&["aoc", "2023", "12-test.txt"]);
