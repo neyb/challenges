@@ -1,20 +1,12 @@
 use crate::Line;
-use std::io::{Stdout, Write};
 
 pub(crate) fn run(content: &str) -> anyhow::Result<crate::Len> {
     let mut sum = 0;
     for (n, line) in content.lines().enumerate() {
-        print!("line {}... ", n + 1);
-        Stdout::flush(&mut std::io::stdout())?;
-
         let mut line: Line = line.parse()?;
-        print!("parsed... ");
-        Stdout::flush(&mut std::io::stdout())?;
         line.duplicate(5);
-        print!("duplicated... ");
-        Stdout::flush(&mut std::io::stdout())?;
         let nb_arrangements = line.nb_arrangement();
-        println!("{nb_arrangements}");
+        println!("line {}: {nb_arrangements}", n + 1);
         sum += nb_arrangements;
     }
     Ok(sum)
