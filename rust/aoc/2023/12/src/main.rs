@@ -52,16 +52,6 @@ impl Line {
             return 0;
         }
 
-        if not_enough_remaining_potential_damaged(self, from_spring, from_record) {
-            memo.insert((from_spring, from_record), 0);
-            return 0;
-        }
-
-        if has_too_many_remaining_damaged(self, from_spring, from_record) {
-            memo.insert((from_spring, from_record), 0);
-            return 0;
-        }
-
         return match self.springs.get(from_spring) {
             None => {
                 if from_record >= self.groups.len() {
@@ -141,43 +131,6 @@ impl Line {
                 .fold(0, |acc, len| if acc == 0 { len } else { acc + len + 1 });
             line.springs.len() >= from_spring
                 && line.springs.len() - from_spring < nb_needed_springs
-        }
-
-        fn not_enough_remaining_potential_damaged(
-            line: &Line,
-            from_spring: usize,
-            from_record: usize,
-        ) -> bool {
-            let nb_needed_springs = line
-                .groups
-                .iter()
-                .skip(from_record)
-                .map(|&len| len as usize)
-                .sum();
-            let remaining_potential_damaged_springs = line
-                .springs
-                .iter()
-                .skip(from_spring)
-                .filter(|spring| matches!(spring, Spring::Damaged | Spring::Unknown))
-                .count();
-
-            remaining_potential_damaged_springs < nb_needed_springs
-        }
-
-        fn has_too_many_remaining_damaged(
-            line: &Line,
-            from_spring: usize,
-            from_record: usize,
-        ) -> bool {
-            let max_damaged: Len = line.groups.iter().skip(from_record).sum();
-            let damaged_count = line
-                .springs
-                .iter()
-                .skip(from_spring)
-                .filter(|&&s| s == Spring::Damaged)
-                .count();
-
-            damaged_count > max_damaged as usize
         }
     }
 }

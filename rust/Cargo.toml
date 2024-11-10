@@ -13,3 +13,7 @@ rpds = "*"
 lazy_static = "*"
 num-traits = "0.2"
 thiserror = "*"
+
+[profile.release]
+codegen-units = 1
+lto = "fat"
