@@ -2,11 +2,14 @@ use crate::Line;
 
 pub(crate) fn run(content: &str) -> anyhow::Result<crate::Len> {
     let mut sum = 0;
-    for (n, line) in content.lines().map(|line| line.parse::<Line>()).enumerate() {
-        let mut line = line?;
+    for (n, line) in content.lines().enumerate() {
+        print!("line {}... ", n + 1);
+        let mut line = line.parse()?;
+        print!("parsed... ");
         line.duplicate(5);
+        print!("duplicated... ");
         let nb_arrangements = line.nb_arrangement();
-        println!("line {n}: {nb_arrangements}");
+        println!("{nb_arrangements}");
         sum += nb_arrangements;
     }
     Ok(sum)

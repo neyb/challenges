@@ -18,7 +18,7 @@ type Len = u32;
 
 struct Line {
     springs: Vec<Spring>,
-    records: Vec<Len>,
+    groups: Vec<Len>,
 }
 
 type Memo = HashMap<(usize, usize), Len>;
@@ -32,15 +32,15 @@ impl Line {
         let springs_len = self.springs.len() * times;
         let springs = mem::replace(&mut self.springs, Vec::with_capacity(springs_len));
 
-        let record_len = self.records.len() * times;
-        let records = mem::replace(&mut self.records, Vec::with_capacity(record_len));
+        let record_len = self.groups.len() * times;
+        let records = mem::replace(&mut self.groups, Vec::with_capacity(record_len));
 
         for i in 0..times {
             if i > 0 {
                 self.springs.push(Spring::Unknown);
             }
             self.springs.extend(springs.clone());
-            self.records.extend(records.clone());
+            self.groups.extend(records.clone());
         }
     }
 
@@ -49,9 +49,23 @@ impl Line {
             return nb_arrangements;
         }
 
+        {
+            let nb_needed_springs = self
+                .groups
+                .iter()
+                .skip(from_record)
+                .map(|&len| len as usize)
+                .fold(0, |acc, len| if acc == 0 { len } else { acc + len + 1 });
+            if self.springs.len() >= from_spring
+                && self.springs.len() - from_spring < nb_needed_springs
+            {
+                return 0;
+            }
+        }
+
         return match self.springs.get(from_spring) {
             None => {
-                if from_record >= self.records.len() {
+                if from_record >= self.groups.len() {
                     1
                 } else {
                     0
@@ -82,7 +96,7 @@ impl Line {
             from_record: usize,
             memo: &mut Memo,
         ) -> Len {
-            match line.records.get(from_record) {
+            match line.groups.get(from_record) {
                 None => 0,
                 Some(damaged_len) => {
                     let damaged_len = *damaged_len as usize;
@@ -118,7 +132,10 @@ impl FromStr for Line {
 
         let springs = springs.chars().map(|c| c.try_into()).try_collect()?;
         let records = records.split(",").map(|s| s.parse()).try_collect()?;
-        Ok(Self { springs, records })
+        Ok(Self {
+            springs,
+            groups: records,
+        })
     }
 }
 
