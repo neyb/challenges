@@ -13,7 +13,7 @@ use std::collections::HashMap;
 use std::str::FromStr;
 use thiserror::Error;
 
-type Len = u32;
+type Len = u64;
 
 struct Line {
     springs: Vec<Spring>,
