@@ -1,8 +1,17 @@
 use crate::{Load, Map};
 use challenges_common::cycle::detect_cycle;
 
-pub(crate) fn run(content: &String) -> anyhow::Result<Load> {
-    let map: Map = content.parse()?;
+pub(crate) fn run(content: &str) -> anyhow::Result<Load> {
+    let mut map: Map = content.parse()?;
+
+    for _ in 0..get_identical_cycle(&mut map)? {
+        map.spin_cycle()?;
+    }
+
+    Ok(map.get_north_load())
+}
+
+fn get_identical_cycle(map: &Map) -> anyhow::Result<usize> {
     let Some(cycle) = detect_cycle(map.clone(), |map| {
         let mut map = map.clone();
         map.spin_cycle().unwrap();
@@ -12,17 +21,13 @@ pub(crate) fn run(content: &String) -> anyhow::Result<Load> {
     };
 
     println!(
-        "cycle of size {:?} starts at {:?}",
+        "cycle of size {} starts at {}",
         cycle.size, cycle.start_index
     );
     let identical_cycle = ((1000000000 - cycle.start_index) % cycle.size) + cycle.start_index;
-    println!("identical cycle: {:?}", identical_cycle);
+    println!("identical cycle: {identical_cycle}");
 
-    let mut map = map.clone();
-    for _ in 0..identical_cycle {
-        map.spin_cycle().unwrap();
-    }
-    Ok(map.get_north_load())
+    Ok(identical_cycle)
 }
 
 #[cfg(test)]
