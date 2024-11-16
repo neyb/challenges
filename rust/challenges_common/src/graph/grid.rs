@@ -1,4 +1,5 @@
 use itertools::Itertools;
+use num_traits::{CheckedSub, Num, PrimInt, Signed, ToPrimitive};
 use std::str::FromStr;
 
 #[derive(Debug)]
@@ -137,30 +138,93 @@ where
 }
 
 #[derive(PartialEq, Eq, PartialOrd, Ord, Hash, Clone, Copy, Debug)]
-pub struct Coord {
-    pub x: usize,
-    pub y: usize,
+pub struct Coord<U: Num + Copy = usize> {
+    pub x: U,
+    pub y: U,
 }
 
-impl Coord {
-    pub fn manhattan_dist_to(&self, to: &Coord) -> usize {
-        self.x.abs_diff(to.x) + self.y.abs_diff(to.y)
+impl<U: Num + CheckedSub + Copy> Coord<U> {
+    pub fn try_at(&self, dir: Direction) -> Option<Self> {
+        match dir {
+            Direction::Up => self
+                .y
+                .checked_sub(&U::one())
+                .map(|y| Coord { x: self.x, y }),
+            Direction::Down => Some(Coord {
+                x: self.x,
+                y: self.y + U::one(),
+            }),
+            Direction::Left => self
+                .x
+                .checked_sub(&U::one())
+                .map(|x| Coord { x, y: self.y }),
+            Direction::Right => Some(Coord {
+                x: self.x + U::one(),
+                y: self.y,
+            }),
+        }
+    }
+}
+
+impl<U: Num + Signed + Copy> Coord<U> {
+    pub fn manhattan_dist_to(&self, to: &Self) -> U {
+        (self.x - to.x).abs() + (self.y - to.y).abs()
     }
 
-    pub fn neighbours(&self, with_diag: bool) -> impl Iterator<Item = Coord> {
-        (-1i8..=1)
-            .flat_map(|diff_x| (-1i8..=1).map(move |diff_y| (diff_x, diff_y)))
-            .filter(|(diff_x, diff_y)| diff_x != &0 || diff_y != &0)
-            .filter(move |(diff_x, diff_y)| with_diag || (diff_x.abs() + diff_y.abs() == 1))
-            .map(|(diff_x, diff_y)| (self.x as i32 + diff_x as i32, self.y as i32 + diff_y as i32))
-            .filter(|(x, y)| x >= &0 && y >= &0)
-            .map(|(x, y)| Coord {
-                x: x as usize,
-                y: y as usize,
-            })
-            .collect_vec()
-            .into_iter()
+    pub fn at(&self, dir: Direction) -> Self {
+        match dir {
+            Direction::Up => Coord {
+                x: self.x,
+                y: self.y - U::one(),
+            },
+            Direction::Down => Coord {
+                x: self.x,
+                y: self.y + U::one(),
+            },
+            Direction::Left => Coord {
+                x: self.x - U::one(),
+                y: self.y,
+            },
+            Direction::Right => Coord {
+                x: self.x + U::one(),
+                y: self.y,
+            },
+        }
     }
+}
+
+impl<U: Num + Copy + CheckedSub> Coord<U> {
+    pub fn neighbours(&self, with_diag: bool) -> impl Iterator<Item = Self> {
+        let mut result = Vec::with_capacity(if with_diag { 8 } else { 4 });
+
+        use Direction::*;
+        [Up, Down, Left, Right]
+            .into_iter()
+            .flat_map(|dir| self.try_at(dir))
+            .for_each(|coord| result.push(coord));
+
+        if with_diag {
+            [Up, Down]
+                .into_iter()
+                .flat_map(|dir| self.try_at(dir))
+                .flat_map(|coord| {
+                    [Left, Right]
+                        .into_iter()
+                        .filter_map(move |dir| coord.try_at(dir))
+                })
+                .for_each(|coord| result.push(coord));
+        }
+
+        result.into_iter()
+    }
+}
+
+#[derive(Copy, Clone)]
+pub enum Direction {
+    Up,
+    Down,
+    Left,
+    Right,
 }
 
 #[cfg(test)]
@@ -181,7 +245,7 @@ mod test {
 
     #[test]
     fn neighbours_of_00_are_2() {
-        let coord = Coord { x: 0, y: 0 };
+        let coord = Coord::<u32> { x: 0, y: 0 };
         assert_eq!(coord.neighbours(false).count(), 2)
     }
 }
