@@ -14,14 +14,30 @@ type Load = usize;
 mod part1;
 mod part2;
 
+#[derive(Eq, PartialEq, Debug, Clone)]
 struct Map {
     grid: Grid<Place>,
 }
 
 impl Map {
-    fn tilt_top(&mut self) -> anyhow::Result<()> {
-        for y in 0..self.grid.height() {
-            for x in 0..self.grid.width() {
+    fn spin_cycle(&mut self) -> anyhow::Result<()> {
+        use Direction::*;
+        self.tilt(Up)?;
+        self.tilt(Left)?;
+        self.tilt(Down)?;
+        self.tilt(Right)?;
+        Ok(())
+    }
+
+    fn tilt(&mut self, direction: Direction) -> anyhow::Result<()> {
+        for mut y in 0..self.grid.height() {
+            if direction == Direction::Down {
+                y = self.grid.height() - y - 1;
+            }
+            for mut x in 0..self.grid.width() {
+                if direction == Direction::Right {
+                    x = self.grid.width() - x - 1;
+                }
                 let orig_coord = Coord { x, y };
                 if matches!(self.grid.at(&orig_coord), Some(Place::RoundRock)) {
                     *self.grid.at_mut(&orig_coord).unwrap() = Place::Empty;
@@ -30,11 +46,11 @@ impl Map {
 
                     while matches!(
                         target_coord
-                            .try_at(Direction::Up)
+                            .try_at(direction)
                             .and_then(|coord| self.grid.at(&coord)),
                         Some(Place::Empty)
                     ) {
-                        target_coord = target_coord.try_at(Direction::Up).unwrap();
+                        target_coord = target_coord.try_at(direction).unwrap();
                     }
                     *self.grid.at_mut(&target_coord).unwrap() = Place::RoundRock;
                 }
@@ -60,6 +76,7 @@ impl FromStr for Map {
     }
 }
 
+#[derive(Debug, Eq, PartialEq, Clone)]
 enum Place {
     Empty,
     RoundRock,

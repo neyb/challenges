@@ -2,7 +2,7 @@ use itertools::Itertools;
 use num_traits::{zero, Num, PrimInt, Signed};
 use std::str::FromStr;
 
-#[derive(Debug)]
+#[derive(Eq, PartialEq, Debug, Clone)]
 pub struct Grid<N, U = usize> {
     width: U,
     content: Vec<N>,
@@ -234,7 +234,7 @@ impl<U: PrimInt> Coord<U> {
     }
 }
 
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Eq, PartialEq, Debug)]
 pub enum Direction {
     Up,
     Down,
