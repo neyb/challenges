@@ -36,13 +36,13 @@ impl RockFalls {
     }
 }
 
-#[derive(PartialEq, Debug, Clone)]
+#[derive(Eq, PartialEq, Debug, Clone)]
 pub struct RockFall {
     pub input: RockFallState,
     pub height_growth: u8,
 }
 
-#[derive(PartialEq, Debug, Clone)]
+#[derive(Eq, PartialEq, Debug, Clone)]
 pub struct RockFallState {
     rock_shape: RockShape,
     jet_index: usize,

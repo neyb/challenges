@@ -1,10 +1,7 @@
-use std::ops::Range;
-
-use anyhow::Result;
-
-use rockfall::*;
-
 use crate::*;
+use anyhow::Result;
+use rockfall::*;
+use std::ops::Range;
 
 mod rockfall;
 
@@ -48,45 +45,16 @@ pub(crate) fn rock_tower_high(jet_pattern: &JetPattern, nb_falls: NbFallsType) -
 }
 
 fn detect_cycle(rock_falls: &mut RockFalls) -> Result<DetectedCycle> {
-    let mut turtle_index = 0usize;
-    let mut hare_index = 0usize;
-
-    // first round
-    while {
-        turtle_index += 1;
-        hare_index += 2;
-        rock_falls.get_num(turtle_index)? != rock_falls.get_num(hare_index)?
-    } {}
-    let first_meet_at = turtle_index;
-
-    // second round
-    hare_index = turtle_index;
-    while {
-        turtle_index += 1;
-        hare_index += 2;
-        rock_falls.get_num(turtle_index)? != rock_falls.get_num(hare_index)?
-    } {}
-    let second_meet_at = turtle_index;
-
-    let cycle_size = second_meet_at - first_meet_at;
-
-    let starting_at_fall_index = {
-        let mut index = first_meet_at - 1;
-        loop {
-            if rock_falls.get(index)? == rock_falls.get(index + cycle_size)? {
-                if index == 0 {
-                    break 0;
-                } else {
-                    index -= 1;
-                }
-            } else {
-                break index;
-            }
-        }
+    let mut i = 0;
+    let Some(cycle) = challenges_common::cycle::detect_cycle(rock_falls.get(i)?, |_| {
+        i += 1;
+        Some(rock_falls.get(i).unwrap())
+    }) else {
+        return Err(anyhow!("no cycle detected"));
     };
 
     let height_growth = {
-        (starting_at_fall_index..starting_at_fall_index + cycle_size)
+        (cycle.start_index..cycle.start_index + cycle.size)
             .map(|fall_index| rock_falls.get(fall_index).map(|fall| fall.height_growth))
             .try_fold(0 as YType, |sum, height_growth| {
                 height_growth.map(|height_growth| sum + (height_growth as YType))
@@ -94,8 +62,8 @@ fn detect_cycle(rock_falls: &mut RockFalls) -> Result<DetectedCycle> {
     };
 
     Ok(DetectedCycle {
-        cycle_fall_count: cycle_size,
-        starting_at_fall_index,
+        cycle_fall_count: cycle.size,
+        starting_at_fall_index: cycle.start_index,
         height_growth,
     })
 }

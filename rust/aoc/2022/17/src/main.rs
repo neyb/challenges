@@ -60,8 +60,7 @@ struct Rock {
 
 impl Rock {
     fn parts(&self) -> Vec<Coord> {
-        self
-            .shape
+        self.shape
             .parts()
             .iter()
             .map(|part| part.move_by(&self.origin))
@@ -80,7 +79,7 @@ impl Rock {
     }
 }
 
-#[derive(PartialEq, Debug, Copy, Clone)]
+#[derive(Eq, PartialEq, Debug, Copy, Clone)]
 enum RockShape {
     Minus,
     Plus,
