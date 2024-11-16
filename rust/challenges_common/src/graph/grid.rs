@@ -1,53 +1,65 @@
 use itertools::Itertools;
-use num_traits::{CheckedSub, Num, PrimInt, Signed, ToPrimitive};
+use num_traits::{zero, Num, PrimInt, Signed};
 use std::str::FromStr;
 
 #[derive(Debug)]
-pub struct Grid<N> {
-    width: usize,
+pub struct Grid<N, U = usize> {
+    width: U,
     content: Vec<N>,
 }
 
-impl<N> Grid<N> {
-    pub fn width(&self) -> usize {
+impl<N, U> Grid<N, U>
+where
+    U: PrimInt,
+{
+    pub fn width(&self) -> U {
         self.width
     }
 
-    pub fn height(&self) -> usize {
-        self.content.len() / self.width
+    pub fn height(&self) -> U {
+        U::from(self.content.len()).unwrap() / self.width
     }
 
-    pub fn at(&self, coord: &Coord) -> Option<&N> {
-        if coord.x < self.width {
-            self.content.get(coord.x + self.width * coord.y)
-        } else {
-            None
-        }
+    pub fn at(&self, coord: &Coord<U>) -> Option<&N>
+    where
+        U: Num + Copy,
+    {
+        (coord.x + self.width * coord.y)
+            .to_usize()
+            .and_then(|i| self.content.get(i))
     }
 
-    pub fn at_mut(&mut self, coord: &Coord) -> Option<&mut N> {
-        if coord.x < self.width {
-            self.content.get_mut(coord.x + self.width * coord.y)
-        } else {
-            None
-        }
+    pub fn at_mut(&mut self, coord: &Coord<U>) -> Option<&mut N> {
+        (coord.x + self.width * coord.y)
+            .to_usize()
+            .and_then(|i| self.content.get_mut(i))
     }
 
-    pub fn coords(&self) -> impl Iterator<Item = Coord> + '_ {
-        (0..self.width()).flat_map(|x| (0..self.height()).map(move |y| Coord { x, y }))
+    pub fn nodes(&self) -> &Vec<N> {
+        &self.content
     }
 
-    pub fn neighbours(&self, coord: &Coord) -> impl Iterator<Item = (Coord, &N)> + '_ {
+    pub fn coords(&self) -> impl Iterator<Item = Coord<U>> + '_ {
+        (0_usize..self.width().to_usize().unwrap()).flat_map(|x| {
+            (0_usize..self.height().to_usize().unwrap()).map(move |y| Coord {
+                x: U::from(x).unwrap(),
+                y: U::from(y).unwrap(),
+            })
+        })
+    }
+
+    pub fn neighbours(&self, coord: &Coord<U>) -> impl Iterator<Item = (Coord<U>, &N)> + '_ {
         coord
             .neighbours(false)
             .filter_map(|coord| self.at(&coord).map(move |n| (coord, n)))
     }
 }
 
-impl<IntoIt, N> From<IntoIt> for Grid<N>
+impl<IntoIt, N, U> From<IntoIt> for Grid<N, U>
 where
     IntoIt: IntoIterator,
     IntoIt::Item: IntoIterator<Item = N>,
+    U: PrimInt,
 {
     fn from(into_it: IntoIt) -> Self {
         let mut width = None;
@@ -57,7 +69,7 @@ where
             .flat_map(|line| match width {
                 None => {
                     let line = line.into_iter().collect_vec();
-                    width = Some(line.len());
+                    width = U::from(line.len());
                     line
                 }
                 Some(_) => line.into_iter().collect_vec(),
@@ -65,13 +77,14 @@ where
             .collect();
 
         Self {
-            width: width.unwrap_or(0),
+            width: width.unwrap_or(zero()),
             content,
         }
     }
 }
 
 use thiserror::Error;
+
 #[derive(Error, Debug)]
 pub enum CannotParseGrid {
     #[error("Cannot parse grid from \"{0}\": {1}")]
@@ -96,10 +109,11 @@ impl From<char> for CannotParseElementFromChar {
     }
 }
 
-impl<N> FromStr for Grid<N>
+impl<N, U> FromStr for Grid<N, U>
 where
     N: TryFrom<char>,
     N::Error: Into<CannotParseElementFromChar>,
+    U: PrimInt,
 {
     type Err = CannotParseGrid;
 
@@ -131,19 +145,19 @@ where
         }
 
         Ok(Self {
-            width: width.unwrap_or(0),
+            width: width.and_then(|width| U::from(width)).unwrap_or(zero()),
             content,
         })
     }
 }
 
 #[derive(PartialEq, Eq, PartialOrd, Ord, Hash, Clone, Copy, Debug)]
-pub struct Coord<U: Num + Copy = usize> {
+pub struct Coord<U = usize> {
     pub x: U,
     pub y: U,
 }
 
-impl<U: Num + CheckedSub + Copy> Coord<U> {
+impl<U: PrimInt> Coord<U> {
     pub fn try_at(&self, dir: Direction) -> Option<Self> {
         match dir {
             Direction::Up => self
@@ -164,13 +178,14 @@ impl<U: Num + CheckedSub + Copy> Coord<U> {
             }),
         }
     }
+
+    pub fn manhattan_dist_to(&self, to: &Self) -> U {
+        let dist = |a: U, b: U| if a > b { a - b } else { b - a };
+        dist(self.x, to.x) + dist(self.y, to.y)
+    }
 }
 
-impl<U: Num + Signed + Copy> Coord<U> {
-    pub fn manhattan_dist_to(&self, to: &Self) -> U {
-        (self.x - to.x).abs() + (self.y - to.y).abs()
-    }
-
+impl<U: PrimInt + Signed> Coord<U> {
     pub fn at(&self, dir: Direction) -> Self {
         match dir {
             Direction::Up => Coord {
@@ -193,7 +208,7 @@ impl<U: Num + Signed + Copy> Coord<U> {
     }
 }
 
-impl<U: Num + Copy + CheckedSub> Coord<U> {
+impl<U: PrimInt> Coord<U> {
     pub fn neighbours(&self, with_diag: bool) -> impl Iterator<Item = Self> {
         let mut result = Vec::with_capacity(if with_diag { 8 } else { 4 });
 

@@ -21,12 +21,16 @@ impl Map {
                 let orig_coord = Coord { x, y };
                 if matches!(self.grid.at(&orig_coord), Some(Place::RoundRock)) {
                     *self.grid.at_mut(&orig_coord).unwrap() = Place::Empty;
+
                     let mut target_coord = orig_coord;
+
                     while matches!(
-                        self.grid.at(&target_coord.at(Direction::Up)),
+                        target_coord
+                            .try_at(Direction::Up)
+                            .and_then(|coord| self.grid.at(&coord)),
                         Some(Place::Empty)
                     ) {
-                        target_coord = target_coord.at(Direction::Up);
+                        target_coord = target_coord.try_at(Direction::Up).unwrap();
                     }
                     *self.grid.at_mut(&target_coord).unwrap() = Place::RoundRock;
                 }
