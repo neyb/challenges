@@ -86,7 +86,7 @@ mod test {
         let jet_pattern = JetPattern::parse_location(&["aoc", "2022", "17-test.txt"]);
         let mut rock_falls = RockFalls::new(jet_pattern);
         let cycle = detect_cycle(&mut rock_falls).unwrap();
-        assert_eq!(cycle.starting_at_fall_index, 27);
+        assert_eq!(cycle.starting_at_fall_index, 28);
         assert_eq!(cycle.cycle_fall_count, 35);
         assert_eq!(cycle.height_growth, 53);
     }

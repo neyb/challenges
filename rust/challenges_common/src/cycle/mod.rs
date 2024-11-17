@@ -33,11 +33,11 @@ where
     let starting_at_index = {
         let mut index = first_meet_at;
         loop {
+            if gen.at(index) != gen.at(index + cycle_length) {
+                break index + 1;
+            }
             if index == 0 {
                 break 0;
-            }
-            if gen.at(index) != gen.at(index + cycle_length) {
-                break index;
             }
             index -= 1;
         }
@@ -87,5 +87,17 @@ where
         }
 
         Some(self.states[index].clone())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn plus_3_mod_7_should_be_a_cycle() {
+        let cycle = super::detect_cycle(12, |i| Some((i + 3) % 7)).unwrap();
+        assert_eq!(cycle.start_index, 1);
+        assert_eq!(cycle.size, 7);
+        assert_eq!(cycle.start, 1);
+        assert_eq!(cycle.second_cycle_start, 1);
     }
 }
