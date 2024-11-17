@@ -24,15 +24,16 @@ where
     where
         U: Num + Copy,
     {
-        (coord.x + self.width * coord.y)
-            .to_usize()
-            .and_then(|i| self.content.get(i))
+        self.content.get(self.get_index(coord))
     }
 
     pub fn at_mut(&mut self, coord: &Coord<U>) -> Option<&mut N> {
-        (coord.x + self.width * coord.y)
-            .to_usize()
-            .and_then(|i| self.content.get_mut(i))
+        let i = self.get_index(coord);
+        self.content.get_mut(i)
+    }
+
+    fn get_index(&self, coord: &Coord<U>) -> usize {
+        (coord.x + self.width * coord.y).to_usize().unwrap()
     }
 
     pub fn nodes(&self) -> &Vec<N> {
@@ -145,7 +146,7 @@ where
         }
 
         Ok(Self {
-            width: width.and_then(|width| U::from(width)).unwrap_or(zero()),
+            width: width.map(|width| U::from(width).unwrap()).unwrap_or(zero()),
             content,
         })
     }
