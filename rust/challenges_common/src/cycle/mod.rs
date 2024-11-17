@@ -15,7 +15,7 @@ where
     while {
         turtle_index += 1;
         hare_index += 2;
-        gen.at(turtle_index) != gen.at(hare_index)
+        gen.at(turtle_index)? != gen.at(hare_index)?
     } {}
     let first_meet_at = turtle_index;
 
@@ -24,7 +24,7 @@ where
     while {
         turtle_index += 1;
         hare_index += 2;
-        gen.at(turtle_index) != gen.at(hare_index)
+        gen.at(turtle_index)? != gen.at(hare_index)?
     } {}
     let second_meet_at = turtle_index;
 
@@ -56,6 +56,7 @@ where
     })
 }
 
+#[cfg_attr(test, derive(Debug, PartialEq))]
 pub struct DetectedCycle<S> {
     pub start_index: usize,
     pub size: usize,
@@ -99,5 +100,16 @@ mod tests {
         assert_eq!(cycle.size, 7);
         assert_eq!(cycle.start, 1);
         assert_eq!(cycle.second_cycle_start, 1);
+    }
+
+    #[test]
+    fn three_first_int_are_not_a_cycle() {
+        let v = [1, 2, 3];
+        let mut i = 0;
+        let cycle = super::detect_cycle(v[0], |_| {
+            i += 1;
+            v.get(i).cloned()
+        });
+        assert_eq!(cycle, None);
     }
 }
