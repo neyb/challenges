@@ -6,10 +6,44 @@ where
     N: FnMut(&S) -> Option<S>,
     S: Eq + Debug,
 {
+    let mut generator = Generator::new(init_state, next_state);
+    let DetectedCycle {
+        start_index,
+        size,
+        start,
+        second_cycle_start,
+    } = detect_cycle_for_gen(&mut generator)?;
+
+    drop(generator);
+
+    Some(DetectedCycle {
+        start_index,
+        size,
+        start: Rc::try_unwrap(start).unwrap(),
+        second_cycle_start: Rc::try_unwrap(second_cycle_start).unwrap(),
+    })
+}
+
+pub fn forecast_state<S, N>(init_state: S, next_state: N, target_index: usize) -> S
+where
+    N: FnMut(&S) -> Option<S>,
+    S: Eq + Debug,
+{
+    Rc::try_unwrap({
+        let mut generator = Generator::new(init_state, next_state);
+        let index = get_identical_cycle_index(&mut generator, target_index);
+        generator.at(index).unwrap()
+    })
+    .unwrap()
+}
+
+fn detect_cycle_for_gen<S, N>(gen: &mut Generator<S, N>) -> Option<DetectedCycle<Rc<S>>>
+where
+    S: Eq + Debug,
+    N: FnMut(&S) -> Option<S>,
+{
     let mut turtle_index = 0usize;
     let mut hare_index = 0usize;
-
-    let mut gen = Generator::new(init_state, next_state);
 
     // first round
     while {
@@ -28,12 +62,12 @@ where
     } {}
     let second_meet_at = turtle_index;
 
-    let cycle_length = second_meet_at - first_meet_at;
+    let size = second_meet_at - first_meet_at;
 
-    let starting_at_index = {
+    let start_index = {
         let mut index = first_meet_at;
         loop {
-            if gen.at(index) != gen.at(index + cycle_length) {
+            if gen.at(index) != gen.at(index + size) {
                 break index + 1;
             }
             if index == 0 {
@@ -43,17 +77,25 @@ where
         }
     };
 
-    let cycle_start = gen.at(starting_at_index).unwrap();
-    let second_cycle_start = gen.at(starting_at_index + cycle_length).unwrap();
-
-    drop(gen);
-
     Some(DetectedCycle {
-        start_index: starting_at_index,
-        size: cycle_length,
-        start: Rc::try_unwrap(cycle_start).unwrap(),
-        second_cycle_start: Rc::try_unwrap(second_cycle_start).unwrap(),
+        start_index,
+        size,
+        start: gen.at(start_index).unwrap(),
+        second_cycle_start: gen.at(start_index + size).unwrap(),
     })
+}
+
+fn get_identical_cycle_index<S, N>(gen: &mut Generator<S, N>, target_index: usize) -> usize
+where
+    N: FnMut(&S) -> Option<S>,
+    S: Eq + Debug,
+{
+    match detect_cycle_for_gen(gen) {
+        Some(cycle) if target_index >= cycle.start_index => {
+            ((target_index - cycle.start_index) % cycle.size) + cycle.start_index
+        }
+        _ => target_index,
+    }
 }
 
 #[cfg_attr(test, derive(Debug, PartialEq))]
@@ -100,6 +142,24 @@ mod tests {
         assert_eq!(cycle.size, 7);
         assert_eq!(cycle.start, 1);
         assert_eq!(cycle.second_cycle_start, 1);
+    }
+
+    #[test]
+    fn forecasting_plus_3_mod_7_to_28() {
+        let forecasted = super::forecast_state(12, |i| Some((i + 3) % 7), 28);
+        assert_eq!(forecasted, 5);
+    }
+
+    #[test]
+    fn forecasting_plus_3_mod_7_to_29() {
+        let forecasted = super::forecast_state(12, |i| Some((i + 3) % 7), 29);
+        assert_eq!(forecasted, 1);
+    }
+
+    #[test]
+    fn forecasting_plus_3_mod_7_to_30() {
+        let forecasted = super::forecast_state(12, |i| Some((i + 3) % 7), 30);
+        assert_eq!(forecasted, 4);
     }
 
     #[test]

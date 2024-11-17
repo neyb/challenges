@@ -1,37 +1,25 @@
 use crate::{Load, Map};
-use challenges_common::cycle::detect_cycle;
+use challenges_common::cycle;
 
 pub(crate) fn run(content: &str) -> anyhow::Result<Load> {
-    let mut map: Map = content.parse()?;
+    let map: Map = content.parse()?;
 
-    for _ in 0..get_identical_cycle(&map)? {
-        map.spin_cycle();
-    }
+    let map = cycle::forecast_state(
+        map,
+        |map| {
+            let mut map = map.clone();
+            map.spin_cycle();
+            Some(map)
+        },
+        1000000000,
+    );
 
     Ok(map.get_north_load())
 }
 
-fn get_identical_cycle(map: &Map) -> anyhow::Result<usize> {
-    let cycle = detect_cycle(map.clone(), |map| {
-        let mut map = map.clone();
-        map.spin_cycle();
-        Some(map)
-    })
-    .ok_or_else(|| anyhow::anyhow!("no cycle detected"))?;
-
-    println!(
-        "cycle of size {} starts at {}",
-        cycle.size, cycle.start_index
-    );
-    let identical_cycle = ((1000000000 - cycle.start_index) % cycle.size) + cycle.start_index;
-    println!("identical cycle: {identical_cycle}");
-
-    Ok(identical_cycle)
-}
-
 #[cfg(test)]
 mod tests {
-    use crate::Map;
+    use crate::{Map, Place};
 
     #[test]
     fn given_test() {
@@ -73,5 +61,24 @@ mod tests {
         map.spin_cycle();
 
         assert_eq!(map.get_north_load(), 69);
+    }
+
+    #[test]
+    fn after_100_cycle_should_have_same_amount_of_rounded_rocks() {
+        let content = challenges_common::get_input_content(&["aoc", "2023", "14-test.txt"]);
+        let mut map: Map = content.parse().unwrap();
+        let count_node = |map: &Map| {
+            map.grid
+                .nodes()
+                .iter()
+                .filter(|place| place == &&Place::RoundRock)
+                .count()
+        };
+        let start_count = count_node(&map);
+        for _ in 0..100 {
+            map.spin_cycle();
+        }
+
+        assert_eq!(count_node(&map), start_count);
     }
 }
