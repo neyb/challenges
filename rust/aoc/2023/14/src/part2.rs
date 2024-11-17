@@ -4,21 +4,20 @@ use challenges_common::cycle::detect_cycle;
 pub(crate) fn run(content: &str) -> anyhow::Result<Load> {
     let mut map: Map = content.parse()?;
 
-    for _ in 0..get_identical_cycle(&mut map)? {
-        map.spin_cycle()?;
+    for _ in 0..get_identical_cycle(&map)? {
+        map.spin_cycle();
     }
 
     Ok(map.get_north_load())
 }
 
 fn get_identical_cycle(map: &Map) -> anyhow::Result<usize> {
-    let Some(cycle) = detect_cycle(map.clone(), |map| {
+    let cycle = detect_cycle(map.clone(), |map| {
         let mut map = map.clone();
-        map.spin_cycle().unwrap();
+        map.spin_cycle();
         Some(map)
-    }) else {
-        anyhow::bail!("no cycle detected");
-    };
+    })
+    .ok_or_else(|| anyhow::anyhow!("no cycle detected"))?;
 
     println!(
         "cycle of size {} starts at {}",
@@ -32,9 +31,47 @@ fn get_identical_cycle(map: &Map) -> anyhow::Result<usize> {
 
 #[cfg(test)]
 mod tests {
+    use crate::Map;
+
     #[test]
     fn given_test() {
         let content = challenges_common::get_input_content(&["aoc", "2023", "14-test.txt"]);
         assert_eq!(super::run(&content).unwrap(), 64);
+    }
+
+    #[test]
+    fn after_3_cycles() {
+        let content = challenges_common::get_input_content(&["aoc", "2023", "14-test.txt"]);
+        let mut map: Map = content.parse().unwrap();
+        map.spin_cycle();
+        map.spin_cycle();
+        map.spin_cycle();
+
+        let expected: Map = "\
+.....#....
+....#...O#
+.....##...
+..O#......
+.....OOO#.
+.O#...O#.#
+....O#...O
+.......OOO
+#...O###.O
+#.OOO#...O"
+            .parse()
+            .unwrap();
+
+        assert_eq!(map, expected);
+    }
+
+    #[test]
+    fn load_after_3_cycles() {
+        let content = challenges_common::get_input_content(&["aoc", "2023", "14-test.txt"]);
+        let mut map: Map = content.parse().unwrap();
+        map.spin_cycle();
+        map.spin_cycle();
+        map.spin_cycle();
+
+        assert_eq!(map.get_north_load(), 69);
     }
 }

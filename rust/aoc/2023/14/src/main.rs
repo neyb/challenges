@@ -20,16 +20,15 @@ struct Map {
 }
 
 impl Map {
-    fn spin_cycle(&mut self) -> anyhow::Result<()> {
+    fn spin_cycle(&mut self) {
         use Direction::*;
-        self.tilt(Up)?;
-        self.tilt(Left)?;
-        self.tilt(Down)?;
-        self.tilt(Right)?;
-        Ok(())
+        self.tilt(Up);
+        self.tilt(Left);
+        self.tilt(Down);
+        self.tilt(Right);
     }
 
-    fn tilt(&mut self, direction: Direction) -> anyhow::Result<()> {
+    fn tilt(&mut self, direction: Direction) {
         for mut y in 0..self.grid.height() {
             if direction == Direction::Down {
                 y = self.grid.height() - y - 1;
@@ -56,7 +55,6 @@ impl Map {
                 }
             }
         }
-        Ok(())
     }
 
     fn get_north_load(&self) -> usize {
