@@ -6,8 +6,8 @@ use challenges_common::graph::{Coord, Grid};
 fn main() -> anyhow::Result<()> {
     let content = challenges_common::get_input_content(&["aoc", "2023", "03.txt"]);
     let map = content.parse()?;
-    println!("part 1: {}", part_1::run(&map).expect("part 1 failed"));
-    println!("part 2: {}", part_2::run(&map).expect("part 2 failed"));
+    println!("part 1: {}", part_1::run(&map).unwrap());
+    println!("part 2: {}", part_2::run(&map).unwrap());
     Ok(())
 }
 

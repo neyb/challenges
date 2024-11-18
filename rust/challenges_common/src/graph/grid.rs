@@ -1,5 +1,6 @@
 use itertools::Itertools;
 use num_traits::{zero, Num, PrimInt, Signed};
+use std::convert::Infallible;
 use std::fmt::{Display, Formatter};
 use std::str::FromStr;
 
@@ -34,11 +35,18 @@ where
     }
 
     fn get_index(&self, coord: &Coord<U>) -> Option<usize> {
-        if coord.x < self.width() {
+        if self.is_coord_inside(coord) {
             Some((coord.x + self.width * coord.y).to_usize().unwrap())
         } else {
             None
         }
+    }
+
+    fn is_coord_inside(&self, coord: &Coord<U>) -> bool {
+        U::zero() <= coord.y
+            && coord.y < self.width
+            && U::zero() <= coord.x
+            && coord.x < self.width()
     }
 
     pub fn nodes(&self) -> &Vec<N> {
@@ -112,6 +120,12 @@ pub struct CannotParseElementFromChar {
 impl From<char> for CannotParseElementFromChar {
     fn from(char: char) -> Self {
         Self { char }
+    }
+}
+
+impl From<Infallible> for CannotParseElementFromChar {
+    fn from(value: Infallible) -> Self {
+        match value {}
     }
 }
 
@@ -266,7 +280,7 @@ pub enum Direction {
 
 #[cfg(test)]
 mod test {
-    use super::Coord;
+    use super::*;
 
     #[test]
     fn neighbours_of_11_with_diag_are_8() {
@@ -284,5 +298,30 @@ mod test {
     fn neighbours_of_00_are_2() {
         let coord = Coord::<u32> { x: 0, y: 0 };
         assert_eq!(coord.neighbours(false).count(), 2)
+    }
+
+    #[test]
+    fn grid_at_outside_of_grid_is_none() {
+        let grid = Grid {
+            width: 2,
+            content: vec![1u8, 2, 3, 4],
+        };
+        assert_eq!(grid.at(&Coord { x: 2, y: 0 }), None);
+        assert_eq!(grid.at(&Coord { x: -1, y: 0 }), None);
+        assert_eq!(grid.at(&Coord { x: 0, y: 2 }), None);
+        assert_eq!(grid.at(&Coord { x: 0, y: -1 }), None);
+    }
+
+    #[test]
+    fn grid_at() {
+        let grid = Grid {
+            width: 2,
+            content: vec![1u8, 2, 3, 4],
+        };
+
+        assert_eq!(grid.at(&Coord { x: 0, y: 0 }), Some(&1));
+        assert_eq!(grid.at(&Coord { x: 1, y: 0 }), Some(&2));
+        assert_eq!(grid.at(&Coord { x: 0, y: 1 }), Some(&3));
+        assert_eq!(grid.at(&Coord { x: 1, y: 1 }), Some(&4));
     }
 }
