@@ -1,5 +1,6 @@
 use itertools::Itertools;
 use num_traits::{zero, Num, PrimInt, Signed};
+use std::fmt::{Display, Formatter};
 use std::str::FromStr;
 
 #[derive(Eq, PartialEq, Debug, Clone)]
@@ -24,16 +25,20 @@ where
     where
         U: Num + Copy,
     {
-        self.content.get(self.get_index(coord))
+        self.content.get(self.get_index(coord)?)
     }
 
     pub fn at_mut(&mut self, coord: &Coord<U>) -> Option<&mut N> {
         let i = self.get_index(coord);
-        self.content.get_mut(i)
+        self.content.get_mut(i?)
     }
 
-    fn get_index(&self, coord: &Coord<U>) -> usize {
-        (coord.x + self.width * coord.y).to_usize().unwrap()
+    fn get_index(&self, coord: &Coord<U>) -> Option<usize> {
+        if coord.x < self.width() {
+            Some((coord.x + self.width * coord.y).to_usize().unwrap())
+        } else {
+            None
+        }
     }
 
     pub fn nodes(&self) -> &Vec<N> {
@@ -149,6 +154,22 @@ where
             width: width.map(|width| U::from(width).unwrap()).unwrap_or(zero()),
             content,
         })
+    }
+}
+
+impl<N, U> Display for Grid<N, U>
+where
+    N: Display,
+    U: PrimInt,
+{
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        for (i, n) in self.content.iter().enumerate() {
+            write!(f, "{}", n)?;
+            if i % self.width.to_usize().unwrap() == self.width.to_usize().unwrap() - 1 {
+                writeln!(f)?;
+            }
+        }
+        Ok(())
     }
 }
 
