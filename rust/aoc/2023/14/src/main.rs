@@ -1,6 +1,7 @@
 use challenges_common::graph::{
     CannotParseElementFromChar, CannotParseGrid, Coord, Direction, Grid,
 };
+use std::fmt::{Display, Formatter};
 use std::str::FromStr;
 
 fn main() {
@@ -15,11 +16,11 @@ mod part1;
 mod part2;
 
 #[derive(Eq, PartialEq, Debug, Clone)]
-struct Map {
+struct Platform {
     grid: Grid<Place>,
 }
 
-impl Map {
+impl Platform {
     fn spin_cycle(&mut self) {
         use Direction::*;
         self.tilt(Up);
@@ -66,7 +67,7 @@ impl Map {
     }
 }
 
-impl FromStr for Map {
+impl FromStr for Platform {
     type Err = CannotParseGrid;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
@@ -91,5 +92,19 @@ impl TryFrom<char> for Place {
             '#' => Ok(Self::SquareRock),
             char => Err(CannotParseElementFromChar::from(char)),
         }
+    }
+}
+
+impl Display for Place {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "{}",
+            match self {
+                Self::Empty => '.',
+                Self::RoundRock => 'O',
+                Self::SquareRock => '#',
+            }
+        )
     }
 }

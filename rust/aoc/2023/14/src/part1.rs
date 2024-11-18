@@ -1,10 +1,10 @@
-use crate::{Load, Map};
+use crate::{Load, Platform};
 use challenges_common::graph::Direction;
 
 pub(crate) fn run(content: &str) -> anyhow::Result<Load> {
-    let mut map: Map = content.parse()?;
-    map.tilt(Direction::Up);
-    Ok(map.get_north_load())
+    let mut platform: Platform = content.parse()?;
+    platform.tilt(Direction::Up);
+    Ok(platform.get_north_load())
 }
 
 #[cfg(test)]

@@ -1,25 +1,25 @@
-use crate::{Load, Map};
+use crate::{Load, Platform};
 use challenges_common::cycle;
 
 pub(crate) fn run(content: &str) -> anyhow::Result<Load> {
-    let map: Map = content.parse()?;
+    let platform: Platform = content.parse()?;
 
-    let map = cycle::forecast_state(
-        map,
-        |map| {
-            let mut map = map.clone();
-            map.spin_cycle();
-            Some(map)
+    let platform = cycle::forecast_state(
+        platform,
+        |platform| {
+            let mut platform = platform.clone();
+            platform.spin_cycle();
+            Some(platform)
         },
         1000000000,
     );
 
-    Ok(map.get_north_load())
+    Ok(platform.get_north_load())
 }
 
 #[cfg(test)]
 mod tests {
-    use crate::{Map, Place};
+    use crate::{Place, Platform};
 
     #[test]
     fn given_test() {
@@ -30,12 +30,12 @@ mod tests {
     #[test]
     fn after_3_cycles() {
         let content = challenges_common::get_input_content(&["aoc", "2023", "14-test.txt"]);
-        let mut map: Map = content.parse().unwrap();
-        map.spin_cycle();
-        map.spin_cycle();
-        map.spin_cycle();
+        let mut platform: Platform = content.parse().unwrap();
+        platform.spin_cycle();
+        platform.spin_cycle();
+        platform.spin_cycle();
 
-        let expected: Map = "\
+        let expected: Platform = "\
 .....#....
 ....#...O#
 .....##...
@@ -49,36 +49,37 @@ mod tests {
             .parse()
             .unwrap();
 
-        assert_eq!(map, expected);
+        assert_eq!(platform, expected);
     }
 
     #[test]
     fn load_after_3_cycles() {
         let content = challenges_common::get_input_content(&["aoc", "2023", "14-test.txt"]);
-        let mut map: Map = content.parse().unwrap();
-        map.spin_cycle();
-        map.spin_cycle();
-        map.spin_cycle();
+        let mut platform: Platform = content.parse().unwrap();
+        platform.spin_cycle();
+        platform.spin_cycle();
+        platform.spin_cycle();
 
-        assert_eq!(map.get_north_load(), 69);
+        assert_eq!(platform.get_north_load(), 69);
     }
 
     #[test]
     fn after_100_cycle_should_have_same_amount_of_rounded_rocks() {
         let content = challenges_common::get_input_content(&["aoc", "2023", "14-test.txt"]);
-        let mut map: Map = content.parse().unwrap();
-        let count_node = |map: &Map| {
-            map.grid
+        let mut platform: Platform = content.parse().unwrap();
+        let count_node = |platform: &Platform| {
+            platform
+                .grid
                 .nodes()
                 .iter()
                 .filter(|place| place == &&Place::RoundRock)
                 .count()
         };
-        let start_count = count_node(&map);
+        let start_count = count_node(&platform);
         for _ in 0..100 {
-            map.spin_cycle();
+            platform.spin_cycle();
         }
 
-        assert_eq!(count_node(&map), start_count);
+        assert_eq!(count_node(&platform), start_count);
     }
 }
