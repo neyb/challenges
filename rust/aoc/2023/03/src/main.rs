@@ -30,7 +30,7 @@ impl FromStr for Map {
 
             for x in 0..grid.width() {
                 let coord = Coord { x, y };
-                match grid.at(&coord) {
+                match grid.get(&coord) {
                     Some(c) if c.is_ascii_digit() => {
                         num_positions.push(coord);
                         num_buffer.push(*c);
@@ -75,7 +75,7 @@ mod part_1 {
                     let is_part_number = positions
                         .iter()
                         .flat_map(|position| position.neighbours(true))
-                        .any(|position| matches!(self.grid.at(&position), Some(&c) if !c.is_ascii_digit() && c != '.'));
+                        .any(|position| matches!(self.grid.get(&position), Some(&c) if !c.is_ascii_digit() && c != '.'));
 
                     if is_part_number {
                         Some(number)
@@ -132,7 +132,7 @@ mod part_2 {
         fn gears_ratio_sum(&self) -> u32 {
             self.grid
                 .coords()
-                .filter(|coord| self.grid.at(coord) == Some(&'*'))
+                .filter(|coord| self.grid.get(coord) == Some(&'*'))
                 .filter_map(|coord| {
                     let gear_neighbours_coord = coord.neighbours(true).collect_vec();
 

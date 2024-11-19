@@ -39,7 +39,7 @@ impl Platform {
                     x = self.grid.width() - x - 1;
                 }
                 let orig_coord = Coord { x, y };
-                if matches!(self.grid.at(&orig_coord), Some(Place::RoundRock)) {
+                if matches!(self.grid.get(&orig_coord), Some(Place::RoundRock)) {
                     *self.grid.at_mut(&orig_coord).unwrap() = Place::Empty;
 
                     let mut target_coord = orig_coord;
@@ -47,7 +47,7 @@ impl Platform {
                     while matches!(
                         target_coord
                             .try_at(direction)
-                            .and_then(|coord| self.grid.at(&coord)),
+                            .and_then(|coord| self.grid.get(&coord)),
                         Some(Place::Empty)
                     ) {
                         target_coord = target_coord.try_at(direction).unwrap();
@@ -61,7 +61,7 @@ impl Platform {
     fn get_north_load(&self) -> usize {
         self.grid
             .coords()
-            .filter(|coord| matches!(self.grid.at(coord), Some(Place::RoundRock)))
+            .filter(|coord| matches!(self.grid.get(coord), Some(Place::RoundRock)))
             .map(|coord| self.grid.height() - coord.y)
             .sum()
     }

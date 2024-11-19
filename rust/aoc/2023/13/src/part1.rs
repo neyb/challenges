@@ -32,8 +32,8 @@ impl Summarize for Pattern {
                     let x_left = x_symm - x_diff;
                     let x_right = x_symm + x_diff - 1;
                     for y in 0..pattern.grid.height() {
-                        if pattern.grid.at(&Coord { x: x_left, y }).unwrap().0
-                            != pattern.grid.at(&Coord { x: x_right, y }).unwrap().0
+                        if pattern.grid.get(&Coord { x: x_left, y }).unwrap().0
+                            != pattern.grid.get(&Coord { x: x_right, y }).unwrap().0
                         {
                             continue 'x_symm;
                         }
@@ -52,11 +52,11 @@ impl Summarize for Pattern {
                     for x in 0..pattern.grid.width() {
                         if pattern
                             .grid
-                            .at(&Coord { x, y: y_left })
+                            .get(&Coord { x, y: y_left })
                             .map(|place| place.0)
                             != pattern
                                 .grid
-                                .at(&Coord { x, y: y_right })
+                                .get(&Coord { x, y: y_right })
                                 .map(|place| place.0)
                         {
                             continue 'y_symm;

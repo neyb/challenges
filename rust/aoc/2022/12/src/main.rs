@@ -64,7 +64,7 @@ fn part2(map: &Map) -> usize {
                 to: coord,
             })
         },
-        |coord| map.grid.at(coord).unwrap() == &b'a',
+        |coord| map.grid.get(coord).unwrap() == &b'a',
         |_| 0,
     )
     .unwrap()
@@ -90,12 +90,12 @@ impl Map {
     }
 
     fn accessible_nodes_from<'a>(&'a self, from: &Coord) -> impl Iterator<Item = Coord> + 'a {
-        let &from_height = self.grid.at(from).unwrap();
+        let &from_height = self.grid.get(from).unwrap();
         self.neightbours_with(from, move |(_, &to_height)| (from_height + 1) >= to_height)
     }
 
     fn node_accessing<'a>(&'a self, to: &Coord) -> impl Iterator<Item = Coord> + 'a {
-        let &to_height = self.grid.at(to).unwrap();
+        let &to_height = self.grid.get(to).unwrap();
         self.neightbours_with(to, move |(_, &from_height)| from_height + 1 >= to_height)
     }
 

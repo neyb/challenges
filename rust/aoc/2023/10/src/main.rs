@@ -38,7 +38,7 @@ impl Map {
         let mut path = Path { element: vec![] };
         loop {
             let next_coord = coord_at(&current_coord, &current_direction);
-            let next_node = self.grid.at(&next_coord)?;
+            let next_node = self.grid.get(&next_coord)?;
 
             if matches!(next_node, Node::Animal) {
                 path.element.push(PathElement {
@@ -152,7 +152,7 @@ impl FromStr for Map {
         let grid: grid::Grid<Node> = s.parse()?;
         let animal_coord = grid
             .coords()
-            .find(|coord| matches!(grid.at(coord), Some(Node::Animal)))
+            .find(|coord| matches!(grid.get(coord), Some(Node::Animal)))
             .ok_or(CannotParseMap::NoAnimalFound)?;
         Ok(Self { grid, animal_coord })
     }

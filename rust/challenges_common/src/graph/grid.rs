@@ -22,7 +22,7 @@ where
         U::from(self.content.len()).unwrap() / self.width
     }
 
-    pub fn at(&self, coord: &Coord<U>) -> Option<&N>
+    pub fn get(&self, coord: &Coord<U>) -> Option<&N>
     where
         U: Num + Copy,
     {
@@ -65,7 +65,7 @@ where
     pub fn neighbours(&self, coord: &Coord<U>) -> impl Iterator<Item = (Coord<U>, &N)> + '_ {
         coord
             .neighbours(false)
-            .filter_map(|coord| self.at(&coord).map(move |n| (coord, n)))
+            .filter_map(|coord| self.get(&coord).map(move |n| (coord, n)))
     }
 }
 
@@ -270,7 +270,7 @@ impl<U: PrimInt> Coord<U> {
     }
 }
 
-#[derive(Copy, Clone, Eq, PartialEq, Debug)]
+#[derive(Copy, Clone, Eq, PartialEq, Debug, Hash)]
 pub enum Direction {
     Up,
     Down,
@@ -306,10 +306,10 @@ mod test {
             width: 2,
             content: vec![1u8, 2, 3, 4],
         };
-        assert_eq!(grid.at(&Coord { x: 2, y: 0 }), None);
-        assert_eq!(grid.at(&Coord { x: -1, y: 0 }), None);
-        assert_eq!(grid.at(&Coord { x: 0, y: 2 }), None);
-        assert_eq!(grid.at(&Coord { x: 0, y: -1 }), None);
+        assert_eq!(grid.get(&Coord { x: 2, y: 0 }), None);
+        assert_eq!(grid.get(&Coord { x: -1, y: 0 }), None);
+        assert_eq!(grid.get(&Coord { x: 0, y: 2 }), None);
+        assert_eq!(grid.get(&Coord { x: 0, y: -1 }), None);
     }
 
     #[test]
@@ -319,9 +319,9 @@ mod test {
             content: vec![1u8, 2, 3, 4],
         };
 
-        assert_eq!(grid.at(&Coord { x: 0, y: 0 }), Some(&1));
-        assert_eq!(grid.at(&Coord { x: 1, y: 0 }), Some(&2));
-        assert_eq!(grid.at(&Coord { x: 0, y: 1 }), Some(&3));
-        assert_eq!(grid.at(&Coord { x: 1, y: 1 }), Some(&4));
+        assert_eq!(grid.get(&Coord { x: 0, y: 0 }), Some(&1));
+        assert_eq!(grid.get(&Coord { x: 1, y: 0 }), Some(&2));
+        assert_eq!(grid.get(&Coord { x: 0, y: 1 }), Some(&3));
+        assert_eq!(grid.get(&Coord { x: 1, y: 1 }), Some(&4));
     }
 }
