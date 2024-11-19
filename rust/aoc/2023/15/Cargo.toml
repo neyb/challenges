@@ -1,0 +1,12 @@
+[package]
+name = "aoc_2023_15"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+challenges_common.workspace = true
+anyhow.workspace = true
+itertools.workspace = true
+thiserror.workspace = true
+lazy-regex.workspace = true
+array-init.workspace = true
