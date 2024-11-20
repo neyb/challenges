@@ -17,6 +17,7 @@ impl RockFalls {
         }
     }
 
+    #[cfg(test)]
     pub fn get_num(&mut self, fall_num: usize) -> Result<Rc<RockFall>> {
         self.get(fall_num - 1)
     }
