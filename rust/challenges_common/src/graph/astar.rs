@@ -16,7 +16,7 @@ pub fn astar<N, C, Nexts>(
 where
     N: Node,
     C: Cost,
-    Nexts: Iterator<Item = Step<N, C>>,
+    Nexts: IntoIterator<Item = Step<N, C>>,
 {
     let mut queue: Queue<N, C> = BinaryHeap::new();
     let mut optimals: Optimals<N, C> = HashMap::new();
