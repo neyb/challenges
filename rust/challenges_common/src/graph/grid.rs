@@ -278,6 +278,26 @@ pub enum Direction {
     Right,
 }
 
+impl Direction {
+    pub fn all() -> [Direction; 4] {
+        [
+            Direction::Up,
+            Direction::Down,
+            Direction::Left,
+            Direction::Right,
+        ]
+    }
+
+    pub fn opposite(&self) -> Self {
+        match self {
+            Direction::Up => Direction::Down,
+            Direction::Down => Direction::Up,
+            Direction::Left => Direction::Right,
+            Direction::Right => Direction::Left,
+        }
+    }
+}
+
 #[cfg(test)]
 mod test {
     use super::*;
