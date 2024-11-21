@@ -215,6 +215,27 @@ impl<U: PrimInt> Coord<U> {
         }
     }
 
+    pub fn try_at_dist(&self, dir: Direction, dist: impl Into<U>) -> Option<Self> {
+        match dir {
+            Direction::Up => Some(Coord {
+                x: self.x,
+                y: self.y.checked_sub(&dist.into())?,
+            }),
+            Direction::Down => Some(Coord {
+                x: self.x,
+                y: self.y + dist.into(),
+            }),
+            Direction::Left => Some(Coord {
+                x: self.x.checked_sub(&dist.into())?,
+                y: self.y,
+            }),
+            Direction::Right => Some(Coord {
+                x: self.x + dist.into(),
+                y: self.y,
+            }),
+        }
+    }
+
     pub fn manhattan_dist_to(&self, to: &Self) -> U {
         let dist = |a: U, b: U| if a > b { a - b } else { b - a };
         dist(self.x, to.x) + dist(self.y, to.y)
@@ -288,6 +309,23 @@ impl Direction {
         ]
     }
 
+    pub fn turn(&self, turn: Turn) -> Self {
+        match turn {
+            Turn::Left => match self {
+                Direction::Up => Direction::Left,
+                Direction::Down => Direction::Right,
+                Direction::Left => Direction::Down,
+                Direction::Right => Direction::Up,
+            },
+            Turn::Right => match self {
+                Direction::Up => Direction::Right,
+                Direction::Down => Direction::Left,
+                Direction::Left => Direction::Up,
+                Direction::Right => Direction::Down,
+            },
+        }
+    }
+
     pub fn opposite(&self) -> Self {
         match self {
             Direction::Up => Direction::Down,
@@ -295,6 +333,18 @@ impl Direction {
             Direction::Left => Direction::Right,
             Direction::Right => Direction::Left,
         }
+    }
+}
+
+#[derive(Copy, Clone, Eq, PartialEq, Debug, Hash)]
+pub enum Turn {
+    Left,
+    Right,
+}
+
+impl Turn {
+    pub fn all() -> [Turn; 2] {
+        [Turn::Left, Turn::Right]
     }
 }
 
