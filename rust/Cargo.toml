@@ -13,7 +13,7 @@ rpds = "*"
 lazy_static = "*"
 num-traits = "*"
 thiserror = "*"
-array-init = "2"
+array-init = "*"
 
 [profile.release]
 codegen-units = 1
