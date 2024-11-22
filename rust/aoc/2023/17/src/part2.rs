@@ -2,7 +2,6 @@ use crate::Map;
 use anyhow::anyhow;
 use challenges_common::graph::{astar, Coord, Direction, Step, Turn};
 use itertools::Itertools;
-use std::iter::{once, repeat_n};
 
 type Res = usize;
 pub(crate) fn run(content: &str) -> anyhow::Result<Res> {
@@ -10,7 +9,8 @@ pub(crate) fn run(content: &str) -> anyhow::Result<Res> {
     let path = astar(
         PathElement {
             coord: Coord { x: 0, y: 0 },
-            previous_directions: vec![Direction::Right],
+            direction: Direction::Right,
+            direction_repeat_count: 1,
         },
         |path_element| path_element.nexts(&map),
         |path_element| path_element.coord == map.end_coord(),
@@ -24,7 +24,8 @@ pub(crate) fn run(content: &str) -> anyhow::Result<Res> {
 #[derive(Hash, PartialEq, Eq)]
 struct PathElement {
     coord: Coord,
-    previous_directions: Vec<Direction>,
+    direction: Direction,
+    direction_repeat_count: u8,
 }
 
 impl PathElement {
@@ -32,36 +33,31 @@ impl PathElement {
         let mut result = Vec::new();
 
         if self.too_much_repeated_direction().is_none() {
-            if let Some(&last) = self.previous_directions.first() {
-                if let Some(next_coord) = self.coord.try_at(last) {
-                    if let Some(block) = map.grid.get(&next_coord) {
-                        result.push(Step {
-                            to: PathElement {
-                                coord: next_coord,
-                                previous_directions: once(last)
-                                    .chain(self.previous_directions.iter().cloned())
-                                    .take(10)
-                                    .collect(),
-                            },
-                            additional_cost: block.heat_loss as Res,
-                        });
-                    }
+            let last = self.direction;
+            if let Some(next_coord) = self.coord.try_at(last) {
+                if let Some(block) = map.grid.get(&next_coord) {
+                    result.push(Step {
+                        to: PathElement {
+                            coord: next_coord,
+                            direction: last,
+                            direction_repeat_count: self.direction_repeat_count + 1,
+                        },
+                        additional_cost: block.heat_loss as Res,
+                    });
                 }
             }
         }
 
         for turn in Turn::all() {
-            let next_direction = self.previous_directions.first().unwrap().turn(turn);
+            let next_direction = self.direction.turn(turn);
 
             if let Some(next_coord) = self.coord.try_at_dist(next_direction, 4_usize) {
                 if let Some(heat) = map.heat_loss_within(&self.coord, next_direction, 4) {
                     result.push(Step {
                         to: PathElement {
                             coord: next_coord,
-                            previous_directions: repeat_n(next_direction, 4)
-                                .chain(self.previous_directions.iter().cloned())
-                                .take(10)
-                                .collect(),
+                            direction: next_direction,
+                            direction_repeat_count: 4,
                         },
                         additional_cost: heat,
                     });
@@ -73,13 +69,8 @@ impl PathElement {
     }
 
     fn too_much_repeated_direction(&self) -> Option<Direction> {
-        if self.previous_directions.len() >= 10 {
-            self.previous_directions
-                .iter()
-                .take(10)
-                .all_equal_value()
-                .ok()
-                .copied()
+        if self.direction_repeat_count >= 10 {
+            Some(self.direction)
         } else {
             None
         }
