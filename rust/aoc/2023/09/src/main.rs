@@ -116,7 +116,7 @@ impl FromStr for Line {
 
     fn from_str(s: &str) -> Result<Self> {
         Ok(Line::new(
-            s.split(' ').into_iter().map(|v| v.parse()).try_collect()?,
+            s.split(' ').map(|v| v.parse()).try_collect()?,
         ))
     }
 }

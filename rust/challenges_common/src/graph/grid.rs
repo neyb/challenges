@@ -263,6 +263,27 @@ impl<U: PrimInt + Signed> Coord<U> {
             },
         }
     }
+
+    pub fn at_dist(&self, dir: Direction, dist: impl Into<U>) -> Self {
+        match dir {
+            Direction::Up => Coord {
+                x: self.x,
+                y: self.y - dist.into(),
+            },
+            Direction::Down => Coord {
+                x: self.x,
+                y: self.y + dist.into(),
+            },
+            Direction::Left => Coord {
+                x: self.x - dist.into(),
+                y: self.y,
+            },
+            Direction::Right => Coord {
+                x: self.x + dist.into(),
+                y: self.y,
+            },
+        }
+    }
 }
 
 impl<U: PrimInt> Coord<U> {
@@ -324,6 +345,10 @@ impl Direction {
                 Direction::Right => Direction::Down,
             },
         }
+    }
+
+    pub fn is_vertical(&self) -> bool {
+        matches!(self, Direction::Up | Direction::Down)
     }
 
     pub fn opposite(&self) -> Self {

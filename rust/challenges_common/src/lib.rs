@@ -1,4 +1,5 @@
 pub mod cycle;
+pub mod geom;
 pub mod graph;
 mod input;
 mod iter;

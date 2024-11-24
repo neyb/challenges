@@ -16,7 +16,7 @@ fn part1(input: &str) -> usize {
     races
         .iter()
         .map(|race| race.count_acceleration_beating())
-        .fold(1, |acc, count| acc * count)
+        .product()
 }
 
 fn part1_parse(input: &str) -> anyhow::Result<Races> {
@@ -49,7 +49,7 @@ fn part2(input: &str) -> usize {
     races
         .iter()
         .map(|race| race.count_acceleration_beating())
-        .fold(1, |acc, count| acc * count)
+        .product()
 }
 
 fn part2_parse(input: &str) -> anyhow::Result<Races> {
@@ -196,7 +196,7 @@ mod tests {
         let input = challenges_common::get_input_content(&["aoc", "2023", "06-test.txt"]);
         assert_eq!(part1(&input), 288);
     }
-    
+
     #[test]
     fn given_test_part2() {
         let input = challenges_common::get_input_content(&["aoc", "2023", "06-test.txt"]);
