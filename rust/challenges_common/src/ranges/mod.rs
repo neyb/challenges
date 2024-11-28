@@ -146,7 +146,7 @@ mod tests {
 
         #[test]
         fn can_create_ranges() {
-            let range = discontinuous::Range::new(1, 2).unwrap();
+            let range = discontinuous::Range::new_inclusive(1, 2).unwrap();
             let ranges = Ranges::new(vec![range]);
             assert_eq!(ranges.ranges.len(), 1);
         }
@@ -154,26 +154,26 @@ mod tests {
         #[test]
         fn simplify_should_join_1_to_2_and_2_to_4() {
             let ranges = Ranges::new(vec![
-                discontinuous::Range::new(1, 2).unwrap(),
-                discontinuous::Range::new(2, 4).unwrap(),
+                discontinuous::Range::new_inclusive(1, 2).unwrap(),
+                discontinuous::Range::new_inclusive(2, 4).unwrap(),
             ]);
 
             assert_eq!(
                 ranges.ranges,
-                vec![discontinuous::Range::new(1, 4).unwrap()]
+                vec![discontinuous::Range::new_inclusive(1, 4).unwrap()]
             )
         }
 
         #[test]
         fn simplify_should_join_1_to_2_and_3_to_4() {
             let ranges = Ranges::new(vec![
-                discontinuous::Range::new(1, 2).unwrap(),
-                discontinuous::Range::new(3, 4).unwrap(),
+                discontinuous::Range::new_inclusive(1, 2).unwrap(),
+                discontinuous::Range::new_inclusive(3, 4).unwrap(),
             ]);
 
             assert_eq!(
                 ranges.ranges,
-                vec![discontinuous::Range::new(1, 4).unwrap()]
+                vec![discontinuous::Range::new_inclusive(1, 4).unwrap()]
             )
         }
     }

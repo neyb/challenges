@@ -10,7 +10,7 @@ impl<P> Range<P>
 where
     P: Ord + Copy + Stepable,
 {
-    pub fn new(start: P, end: P) -> Option<Self> {
+    pub fn new_inclusive(start: P, end: P) -> Option<Self> {
         if start <= end {
             Some(Self { start, end })
         } else {
@@ -60,7 +60,7 @@ where
     fn intersection(&self, other: &Self) -> Option<Self> {
         let start = self.start.max(other.start);
         let end = self.end.min(other.end);
-        Self::new(start, end)
+        Self::new_inclusive(start, end)
     }
 
     fn join(&self, other: &Self) -> JoinedResult<Self> {
@@ -70,7 +70,7 @@ where
         {
             let start = self.start.min(other.start);
             let end = self.end.max(other.end);
-            JoinedResult::Joined(Self::new(start, end).unwrap())
+            JoinedResult::Joined(Self::new_inclusive(start, end).unwrap())
         } else {
             JoinedResult::Disjoint(self.clone(), other.clone())
         }
@@ -83,8 +83,14 @@ where
                 removed: None,
             },
             Some(removed) => {
-                let remaining_before = removed.start.prev().and_then(|end| Self::new(self.start, end));
-                let remaining_after = removed.end.next().and_then(|start| Self::new(start, self.end));
+                let remaining_before = removed
+                    .start
+                    .prev()
+                    .and_then(|end| Self::new_inclusive(self.start, end));
+                let remaining_after = removed
+                    .end
+                    .next()
+                    .and_then(|start| Self::new_inclusive(start, self.end));
 
                 match (remaining_before, remaining_after) {
                     (Some(before), Some(after)) => WithoutResult {
@@ -139,4 +145,3 @@ macro_rules! impl_stepable_num {
 }
 
 impl_stepable_num!(i8, i16, i32, i64, i128, isize, u8, u16, u32, u64, u128, usize);
-

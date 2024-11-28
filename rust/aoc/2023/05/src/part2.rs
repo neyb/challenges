@@ -71,7 +71,7 @@ impl Category {
         for transformation in &mapping.transformations {
             let removed = orig_ranges.remove_range(&Range::from(&transformation.source_range));
             let to_add = removed.map(|range| {
-                Range::new(
+                Range::new_inclusive(
                     (range.start as PositionTransformation + transformation.transformation)
                         as Position,
                     (range.end as PositionTransformation + transformation.transformation)
@@ -97,7 +97,7 @@ impl FromStr for Category {
                 let (_, [start, length]) = capt.extract();
                 let start = start.parse()?;
                 let length = length.parse()?;
-                Range::with_length(start, length).ok_or_else(||anyhow!(""))
+                Range::with_length(start, length).ok_or_else(|| anyhow!(""))
             })
             .try_collect()?;
 
