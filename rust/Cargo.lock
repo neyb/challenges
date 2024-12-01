@@ -430,6 +430,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "aoc_2024_01"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "challenges_common",
+ "itertools",
+ "lazy-regex",
+]
+
+[[package]]
 name = "array-init"
 version = "2.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
