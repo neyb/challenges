@@ -1,3 +1,4 @@
+use itertools::Itertools;
 use std::io::Read;
 use std::{
     fs::File,
@@ -17,7 +18,13 @@ pub fn get_input_file(location: &[impl AsRef<Path>]) -> File {
         .ancestors()
         .map(target)
         .find(|target| target.exists())
-        .expect("file not found");
+        .unwrap_or_else(|| {
+            let path = location
+                .iter()
+                .map(|p| p.as_ref().to_str().expect("path is not valid utf-8"))
+                .join("/");
+            panic!("file not found: {path}")
+        });
 
     File::open(target).unwrap()
 }
