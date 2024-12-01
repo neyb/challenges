@@ -1,5 +1,5 @@
 [workspace]
-members = ["challenges_common", "aoc/[!a-z]*/*"]
+members = ["challenges_common", "aoc/20*/*"]
 resolver = "2"
 
 [workspace.dependencies]
