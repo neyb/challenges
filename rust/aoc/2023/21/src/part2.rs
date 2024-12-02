@@ -18,6 +18,8 @@ pub(crate) fn run(content: &String, steps: u32) -> Result<Res> {
 
     for i_step in 0..steps {
         let mut discovered = HashSet::new();
+        #[cfg(feature = "trace")]
+        let original_count = count;
 
         for coord in &previous_explored {
             for neighbour in coord.neighbours(false) {
@@ -34,6 +36,18 @@ pub(crate) fn run(content: &String, steps: u32) -> Result<Res> {
 
         old_explored = previous_explored;
         previous_explored = discovered;
+
+        #[cfg(feature = "trace")]
+        if (i_step + 1) % 2 == steps % 2 {
+            print!("after step: {}", i_step + 1);
+
+            let incr = count - original_count;
+            print!(", incr: {incr}");
+            print!(", mult: {}", count as f32 / original_count as f32);
+            print!(", incr - step : {}", incr - i_step);
+            print!(", incr - 2 step : {}", incr - (2 * i_step));
+            println!(", incr - 3 step : {}", incr - (3 * i_step));
+        }
     }
 
     Ok(count)
@@ -89,45 +103,30 @@ mod tests {
     fn test_infinite_map_10() {
         let content = challenges_common::get_input_content(&["aoc", "2023", "21-test.txt"]);
         assert_eq!(run(&content, 10).unwrap(), 50);
-        // assert_eq!(run(&content, 50).unwrap(), 1594);
-        // assert_eq!(run(&content, 100).unwrap(), 6536);
-        // assert_eq!(run(&content, 500).unwrap(), 167004);
-        // assert_eq!(run(&content, 1000).unwrap(), 668697);
-        // assert_eq!(run(&content, 5000).unwrap(), 16733044);
     }
 
     #[test]
     fn test_infinite_map_50() {
         let content = challenges_common::get_input_content(&["aoc", "2023", "21-test.txt"]);
         assert_eq!(run(&content, 50).unwrap(), 1594);
-        // assert_eq!(run(&content, 100).unwrap(), 6536);
-        // assert_eq!(run(&content, 500).unwrap(), 167004);
-        // assert_eq!(run(&content, 1000).unwrap(), 668697);
-        // assert_eq!(run(&content, 5000).unwrap(), 16733044);
     }
 
     #[test]
     fn test_infinite_map_100() {
         let content = challenges_common::get_input_content(&["aoc", "2023", "21-test.txt"]);
         assert_eq!(run(&content, 100).unwrap(), 6536);
-        // assert_eq!(run(&content, 500).unwrap(), 167004);
-        // assert_eq!(run(&content, 1000).unwrap(), 668697);
-        // assert_eq!(run(&content, 5000).unwrap(), 16733044);
     }
 
     #[test]
     fn test_infinite_map_500() {
         let content = challenges_common::get_input_content(&["aoc", "2023", "21-test.txt"]);
         assert_eq!(run(&content, 500).unwrap(), 167004);
-        // assert_eq!(run(&content, 1000).unwrap(), 668697);
-        // assert_eq!(run(&content, 5000).unwrap(), 16733044);
     }
 
     #[test]
     fn test_infinite_map_1000() {
         let content = challenges_common::get_input_content(&["aoc", "2023", "21-test.txt"]);
         assert_eq!(run(&content, 1000).unwrap(), 668697);
-        // assert_eq!(run(&content, 5000).unwrap(), 16733044);
     }
 
     #[test]

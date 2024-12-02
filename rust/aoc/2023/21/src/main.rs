@@ -3,7 +3,8 @@ use challenges_common::graph::CannotParseElementFromChar;
 fn main() {
     let content = challenges_common::get_input_content(&["aoc", "2023", "21.txt"]);
     println!("part1: {:?}", part1::run(&content));
-    println!("part2: {:?}", part2::run(&content, 26501365));
+    println!("part2: {:?}", part2::run(&content, 500));
+    // println!("part2: {:?}", part2::run(&content, 26501365));
 }
 
 mod part1;
