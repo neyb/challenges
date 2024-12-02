@@ -29,9 +29,20 @@ where
         self.content.get(self.get_index(coord)?)
     }
 
-    pub fn at_mut(&mut self, coord: &Coord<U>) -> Option<&mut N> {
+    pub fn get_mut(&mut self, coord: &Coord<U>) -> Option<&mut N> {
         let i = self.get_index(coord);
         self.content.get_mut(i?)
+    }
+
+    fn get_coord_from_index(&self, index: usize) -> Option<Coord<U>> {
+        if index < self.content.len() {
+            Some(Coord {
+                x: U::from(index % self.width.to_usize().unwrap()).unwrap(),
+                y: U::from(index / self.width.to_usize().unwrap()).unwrap(),
+            })
+        } else {
+            None
+        }
     }
 
     fn get_index(&self, coord: &Coord<U>) -> Option<usize> {
@@ -60,6 +71,14 @@ where
                 y: U::from(y).unwrap(),
             })
         })
+    }
+
+    pub fn find(&self, predicate: impl Fn(&N) -> bool) -> Option<Coord<U>> {
+        self.content
+            .iter()
+            .enumerate()
+            .find(|(_i, n)| predicate(n))
+            .and_then(|(i, _n)| self.get_coord_from_index(i))
     }
 
     pub fn neighbours(&self, coord: &Coord<U>) -> impl Iterator<Item = (Coord<U>, &N)> + '_ {

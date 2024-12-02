@@ -1,12 +1,13 @@
+use crate::{Position, PositionType};
 use anyhow::*;
-use challenges_common::graph::{CannotParseElementFromChar, Coord, Grid};
-use std::convert::TryFrom;
+use challenges_common::graph::{CannotParseGrid, Coord, Grid};
 use std::str::FromStr;
 
 type Res = usize;
-pub(crate) fn run(content: &String) -> Result<Res> {
-    let map: Map = content.parse()?;
-    map.explore(16)
+pub(crate) fn run(content: &str) -> Result<Res> {
+    let mut map: Map = content.parse()?;
+    map.explore(64)?;
+    Ok(map.count_explored(64))
 }
 
 struct Map {
@@ -14,54 +15,49 @@ struct Map {
 }
 
 impl Map {
-    pub(crate) fn explore(&self, count: u8) -> Result<Res> {
-        let mut explored = Vec::new();
-        let mut current_positions = Vec::new();
+    fn explore(&mut self, times: u8) -> Result<()> {
+        let mut current_positions = vec![self.start().ok_or_else(|| anyhow!("no start"))?];
+
+        for i in 0..times {
+            let mut next_positions = Vec::new();
+            for position in current_positions {
+                for next_coord in position.neighbours(false) {
+                    if let Some(next_position) = self.grid.get_mut(&next_coord) {
+                        if next_position.should_be_explored() {
+                            next_position.explore_range = Some(i + 1);
+                            next_positions.push(next_coord);
+                        }
+                    }
+                }
+            }
+
+            current_positions = next_positions;
+        }
+
+        anyhow::Ok(())
     }
 
     fn start(&self) -> Option<Coord> {
         self.grid
+            .find(|position| position.position_type == PositionType::Start)
+    }
+
+    fn count_explored(&self, turn: u8) -> usize {
+        self.grid
             .nodes()
             .iter()
-            .find(|position| position.position_type == PositionType::Start)
-            .map(|(coord, _)| coord)
+            .filter(|position| {
+                matches!(position.explore_range, Some(range) if range %2 == turn %2 && range <= turn)
+            })
+            .count()
     }
-}
-
-struct Position {
-    position_type: PositionType,
-    explore_range: Option<u8>,
-}
-
-enum PositionType {
-    Start,
-    Empty,
-    Rock,
 }
 
 impl FromStr for Map {
-    type Err = anyhow::Error;
+    type Err = CannotParseGrid;
 
-    fn from_str(s: &str) -> Result<Self> {
-        Ok(Self { grid: s.parse()? })
-    }
-}
-
-impl TryFrom<char> for Position {
-    type Error = CannotParseElementFromChar;
-
-    fn try_from(value: char) -> Result<Self, Self::Error> {
-        let position_type = match value {
-            '.' => PositionType::Empty,
-            '#' => PositionType::Rock,
-            'X' => PositionType::Start,
-            _ => Err(CannotParseElementFromChar::from(value))?,
-        };
-
-        Result::Ok(Self {
-            position_type,
-            explore_range: None,
-        })
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        std::prelude::rust_2015::Ok(Self { grid: s.parse()? })
     }
 }
 
@@ -70,8 +66,13 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_run() {
+    fn given_test_after_6_turns() -> Result<()> {
         let content = challenges_common::get_input_content(&["aoc", "2023", "21-test.txt"]);
-        assert_eq!(run(&content).unwrap(), 16);
+        let mut map: Map = content.parse()?;
+        map.explore(6)?;
+        map.count_explored(6);
+
+        assert_eq!(map.count_explored(6), 16);
+        Ok(())
     }
 }
