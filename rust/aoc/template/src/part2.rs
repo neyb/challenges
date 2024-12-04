@@ -1,7 +1,7 @@
 use anyhow::*;
 
 type Res = usize;
-pub(crate) fn run(_content: &String) -> Result<Res> {
+pub(crate) fn run(_content: &str) -> Result<Res> {
     todo!()
 }
 
