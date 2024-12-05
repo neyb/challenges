@@ -62,14 +62,3 @@ enum Sign {
     Positive,
     Negative,
 }
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_run() {
-        let content = challenges_common::get_input_content(&["aoc", "2024", "02-test.txt"]);
-        assert_eq!(run(&content).unwrap(), 0);
-    }
-}

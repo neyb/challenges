@@ -17,14 +17,3 @@ pub(crate) fn run(content: &str) -> Result<Res> {
 
     crate::part1::run(&new_content)
 }
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_run() {
-        let content = challenges_common::get_input_content(&["aoc", "2024", "03-test.txt"]);
-        assert_eq!(run(&content).unwrap(), 0);
-    }
-}
