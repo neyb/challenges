@@ -1,5 +1,6 @@
 use crate::{Block, Map};
 use anyhow::*;
+use rayon::prelude::*;
 use std::collections::HashSet;
 
 type Res = usize;
@@ -8,7 +9,7 @@ pub(crate) fn run(content: &str) -> Result<Res> {
     let guard_positions = map.all_guard_positions();
 
     Ok(guard_positions
-        .into_iter()
+        .par_iter()
         .map(|coord| {
             let mut map = map.clone();
             *map.grid.get_mut(&coord).unwrap() = Block::Obstruction;
