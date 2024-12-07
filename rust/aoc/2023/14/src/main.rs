@@ -40,7 +40,7 @@ impl Platform {
                 }
                 let orig_coord = Coord { x, y };
                 if matches!(self.grid.get(&orig_coord), Some(Place::RoundRock)) {
-                    *self.grid.at_mut(&orig_coord).unwrap() = Place::Empty;
+                    *self.grid.get_mut(&orig_coord).unwrap() = Place::Empty;
 
                     let mut target_coord = orig_coord;
 
@@ -52,7 +52,7 @@ impl Platform {
                     ) {
                         target_coord = target_coord.try_at(direction).unwrap();
                     }
-                    *self.grid.at_mut(&target_coord).unwrap() = Place::RoundRock;
+                    *self.grid.get_mut(&target_coord).unwrap() = Place::RoundRock;
                 }
             }
         }
