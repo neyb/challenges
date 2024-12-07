@@ -18,7 +18,7 @@ struct System {
 }
 
 impl System {
-    fn new(mut modules: Vec<Module>) -> Self {
+    fn new(modules: Vec<Module>) -> Self {
         let mut modules_by_name: HashMap<String, Module> = modules
             .clone()
             .into_iter()
@@ -193,12 +193,6 @@ struct Conjunction {
 }
 
 impl Conjunction {
-    fn init(&mut self, outputs: &Vec<String>) {
-        for output in outputs {
-            self.internal_state.insert(output.clone(), Pulse::Low);
-        }
-    }
-
     fn get_output_pulse(&mut self, pulse: Pulse, module_name: &str) -> Option<Pulse> {
         self.internal_state.insert(module_name.to_string(), pulse);
         if self

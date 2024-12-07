@@ -22,7 +22,7 @@ impl Part2Workflows for Workflows {
     fn accepted_ranges(&self) -> Result<Vec<MachinePartRange>> {
         let in_rule = self.get("in").ok_or_else(|| anyhow!("No in workflow"))?;
 
-        Ok(in_rule.accepted(&vec![MachinePartRange::full_range()], self))
+        Ok(in_rule.accepted(&[MachinePartRange::full_range()], self))
     }
 }
 
@@ -99,7 +99,7 @@ struct SplitResult {
 trait Part2Workflow {
     fn accepted(
         &self,
-        machine_part: &Vec<MachinePartRange>,
+        machine_part: &[MachinePartRange],
         workflows: &Workflows,
     ) -> Vec<MachinePartRange>;
 }
@@ -107,7 +107,7 @@ trait Part2Workflow {
 impl Part2Workflow for Workflow {
     fn accepted(
         &self,
-        machine_part: &Vec<MachinePartRange>,
+        machine_part: &[MachinePartRange],
         workflows: &Workflows,
     ) -> Vec<MachinePartRange> {
         let mut accepted = Vec::with_capacity(machine_part.len());
@@ -156,7 +156,7 @@ impl Part2Action for Action {
             Action::Redirect { workflow_name } => workflows
                 .get(workflow_name)
                 .expect("Unknown workflow")
-                .accepted(&vec![machine_part_range.clone()], workflows),
+                .accepted(&[machine_part_range.clone()], workflows),
         }
     }
 }
@@ -190,7 +190,7 @@ in{s<1351:A,R}
 
 {x=787,m=2655,a=1222,s=2876}
 ";
-        assert_eq!(run(&content).unwrap(), 1350 * 4000 * 4000 * 4000);
+        assert_eq!(run(content).unwrap(), 1350 * 4000 * 4000 * 4000);
     }
 
     #[test]

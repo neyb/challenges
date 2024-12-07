@@ -4,7 +4,7 @@ use challenges_common::graph::Coord;
 use itertools::Itertools;
 
 type Res = usize;
-pub(crate) fn run(content: &String) -> Result<Res> {
+pub(crate) fn run(content: &str) -> Result<Res> {
     let map: Map = content.parse()?;
     Ok(map.count_mas())
 }
@@ -20,7 +20,7 @@ impl Part2Map for Map {
             .flat_map(|coord| {
                 [Direction::U, Direction::D, Direction::L, Direction::R]
                     .into_iter()
-                    .map(|dir| (coord.clone(), dir))
+                    .map(|dir| (coord, dir))
                     .collect_vec()
             })
             .filter_map(|(coord, dir)| {

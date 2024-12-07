@@ -12,14 +12,6 @@ use itertools::Itertools;
 use std::str::FromStr;
 
 type Res = usize;
-pub(crate) fn run(content: &String) -> Result<Res> {
-    let lines: Vec<_> = content
-        .lines()
-        .map(|line| line.parse::<Line>())
-        .try_collect()?;
-
-    Ok(lines.iter().filter(|line| line.is_safe()).count())
-}
 
 #[derive(Clone)]
 struct Line {

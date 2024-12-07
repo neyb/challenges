@@ -19,7 +19,7 @@ impl Part1Map for Map {
             .flat_map(|coord| {
                 Direction::all()
                     .into_iter()
-                    .map(|dir| (coord.clone(), dir))
+                    .map(|dir| (coord, dir))
                     .collect_vec()
             })
             .filter_map(|(coord, dir)| {

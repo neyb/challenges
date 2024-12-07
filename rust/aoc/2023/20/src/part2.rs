@@ -1,7 +1,7 @@
 use anyhow::*;
 
 type Res = u64;
-pub(crate) fn run(_content: &String) -> Result<Res> {
+pub(crate) fn run(_content: &str) -> Result<Res> {
     // cf graph.png
     // rx receive low
     // when kj sources (dr, vn, ln, rx) send high

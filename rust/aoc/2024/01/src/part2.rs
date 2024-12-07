@@ -2,7 +2,7 @@ use anyhow::*;
 use itertools::Itertools;
 
 type Res = u32;
-pub(crate) fn run(content: &String) -> Result<Res> {
+pub(crate) fn run(content: &str) -> Result<Res> {
     let lines: Vec<(&str, &str)> = content
         .lines()
         .map(|line| {

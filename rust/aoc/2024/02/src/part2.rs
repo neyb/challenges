@@ -1,10 +1,9 @@
-use crate::Line;
+use crate::{Line, Res};
 use anyhow::*;
 use itertools::Itertools;
 use std::iter::once;
 
-type Res = usize;
-pub(crate) fn run(content: &String) -> Result<Res> {
+pub(crate) fn run(content: &str) -> Result<Res> {
     let lines: Vec<Line> = content.lines().map(|line| line.parse()).try_collect()?;
     Ok(lines.iter().filter(|line| line.is_safe_part2()).count())
 }

@@ -1,5 +1,4 @@
 use challenges_common::graph::{grid, CannotParseGrid, Coord, Grid};
-use itertools::Itertools;
 use std::str::FromStr;
 
 fn main() {

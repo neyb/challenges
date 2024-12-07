@@ -1,9 +1,9 @@
+use crate::Res;
 use anyhow::*;
 use itertools::Itertools;
 use std::str::FromStr;
 
-type Res = usize;
-pub(crate) fn run(content: &String) -> Result<Res> {
+pub(crate) fn run(content: &str) -> Result<Res> {
     let lines: Vec<_> = content
         .lines()
         .map(|line| line.parse::<Line>())

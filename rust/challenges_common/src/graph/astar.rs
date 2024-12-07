@@ -229,6 +229,7 @@ mod test {
     }
 
     #[derive(Hash, PartialEq, Eq, Clone)]
+    #[allow(dead_code)]
     struct WeightedNode {
         id: u8,
     }
