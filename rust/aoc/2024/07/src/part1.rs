@@ -1,5 +1,6 @@
 use crate::Res;
 
+#[derive(Clone)]
 pub enum Operator {
     Add,
     Multiply,
@@ -10,10 +11,22 @@ impl crate::Operator for Operator {
         vec![Self::Add, Self::Multiply]
     }
 
-    fn apply(&self, a: Res, b: Res) -> Res {
+    fn resolve_first_operand(&self, res: Res, b: Res) -> Option<Res> {
         match self {
-            Self::Add => a + b,
-            Self::Multiply => a * b,
+            Operator::Add => {
+                if res > b {
+                    Some(res - b)
+                } else {
+                    None
+                }
+            }
+            Operator::Multiply => {
+                if res % b == 0 {
+                    Some(res / b)
+                } else {
+                    None
+                }
+            }
         }
     }
 }
@@ -21,6 +34,12 @@ impl crate::Operator for Operator {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn simple_test() {
+        let equation: crate::Equation = "3267: 81 40 27".parse().unwrap();
+        assert!(equation.can_be_solved::<Operator>());
+    }
 
     #[test]
     fn test_run() {

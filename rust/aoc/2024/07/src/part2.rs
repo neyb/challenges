@@ -1,5 +1,6 @@
 use crate::Res;
 
+#[derive(Clone)]
 pub enum Operator {
     Add,
     Multiply,
@@ -11,18 +12,29 @@ impl crate::Operator for Operator {
         vec![Self::Add, Self::Multiply, Self::Concatenate]
     }
 
-    fn apply(&self, a: Res, b: Res) -> Res {
+    fn resolve_first_operand(&self, res: Res, b: Res) -> Option<Res> {
         match self {
-            Self::Add => a + b,
-            Self::Multiply => a * b,
-            Self::Concatenate => {
-                let mut a = a;
-                let mut b_tmp = b;
-                while b_tmp >= 10 {
-                    a *= 10;
-                    b_tmp /= 10;
+            Self::Add => {
+                if res > b {
+                    Some(res - b)
+                } else {
+                    None
                 }
-                a * 10 + b
+            }
+            Self::Multiply => {
+                if res % b == 0 {
+                    Some(res / b)
+                } else {
+                    None
+                }
+            }
+            Self::Concatenate => {
+                let mask = 10_u64.pow(b.ilog10() + 1);
+                if res % mask == b {
+                    Some(res / mask)
+                } else {
+                    None
+                }
             }
         }
     }
@@ -36,7 +48,7 @@ mod tests {
     #[test]
     fn basic_concat_test() -> Result<()> {
         let equation: crate::Equation = "156: 15 6".parse()?;
-        assert_eq!(equation.can_be_solved::<Operator>(), true);
+        assert!(equation.can_be_solved::<Operator>());
         Ok(())
     }
 

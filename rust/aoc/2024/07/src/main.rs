@@ -37,29 +37,19 @@ struct Equation {
 
 impl Equation {
     fn can_be_solved<Op: Operator>(&self) -> bool {
-        self.can_be_solved_with(&mut Vec::<Op>::new())
-    }
+        return can_be_solved_with::<Op>(self.result, &self.operands);
 
-    fn can_be_solved_with<Op: Operator>(&self, mut operators: &mut Vec<Op>) -> bool {
-        if self.operands.len() == operators.len() + 1 {
-            self.operands
-                .iter()
-                .tuple_windows()
-                .zip(operators)
-                .fold(None, |sum, ((a, b), op)| match sum {
-                    None => Some(op.apply(*a, *b)),
-                    Some(res) => Some(op.apply(res, *b)),
-                })
-                == Some(self.result)
-        } else {
-            for operator in Op::all() {
-                operators.push(operator);
-                if self.can_be_solved_with(&mut operators) {
-                    return true;
-                }
-                operators.pop();
+        fn can_be_solved_with<Op: Operator>(res: Res, operands: &[Res]) -> bool {
+            match operands {
+                [] => panic!("no operands"),
+                [operand] => *operand == res,
+                [rest @ .., last_operand] => Op::all().iter().any(|operator| {
+                    match operator.resolve_first_operand(res, *last_operand) {
+                        None => false,
+                        Some(a) => can_be_solved_with::<Op>(a, rest),
+                    }
+                }),
             }
-            false
         }
     }
 }
@@ -89,5 +79,5 @@ impl FromStr for Equation {
 
 trait Operator: Sized {
     fn all() -> Vec<Self>;
-    fn apply(&self, a: Res, b: Res) -> Res;
+    fn resolve_first_operand(&self, res: Res, b: Res) -> Option<Res>;
 }
