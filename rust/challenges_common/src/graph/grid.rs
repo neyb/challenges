@@ -60,7 +60,7 @@ where
         }
     }
 
-    fn is_coord_inside(&self, coord: &Coord<U>) -> bool {
+    pub fn is_coord_inside(&self, coord: &Coord<U>) -> bool {
         U::zero() <= coord.y
             && coord.y < self.width
             && U::zero() <= coord.x

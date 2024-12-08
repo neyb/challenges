@@ -2,7 +2,7 @@ use anyhow::*;
 
 type Res = usize;
 pub(crate) fn run(_content: &str) -> Result<Res> {
-    todo!()
+    todo!("part 2 not implemented yet");
 }
 
 #[cfg(test)]
