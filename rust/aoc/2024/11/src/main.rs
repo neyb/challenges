@@ -1,7 +1,6 @@
 use anyhow::Error;
 use itertools::Itertools;
 use std::collections::HashMap;
-use std::ops::Deref;
 use std::str::FromStr;
 
 fn main() {
@@ -13,6 +12,8 @@ fn main() {
 mod part1;
 mod part2;
 
+type TStone = u64;
+
 struct StoneLine {
     current_stones: HashMap<Stone, usize>,
 }
@@ -22,7 +23,6 @@ impl StoneLine {
         let stones = self
             .current_stones
             .iter()
-            // .copied()
             .map(|(&stone, &count)| (stone, count))
             .collect_vec();
         for (stone, count) in stones {
@@ -37,13 +37,12 @@ impl StoneLine {
 
     fn len(&self) -> TStone {
         self.current_stones
-            .iter()
-            .map(|(stone, count)| *count as TStone)
+            .values()
+            .map(|count| *count as TStone)
             .sum()
     }
 }
 
-type TStone = u64;
 #[derive(Hash, Eq, PartialEq, Debug, Clone, Copy)]
 struct Stone(TStone);
 
@@ -66,22 +65,11 @@ impl From<TStone> for Stone {
     }
 }
 
-impl Deref for Stone {
-    type Target = TStone;
-
-    fn deref(&self) -> &Self::Target {
-        &self.0
-    }
-}
-
 impl FromStr for StoneLine {
     type Err = Error;
 
     fn from_str(s: &str) -> anyhow::Result<Self> {
-        let stones: Vec<Stone> = s
-            .split(" ")
-            .map(|s| s.parse().map(|n| Stone(n)))
-            .try_collect()?;
+        let stones: Vec<Stone> = s.split(" ").map(|s| s.parse().map(Stone)).try_collect()?;
 
         anyhow::Ok(Self {
             current_stones: stones.into_iter().counts(),
