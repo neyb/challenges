@@ -59,12 +59,6 @@ impl Stone {
     }
 }
 
-impl From<TStone> for Stone {
-    fn from(value: TStone) -> Self {
-        Self(value)
-    }
-}
-
 impl FromStr for StoneLine {
     type Err = Error;
 
