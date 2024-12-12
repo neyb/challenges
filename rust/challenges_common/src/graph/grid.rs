@@ -67,6 +67,13 @@ where
             && coord.x < self.width()
     }
 
+    pub fn entries(&self) -> impl Iterator<Item = (Coord<U>, &N)> + '_ {
+        self.coords().map(|coord| {
+            let node = self.get(&coord).unwrap();
+            (coord, node)
+        })
+    }
+
     pub fn nodes(&self) -> &Vec<N> {
         &self.content
     }
