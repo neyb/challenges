@@ -67,6 +67,13 @@ where
             && coord.x < self.width()
     }
 
+    pub fn entries(&self) -> impl Iterator<Item = (Coord<U>, &N)> + '_ {
+        self.coords().map(|coord| {
+            let node = self.get(&coord).unwrap();
+            (coord, node)
+        })
+    }
+
     pub fn nodes(&self) -> &Vec<N> {
         &self.content
     }
@@ -383,6 +390,38 @@ impl Direction {
             Direction::Down => Direction::Up,
             Direction::Left => Direction::Right,
             Direction::Right => Direction::Left,
+        }
+    }
+}
+
+#[derive(PartialEq, Eq, PartialOrd, Ord, Hash, Clone, Copy, Debug)]
+struct Vec2<U = usize> {
+    x: U,
+    y: U,
+}
+
+impl<U> From<Direction> for Vec2<U>
+where
+    U: PrimInt + Signed,
+{
+    fn from(direction: Direction) -> Self {
+        match direction {
+            Direction::Up => Vec2 {
+                x: U::zero(),
+                y: -U::one(),
+            },
+            Direction::Down => Vec2 {
+                x: U::zero(),
+                y: U::one(),
+            },
+            Direction::Left => Vec2 {
+                x: -U::one(),
+                y: U::zero(),
+            },
+            Direction::Right => Vec2 {
+                x: U::one(),
+                y: U::zero(),
+            },
         }
     }
 }
