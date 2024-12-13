@@ -2,6 +2,7 @@ use itertools::Itertools;
 use num_traits::{zero, Num, PrimInt, Signed};
 use std::convert::Infallible;
 use std::fmt::{Display, Formatter};
+use std::ops::{Add, Mul};
 use std::str::FromStr;
 
 #[derive(Eq, PartialEq, Debug, Clone)]
@@ -136,7 +137,8 @@ use thiserror::Error;
 pub enum CannotParseGrid {
     #[error("Cannot parse grid from \"{0}\": {1}")]
     CannotParseNode(String, #[source] CannotParseElementFromChar),
-    #[error("Cannot parse grid from \"{str}\": all lines does not have the same length: line {line_index} has length {line_length}")]
+    #[error("Cannot parse grid from \"{str}\": all lines does not have the same length: line {line_index} has length {line_length}"
+    )]
     AllLinesDoesNotHaveSameLength {
         str: String,
         line_index: usize,
@@ -395,9 +397,43 @@ impl Direction {
 }
 
 #[derive(PartialEq, Eq, PartialOrd, Ord, Hash, Clone, Copy, Debug)]
-struct Vec2<U = usize> {
-    x: U,
-    y: U,
+pub struct Vec2<U = usize> {
+    pub x: U,
+    pub y: U,
+}
+
+impl<U> Vec2<U> {
+    pub fn new(x: U, y: U) -> Self {
+        Self { x, y }
+    }
+}
+
+impl<U> Add<&Vec2<U>> for &Vec2<U>
+where
+    U: Add<U, Output = U> + Copy,
+{
+    type Output = Vec2<U>;
+
+    fn add(self, rhs: &Vec2<U>) -> Self::Output {
+        Vec2 {
+            x: self.x + rhs.x,
+            y: self.y + rhs.y,
+        }
+    }
+}
+
+impl<U> Mul<U> for &Vec2<U>
+where
+    U: Mul<Output = U> + Copy,
+{
+    type Output = Vec2<U>;
+
+    fn mul(self, rhs: U) -> Self::Output {
+        Self::Output {
+            x: self.x * rhs,
+            y: self.y * rhs,
+        }
+    }
 }
 
 impl<U> From<Direction> for Vec2<U>
