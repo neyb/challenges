@@ -2,7 +2,7 @@ use itertools::Itertools;
 use num_traits::{zero, Num, PrimInt, Signed};
 use std::convert::Infallible;
 use std::fmt::{Display, Formatter};
-use std::ops::{Add, Mul};
+use std::ops::{Add, AddAssign, Mul};
 use std::str::FromStr;
 
 #[derive(Eq, PartialEq, Debug, Clone)]
@@ -275,6 +275,30 @@ impl<U: PrimInt> Coord<U> {
         let dist = |a: U, b: U| if a > b { a - b } else { b - a };
         dist(self.x, to.x) + dist(self.y, to.y)
     }
+
+    pub fn neighbours(&self, with_diag: bool) -> impl Iterator<Item = Self> {
+        let mut result = Vec::with_capacity(if with_diag { 8 } else { 4 });
+
+        use Direction::*;
+        [Up, Down, Left, Right]
+            .into_iter()
+            .flat_map(|dir| self.try_at(dir))
+            .for_each(|coord| result.push(coord));
+
+        if with_diag {
+            [Up, Down]
+                .into_iter()
+                .flat_map(|dir| self.try_at(dir))
+                .flat_map(|coord| {
+                    [Left, Right]
+                        .into_iter()
+                        .filter_map(move |dir| coord.try_at(dir))
+                })
+                .for_each(|coord| result.push(coord));
+        }
+
+        result.into_iter()
+    }
 }
 
 impl<U: PrimInt + Signed> Coord<U> {
@@ -321,29 +345,27 @@ impl<U: PrimInt + Signed> Coord<U> {
     }
 }
 
-impl<U: PrimInt> Coord<U> {
-    pub fn neighbours(&self, with_diag: bool) -> impl Iterator<Item = Self> {
-        let mut result = Vec::with_capacity(if with_diag { 8 } else { 4 });
+impl<U> Add<&Vec2<U>> for &Coord<U>
+where
+    U: Add<U, Output = U> + Copy,
+{
+    type Output = Coord<U>;
 
-        use Direction::*;
-        [Up, Down, Left, Right]
-            .into_iter()
-            .flat_map(|dir| self.try_at(dir))
-            .for_each(|coord| result.push(coord));
-
-        if with_diag {
-            [Up, Down]
-                .into_iter()
-                .flat_map(|dir| self.try_at(dir))
-                .flat_map(|coord| {
-                    [Left, Right]
-                        .into_iter()
-                        .filter_map(move |dir| coord.try_at(dir))
-                })
-                .for_each(|coord| result.push(coord));
+    fn add(self, rhs: &Vec2<U>) -> Self::Output {
+        Self::Output {
+            x: self.x + rhs.x,
+            y: self.y + rhs.y,
         }
+    }
+}
 
-        result.into_iter()
+impl<U> AddAssign<Vec2<U>> for Coord<U>
+where
+    U: AddAssign<U>,
+{
+    fn add_assign(&mut self, rhs: Vec2<U>) {
+        self.x += rhs.x;
+        self.y += rhs.y;
     }
 }
 
