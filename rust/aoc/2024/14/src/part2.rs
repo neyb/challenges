@@ -13,13 +13,13 @@ pub(crate) fn run(content: &str) -> Result<usize> {
 
     let mut last_best_score = 0;
     let mut best_last_turn = 0;
-    for _ in 0..10_000 {
+    for _ in 0..101 * 103 {
         world.wait();
         let score = world.score();
         if score > last_best_score {
             last_best_score = score;
             best_last_turn = world.time_elapsed;
-            println!("");
+            println!();
             println!("{world}");
             println!("Time elapsed: {}, score: {}", world.time_elapsed, score);
         }

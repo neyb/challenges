@@ -1,6 +1,7 @@
 use itertools::Itertools;
 use num_traits::{zero, Num, PrimInt, Signed};
 use std::convert::Infallible;
+use std::error::Error;
 use std::fmt::{Display, Formatter};
 use std::ops::{Add, AddAssign, Mul};
 use std::str::FromStr;
@@ -134,10 +135,12 @@ where
 use thiserror::Error;
 
 #[derive(Error, Debug)]
-pub enum CannotParseGrid {
+pub enum CannotParseGrid<T: Sized = CannotParseElementFromChar> {
     #[error("Cannot parse grid from \"{0}\": {1}")]
-    CannotParseNode(String, #[source] CannotParseElementFromChar),
-    #[error("Cannot parse grid from \"{str}\": all lines does not have the same length: line {line_index} has length {line_length}"
+    CannotParseNode(String, #[source] T),
+    #[error(
+        "Cannot parse grid from \"{str}\": all lines does not have the same length:\
+     line {line_index} has length {line_length}"
     )]
     AllLinesDoesNotHaveSameLength {
         str: String,
@@ -167,10 +170,10 @@ impl From<Infallible> for CannotParseElementFromChar {
 impl<N, U> FromStr for Grid<N, U>
 where
     N: TryFrom<char>,
-    N::Error: Into<CannotParseElementFromChar>,
+    N::Error: Sized,
     U: PrimInt,
 {
-    type Err = CannotParseGrid;
+    type Err = CannotParseGrid<N::Error>;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         let mut content = Vec::with_capacity(s.len());
@@ -194,7 +197,7 @@ where
             for c in line.chars() {
                 content.push(
                     N::try_from(c)
-                        .map_err(|e| CannotParseGrid::CannotParseNode(s.to_string(), e.into()))?,
+                        .map_err(|e| CannotParseGrid::CannotParseNode(s.to_string(), e))?,
                 );
             }
         }
