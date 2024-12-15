@@ -305,6 +305,7 @@ impl<U: PrimInt> Coord<U> {
 }
 
 impl<U: PrimInt + Signed> Coord<U> {
+    // TODO change dir to ref
     pub fn at(&self, dir: Direction) -> Self {
         match dir {
             Direction::Up => Coord {
