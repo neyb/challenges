@@ -1,5 +1,6 @@
+use crate::{Move, Moves};
 use anyhow::*;
-use challenges_common::graph::{grid, CannotParseElementFromChar, Coord, Direction};
+use challenges_common::graph::{grid, CannotParseElementFromChar, Coord};
 use challenges_common::MyIterTools;
 use itertools::Itertools;
 use std::fmt::Display;
@@ -88,38 +89,6 @@ impl Display for Item {
             Robot => '@',
         };
         write!(f, "{c}")
-    }
-}
-
-struct Moves {
-    moves: Vec<Move>,
-}
-
-impl Moves {
-    fn iter(&self) -> impl Iterator<Item = &Move> {
-        self.moves.iter()
-    }
-}
-
-struct Move(Direction);
-
-impl FromStr for Moves {
-    type Err = Error;
-
-    fn from_str(s: &str) -> Result<Self> {
-        use grid::Direction::*;
-        let moves = s
-            .chars()
-            .filter(|c| c != &'\n')
-            .map(|c| match c {
-                '^' => Ok(Move(Up)),
-                'v' => Ok(Move(Down)),
-                '<' => Ok(Move(Left)),
-                '>' => Ok(Move(Right)),
-                _ => Err(anyhow!("Cannot parse move: {c}")),
-            })
-            .try_collect()?;
-        Ok(Self { moves })
     }
 }
 
