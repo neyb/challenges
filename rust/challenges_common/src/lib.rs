@@ -1,3 +1,4 @@
+#![recursion_limit = "256"]
 pub mod cycle;
 pub mod geom;
 pub mod graph;

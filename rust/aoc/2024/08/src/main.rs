@@ -60,7 +60,7 @@ struct Block(Option<Antenna>);
 struct Antenna(char);
 
 impl FromStr for Map {
-    type Err = CannotParseGrid;
+    type Err = CannotParseGrid<Infallible>;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         Ok(Self { grid: s.parse()? })

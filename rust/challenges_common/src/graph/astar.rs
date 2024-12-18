@@ -7,6 +7,9 @@ use std::{
     rc::Rc,
 };
 
+mod multiple;
+pub use multiple::astar_multiple;
+
 pub fn astar<N, C, Nexts>(
     starting_at: N,
     mut next: impl FnMut(&N) -> Nexts,

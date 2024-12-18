@@ -1,7 +1,6 @@
 use itertools::Itertools;
 use num_traits::{zero, Num, PrimInt, Signed};
 use std::convert::Infallible;
-use std::error::Error;
 use std::fmt::{Display, Formatter};
 use std::ops::{Add, AddAssign, Mul};
 use std::str::FromStr;
@@ -36,10 +35,17 @@ where
         self.content.get_mut(i?)
     }
 
-    pub fn map<NewN>(&self, f: impl Fn(&N) -> NewN) -> Grid<NewN, U> {
+    pub fn map<NewN>(&self, f: impl FnMut(&N) -> NewN) -> Grid<NewN, U> {
         Grid {
             width: self.width,
             content: self.content.iter().map(f).collect(),
+        }
+    }
+
+    pub fn map_with_coord<NewN>(&self, f: impl FnMut((Coord<U>, &N)) -> NewN) -> Grid<NewN, U> {
+        Grid {
+            width: self.width,
+            content: self.entries().map(f).collect(),
         }
     }
 
@@ -81,8 +87,8 @@ where
     }
 
     pub fn coords(&self) -> impl Iterator<Item = Coord<U>> + '_ {
-        (0_usize..self.width().to_usize().unwrap()).flat_map(|x| {
-            (0_usize..self.height().to_usize().unwrap()).map(move |y| Coord {
+        (0_usize..self.height().to_usize().unwrap()).flat_map(|y| {
+            (0_usize..self.width().to_usize().unwrap()).map(move |x| Coord {
                 x: U::from(x).unwrap(),
                 y: U::from(y).unwrap(),
             })

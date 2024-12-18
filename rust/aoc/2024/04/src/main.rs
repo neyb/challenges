@@ -1,4 +1,5 @@
 use challenges_common::graph::{grid, CannotParseGrid, Coord, Grid};
+use std::convert::Infallible;
 use std::str::FromStr;
 
 fn main() {
@@ -15,10 +16,10 @@ struct Map {
 }
 
 impl FromStr for Map {
-    type Err = CannotParseGrid;
+    type Err = CannotParseGrid<Infallible>;
 
-    fn from_str(s: &str) -> anyhow::Result<Self, CannotParseGrid> {
-        anyhow::Result::Ok(Self { grid: s.parse()? })
+    fn from_str(s: &str) -> anyhow::Result<Self, Self::Err> {
+        Ok(Self { grid: s.parse()? })
     }
 }
 
