@@ -82,7 +82,7 @@ where
     fn add_node<N, C>(
         queue: &mut Queue<N, C>,
         optimals: &mut Optimals<N, C>,
-        mut info: AggregatedNodeInfo<N, C>,
+        info: AggregatedNodeInfo<N, C>,
     ) where
         N: Node,
         C: Cost,
@@ -145,8 +145,8 @@ where
                 nodes.insert(end.borrow().node.clone());
 
                 if let Some(previous_ancestors) = &end.borrow().previous_ancestors {
-                    for nodeInfo in previous_ancestors {
-                        queue.push_back(nodeInfo.clone());
+                    for node_info in previous_ancestors {
+                        queue.push_back(node_info.clone());
                     }
                 }
             }
