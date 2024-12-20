@@ -28,23 +28,22 @@ trait Part2Towels {
 
 impl Part2Towels for Towels {
     fn count_ways(&self, design: &Pattern, cache: &mut HashMap<Pattern, Res>) -> Res {
-        if let Some(&result) = cache.get(design) {
-            return result;
-        }
         if design.is_empty() {
             return 1;
         }
 
-        let mut sum = 0;
-        for size in 1..=self.max_len.min(design.len()) {
-            let towel = design.start(size);
-            if self.towels.contains(&towel) {
-                sum += self.count_ways(&design.skip(size), cache);
+        match cache.get(design) {
+            Some(&result) => result,
+            None => {
+                let sum = (1..=self.max_len.min(design.len()))
+                    .filter(|size| self.towels.contains(&design.start(*size)))
+                    .map(|size| self.count_ways(&design.skip(size), cache))
+                    .sum();
+
+                cache.insert(design.clone(), sum);
+                sum
             }
         }
-
-        cache.insert(design.clone(), sum);
-        sum
     }
 }
 

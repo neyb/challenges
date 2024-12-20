@@ -28,23 +28,21 @@ trait Part1Towels {
 
 impl Part1Towels for Towels {
     fn can_create(&self, design: &Pattern, cache: &mut HashMap<Pattern, bool>) -> bool {
-        if let Some(&result) = cache.get(design) {
-            return result;
-        }
         if design.is_empty() {
             return true;
         }
 
-        for size in (1..=self.max_len.min(design.len())).rev() {
-            let towel = design.start(size);
-            if self.towels.contains(&towel) && self.can_create(&design.skip(size), cache) {
-                cache.insert(design.clone(), true);
-                return true;
+        match cache.get(design) {
+            Some(&result) => result,
+            None => {
+                let res = (1..=self.max_len.min(design.len())).rev().any(|size| {
+                    self.towels.contains(&design.start(size))
+                        && self.can_create(&design.skip(size), cache)
+                });
+                cache.insert(design.clone(), res);
+                res
             }
         }
-
-        cache.insert(design.clone(), false);
-        false
     }
 }
 
