@@ -1,7 +1,5 @@
 use crate::Map;
 use anyhow::*;
-use itertools::Itertools;
-use std::str::FromStr;
 
 type Res = u32;
 pub(crate) fn run(content: &str) -> Result<Res> {

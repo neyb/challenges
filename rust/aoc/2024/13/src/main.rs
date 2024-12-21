@@ -66,10 +66,6 @@ impl Machine {
             None
         }
     }
-
-    fn claw_position(&self, a_presses: Unit, b_presses: Unit) -> Vec2 {
-        &(&self.a * a_presses) + &(&self.b * b_presses)
-    }
 }
 
 impl FromStr for Machines {

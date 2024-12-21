@@ -5,6 +5,7 @@ use challenges_common::MyIterTools;
 use itertools::Itertools;
 use std::fmt::Display;
 use std::str::FromStr;
+use Item::Empty;
 
 type Res = Unit;
 pub(crate) fn run(content: &str) -> Result<Res> {
@@ -41,14 +42,11 @@ struct Map {
 
 impl Map {
     fn move_robot(&mut self, r#move: &Move) {
-        match self.next_non_box(r#move) {
-            Some((coord, item)) if item == Item::Empty => {
-                *self.grid.get_mut(&self.robot).unwrap() = Item::Empty;
-                self.robot = self.robot.try_at(r#move.0).unwrap();
-                *self.grid.get_mut(&coord).unwrap() = Item::Box;
-                *self.grid.get_mut(&self.robot).unwrap() = Item::Robot;
-            }
-            _ => {}
+        if let Some((coord, Empty)) = self.next_non_box(r#move) {
+            *self.grid.get_mut(&self.robot).unwrap() = Empty;
+            self.robot = self.robot.try_at(r#move.0).unwrap();
+            *self.grid.get_mut(&coord).unwrap() = Item::Box;
+            *self.grid.get_mut(&self.robot).unwrap() = Item::Robot;
         }
     }
 

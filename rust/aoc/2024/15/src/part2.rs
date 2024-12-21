@@ -4,7 +4,6 @@ use challenges_common::graph::{grid, Direction};
 use challenges_common::MyIterTools;
 use itertools::Itertools;
 use std::collections::{HashMap, HashSet};
-use std::fmt::Display;
 use std::str::FromStr;
 
 type Res = Unit;
@@ -86,7 +85,7 @@ impl Map {
                 _ => {
                     let mut result = HashSet::new();
 
-                    result.insert(map.location_index[&item.left_coord()]);
+                    result.insert(map.location_index[item.left_coord()]);
 
                     for coord in item.coords_at(direction) {
                         if let Some(item) = map.get(&coord) {

@@ -1,8 +1,6 @@
 use anyhow::{anyhow, Error};
-use challenges_common::graph::Direction::{Down, Left, Right, Up};
 use challenges_common::graph::{grid, Direction};
 use itertools::Itertools;
-use std::fmt::Display;
 use std::str::FromStr;
 
 fn main() {

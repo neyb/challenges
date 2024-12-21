@@ -133,7 +133,7 @@ impl<'map> ActorState<'map> {
     }
 }
 
-impl<'map> Action<'map> {
+impl Action<'_> {
     fn time_left(&self) -> Option<u8> {
         use Action::*;
 

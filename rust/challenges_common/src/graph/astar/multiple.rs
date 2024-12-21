@@ -5,7 +5,7 @@ use std::cmp::{Ordering, Reverse};
 use std::collections::{BinaryHeap, HashMap, HashSet, VecDeque};
 use std::rc::Rc;
 
-mod paths;
+// mod paths;
 
 pub fn astar_multiple<N, C, Nexts>(
     starting_at: N,
@@ -95,7 +95,7 @@ where
             }
             Some(existing) => {
                 let ordering = { info.cost.cmp(&existing.borrow().cost) };
-                match { ordering } {
+                match ordering {
                     Ordering::Less => {
                         let info = Rc::new(RefCell::new(info));
                         let node = Rc::clone(&info.borrow().node);

@@ -29,7 +29,7 @@ impl<'map> Startable<'map> for StatePart1<'map> {
     }
 }
 
-impl<'map> State for StatePart1<'map> {
+impl State for StatePart1<'_> {
     fn nexts<'a>(
         &'a self,
         map: &'a Map,

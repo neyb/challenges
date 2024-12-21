@@ -50,7 +50,7 @@ impl Regions {
                 .any(|current_cell| neighbors.contains(current_cell))
         });
 
-        let mut neighbors = groups.remove(&true).unwrap_or_else(Vec::new);
+        let neighbors = groups.remove(&true).unwrap_or_else(Vec::new);
         let mut not_neighbors = groups.remove(&false).unwrap_or_else(Vec::new);
 
         let mut region = Region::merge(neighbors);
@@ -62,11 +62,7 @@ impl Regions {
     }
 
     fn price(&self, get_price: impl Fn(&Region) -> Price) -> Price {
-        self.regions
-            .values()
-            .flat_map(|regions| regions)
-            .map(get_price)
-            .sum()
+        self.regions.values().flatten().map(get_price).sum()
     }
 }
 

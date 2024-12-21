@@ -12,14 +12,3 @@ pub(crate) fn run(content: &str) -> Result<Res> {
 
     Ok(machines.min_cost())
 }
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_run() {
-        let content = challenges_common::get_input_content(&["aoc", "2024", "13-test.txt"]);
-        assert_eq!(run(&content).unwrap(), 0);
-    }
-}
