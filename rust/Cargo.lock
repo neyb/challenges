@@ -619,7 +619,6 @@ dependencies = [
  "anyhow",
  "challenges_common",
  "itertools",
- "lazy-regex",
 ]
 
 [[package]]
