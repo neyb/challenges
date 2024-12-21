@@ -141,7 +141,7 @@ where
 use thiserror::Error;
 
 #[derive(Error, Debug)]
-pub enum CannotParseGrid<T: Sized = CannotParseElementFromChar> {
+pub enum CannotParseGrid<T: std::error::Error + Sized = CannotParseElementFromChar> {
     #[error("Cannot parse grid from \"{0}\": {1}")]
     CannotParseNode(String, #[source] T),
     #[error(
@@ -176,7 +176,7 @@ impl From<Infallible> for CannotParseElementFromChar {
 impl<N, U> FromStr for Grid<N, U>
 where
     N: TryFrom<char>,
-    N::Error: Sized,
+    N::Error: Sized + std::error::Error,
     U: PrimInt,
 {
     type Err = CannotParseGrid<N::Error>;
