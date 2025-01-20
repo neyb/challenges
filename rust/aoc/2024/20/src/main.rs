@@ -64,9 +64,7 @@ impl PathAnalyzer {
                 let win_time = dest_time - shortcut_length;
                 if shortcut_length <= shortcut_max_len && win_time >= min_win {
                     shortcuts.push(Shortcut {
-                        start: *start,
-                        end: *end,
-                        shorcut_length: shortcut_length,
+                        #[cfg(test)]
                         win_time,
                     });
                 }
@@ -78,9 +76,7 @@ impl PathAnalyzer {
 }
 
 struct Shortcut {
-    start: Coord,
-    end: Coord,
-    shorcut_length: Unit,
+    #[cfg(test)]
     win_time: Unit,
 }
 

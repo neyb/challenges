@@ -12,7 +12,7 @@ pub(crate) fn run(content: &str) -> Result<Res> {
         .par_iter()
         .map(|coord| {
             let mut map = map.clone();
-            *map.grid.get_mut(&coord).unwrap() = Block::Obstruction;
+            *map.grid.get_mut(coord).unwrap() = Block::Obstruction;
             map
         })
         .filter(|map| map.does_loop())

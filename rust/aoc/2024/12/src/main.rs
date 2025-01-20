@@ -41,7 +41,7 @@ impl Regions {
 
     // this is trash performance wise (quick-win should use square to limit possibilities)...
     fn add_cell(&mut self, plant: Plant, coord: Coord) {
-        let regions = self.regions.remove(&plant).unwrap_or_else(|| Vec::new());
+        let regions = self.regions.remove(&plant).unwrap_or_default();
         let neighbors = coord.neighbours(false).collect_vec();
         let mut groups = regions.into_iter().into_group_map_by(|region| {
             region

@@ -120,7 +120,7 @@ impl<'map> StatePart2<'map> {
     }
 }
 
-impl<'map> ActorState<'map> {
+impl ActorState<'_> {
     fn wait(self, time: u8, map: &Map) -> Result<(Self, u32)> {
         let (action, freed_flow) = self.action.wait(time, map)?;
         Ok((
@@ -210,7 +210,7 @@ impl<'map> Startable<'map> for StatePart2<'map> {
     }
 }
 
-impl<'map> State for StatePart2<'map> {
+impl State for StatePart2<'_> {
     fn nexts<'a>(
         &'a self,
         map: &'a Map,

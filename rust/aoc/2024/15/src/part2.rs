@@ -33,7 +33,6 @@ fn parse(content: &str) -> Result<(Map, Moves)> {
 
 type Unit = isize;
 type Coord = grid::Coord<Unit>;
-type Grid = grid::Grid<Item, Unit>;
 
 struct Map {
     items: Vec<Item>,
@@ -72,7 +71,7 @@ impl Map {
             .sum()
     }
 
-    fn movable_items<'m>(&self, item: &Item, direction: &Direction) -> Option<HashSet<usize>> {
+    fn movable_items(&self, item: &Item, direction: &Direction) -> Option<HashSet<usize>> {
         return movable_items_rec(self, item, direction);
 
         fn movable_items_rec(
@@ -125,12 +124,6 @@ impl Map {
         self.location_index
             .get(coord)
             .map(|&index| &self.items[index])
-    }
-
-    fn get_mut(&mut self, coord: &Coord) -> Option<&mut Item> {
-        self.location_index
-            .get(coord)
-            .map(|&index| &mut self.items[index])
     }
 }
 

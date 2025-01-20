@@ -1,0 +1,9 @@
+[package]
+name = "aoc_2024_23"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+anyhow.workspace = true
+challenges_common.workspace = true
+itertools.workspace = true
